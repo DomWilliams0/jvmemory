@@ -15,7 +15,7 @@ public class ArrayManipulation implements Specimen {
 
 	private void ping() {
 		for (int i = 0; i < array.length; i++) {
-			array[i] += 1;
+			array[i] += 26;
 		}
 
 		System.out.println("array = " + Arrays.toString(array));
