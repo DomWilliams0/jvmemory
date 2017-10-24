@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
-Premain-Class: ms.domwillia.jvmemory.Agent
+Premain-Class: ms.domwillia.jvmemory.modify.Agent
 Can-Retransform-Classes: true
 Can-Redefine-Classes: true
