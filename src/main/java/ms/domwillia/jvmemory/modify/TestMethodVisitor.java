@@ -7,7 +7,7 @@ public class TestMethodVisitor extends MethodVisitor {
 	private final String name;
 
 	public TestMethodVisitor(MethodVisitor mv, String name) {
-		super(Opcodes.ASM4, mv);
+		super(Opcodes.ASM6, mv);
 		this.name = name;
 	}
 

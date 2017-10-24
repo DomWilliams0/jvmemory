@@ -17,7 +17,7 @@ public class Agent implements ClassFileTransformer {
 	                        final Class classBeingRedefined, final ProtectionDomain protectionDomain,
 	                        final byte[] classfileBuffer) throws IllegalClassFormatException {
 
-		if (className.startsWith("ms/domwillia")) {
+		if (className.startsWith("ms/domwillia/jvmemory/specimen")) {
 			ClassReader reader = new ClassReader(classfileBuffer);
 			ClassWriter writer = new ClassWriter(reader, 0);
 			TestVisitor printer = new TestVisitor(writer);
