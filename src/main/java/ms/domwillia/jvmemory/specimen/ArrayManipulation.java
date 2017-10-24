@@ -1,12 +1,12 @@
-package ms.domwillia.jvmemory;
+package ms.domwillia.jvmemory.specimen;
 
 import java.util.Arrays;
 
-public class SimpleJava {
+public class ArrayManipulation implements Specimen {
 
 	private int[] array;
 
-	SimpleJava() {
+	public ArrayManipulation() {
 		array = new int[16];
 		for (int i = 0; i < array.length; i++) {
 			array[i] = i;
@@ -21,11 +21,10 @@ public class SimpleJava {
 		System.out.println("array = " + Arrays.toString(array));
 	}
 
-	public static void main(String[] args) {
-		SimpleJava simple = new SimpleJava();
-
+	@Override
+	public void go() {
 		while (true) {
-			simple.ping();
+			this.ping();
 
 			try {
 				Thread.sleep(200);
