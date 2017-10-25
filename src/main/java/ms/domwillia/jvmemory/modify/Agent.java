@@ -20,8 +20,8 @@ public class Agent implements ClassFileTransformer {
 		if (className.startsWith("ms/domwillia/jvmemory/specimen")) {
 			ClassReader reader = new ClassReader(classfileBuffer);
 			ClassWriter writer = new ClassWriter(reader, 0);
-			TestVisitor printer = new TestVisitor(writer);
-			reader.accept(printer, 0);
+			TestVisitor visitor = new TestVisitor(writer);
+			reader.accept(visitor, 0);
 			return writer.toByteArray();
 		}
 		return null;

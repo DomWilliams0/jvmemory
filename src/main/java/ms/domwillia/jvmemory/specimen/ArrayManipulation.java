@@ -7,7 +7,7 @@ public class ArrayManipulation implements Specimen {
 	private int[] array;
 
 	public ArrayManipulation() {
-		array = new int[16];
+		array = new int[4];
 		for (int i = 0; i < array.length; i++) {
 			array[i] = i;
 		}
@@ -23,7 +23,7 @@ public class ArrayManipulation implements Specimen {
 
 	@Override
 	public void go() {
-		while (true) {
+		for (int i = 0; i < 3; i++) {
 			this.ping();
 
 			try {
