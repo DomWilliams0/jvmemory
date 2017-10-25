@@ -7,27 +7,30 @@ import org.objectweb.asm.Opcodes;
 
 public class TestVisitor extends ClassVisitor {
 
+	private String currentClass;
+
 	public TestVisitor(ClassWriter writer) {
 		super(Opcodes.ASM6, writer);
+		currentClass = null;
 	}
 
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-		System.out.printf("visiting class %s\n", name);
+		currentClass = name;
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
 	public void visitEnd() {
-		System.out.println("================");
+		currentClass = null;
 		super.visitEnd();
 	}
 
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		return new TestInstructionVisitor(mv, name);
+		InstrAdapter instr = new InstrAdapter(mv);
+		System.out.printf("visiting %s : %s\n", currentClass, name);
+		return instr;
 	}
-
-
 }
