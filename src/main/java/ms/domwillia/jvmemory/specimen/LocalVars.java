@@ -14,7 +14,6 @@ public class LocalVars implements Specimen {
 		System.out.println("a = " + a);
 		System.out.println("b = " + b);
 
-
 		int c = 25;
 		byte d = 6;
 		char e = 's';

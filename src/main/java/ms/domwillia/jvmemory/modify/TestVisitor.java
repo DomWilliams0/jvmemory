@@ -4,6 +4,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 
 public class TestVisitor extends ClassVisitor {
 
@@ -30,7 +31,9 @@ public class TestVisitor extends ClassVisitor {
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 		InstrAdapter instr = new InstrAdapter(mv);
+		LocalVariablesSorter localVarSorter = new LocalVariablesSorter(access, desc, instr);
+		instr.localVars = localVarSorter;
 		System.out.printf("visiting %s : %s\n", currentClass, name);
-		return instr;
+		return localVarSorter;
 	}
 }

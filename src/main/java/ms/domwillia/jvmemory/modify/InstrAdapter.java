@@ -4,10 +4,13 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 
 public class InstrAdapter extends InstructionAdapter {
+
+	public LocalVariablesSorter localVars;
 
 	public InstrAdapter(MethodVisitor mv) {
 		super(Opcodes.ASM6, mv);
@@ -70,9 +73,43 @@ public class InstrAdapter extends InstructionAdapter {
 
 	@Override
 	public void load(int var, Type type) {
-		super.iconst(var);
-		super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", "iloadPrint", "(I)V", false);
 		super.load(var, type);
+	}
+
+	@Override
+	public void putfield(String owner, String name, String desc) {
+		String typePrefix = getTypePrefix(Type.getType(desc));
+		if (typePrefix != null) {
+		String funcName = typePrefix + "getfieldPrint";
+		String sig = "(Ljava/lang/Object;" + desc + ")V";
+
+		// TODO if desc is long/double dup3, otherwise dup2
+		// TODO dont be a messy savage and extract all this into a separate class
+		if (desc.equals("J") || desc.equals("D"))
+			dup3(desc.equals("J") ? Type.LONG_TYPE : Type.DOUBLE_TYPE);
+		else
+			super.dup2();
+		super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", funcName, sig, false);
+
+		}
+		super.putfield(owner, name, desc);
+	}
+
+	// top of stack must be a wide type (double or long)
+	// TODO similar for dup4
+	private void dup3(Type type) {
+		// original:   obj l1 l2 <-- HEAD
+		// dup2_x1:    l1 l2 obj l1 l2
+		// lstore tmp: l1 l2 obj
+		// dup_x2:     obj l1 l2 obj
+		// lload tmp:  obj l1 l2 obj l1 l2
+
+		int tmp = localVars.newLocal(type);
+
+		super.dup2X1();
+		super.store(tmp, type);
+		super.dupX2();
+		super.load(tmp, type);
 	}
 
 	@Override
@@ -84,12 +121,6 @@ public class InstrAdapter extends InstructionAdapter {
 	@Override
 	public void astore(Type type) {
 		// TODO astore and aload have 3 params - how to dup3?
-		// println
-//		super.visitFieldInsn(GETSTATIC, "java/lang/System", "out",
-//				"Ljava/io/PrintStream;");
-//		super.visitLdcInsn("wahey, astore");
-//		super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
-
 		super.astore(type);
 	}
 
@@ -101,6 +132,7 @@ public class InstrAdapter extends InstructionAdapter {
 
 	@Override
 	public void visitMaxs(int maxStack, int maxLocals) {
+		// TODO dont hardcode, count the added instructions instead
 		super.visitMaxs(maxStack + 4, maxLocals);
 	}
 }
