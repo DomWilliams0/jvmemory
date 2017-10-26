@@ -5,7 +5,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 
 public class InstrAdapter extends InstructionAdapter {
 
@@ -13,10 +13,60 @@ public class InstrAdapter extends InstructionAdapter {
 		super(Opcodes.ASM6, mv);
 	}
 
+	private String getTypePrefix(Type type) {
+		switch (type.getSort()) {
+			case Type.BOOLEAN:
+				return "bool";
+			case Type.CHAR:
+				return "char";
+			case Type.BYTE:
+				return "byte";
+			case Type.SHORT:
+				return "short";
+			case Type.INT:
+				return "int";
+			case Type.FLOAT:
+				return "float";
+			case Type.LONG:
+				return "long";
+			case Type.DOUBLE:
+				return "double";
+			case Type.OBJECT:
+				return "object";
+			// TODO arrays just complicate things at this stage
+//			case Type.ARRAY:
+//				return "array";
+			default:
+				return null;
+		}
+	}
+
+	// does this depend on architecture/implementation?
+	private void dupTypeSpecific(Type type) {
+		switch (type.getSort()) {
+			case Type.LONG:
+			case Type.DOUBLE:
+				super.dup2();
+				break;
+			default:
+				super.dup();
+				break;
+		}
+	}
+
 	@Override
 	public void store(int var, Type type) {
-		super.iconst(var);
-		super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", "istorePrint", "(I)V", false);
+		String typePrefix = getTypePrefix(type);
+		System.out.println("type = " + type);
+		System.out.println("typePrefix = " + typePrefix);
+		if (typePrefix != null) {
+			String funcName = typePrefix + "storePrint";
+			String sig = String.format("(%sI)V", type.getDescriptor());
+
+			dupTypeSpecific(type);
+			super.iconst(var);
+			super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", funcName, sig, false);
+		}
 		super.store(var, type);
 	}
 
