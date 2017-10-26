@@ -43,8 +43,18 @@ public class DebugPrinter {
 		storePrint("object", val, var);
 	}
 
-	public static void iloadPrint(int var) {
-//		System.out.println("=== iload " + var);
+	// getfield
+	public static void longgetfieldPrint(Object obj, long val) {
+		System.out.println("DebugPrinter.longgetfieldPrint");
+		System.out.println("obj = [" + obj + "], val = [" + val + "]");
 	}
-
+	public static void doublegetfieldPrint(Object obj, double val) {
+		System.out.println("DebugPrinter.doublegetfieldPrint");
+		System.out.println("obj = [" + obj + "], val = [" + val + "]");
+		System.out.println("=================");
+	}
+	public static void intgetfieldPrint(Object obj, int val) {
+		System.out.println("DebugPrinter.intgetfieldPrint");
+		System.out.println("obj = [" + obj + "], val = [" + val + "]");
+	}
 }
