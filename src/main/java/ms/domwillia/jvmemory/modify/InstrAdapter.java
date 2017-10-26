@@ -12,12 +12,26 @@ import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
 public class InstrAdapter extends InstructionAdapter {
 
+	private final String className;
+	private final String methodName;
 	private final boolean isConstructor;
-	public LocalVariablesSorter localVars;
 
-	public InstrAdapter(MethodVisitor mv, boolean isConstructor) {
+	LocalVariablesSorter localVars;
+
+	InstrAdapter(MethodVisitor mv, String className, String methodName) {
 		super(Opcodes.ASM6, mv);
-		this.isConstructor = isConstructor;
+		this.className = className;
+		this.methodName = methodName;
+		this.isConstructor = methodName.equals("<init>");
+	}
+
+	@Override
+	public void visitCode() {
+		String sig = "(Ljava/lang/String;Ljava/lang/String;)V";
+		super.visitLdcInsn(className);
+		super.visitLdcInsn(methodName);
+		super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/StackTracker", "push", sig, false);
+		super.visitCode();
 	}
 
 	private String getTypePrefix(Type type) {
@@ -142,6 +156,22 @@ public class InstrAdapter extends InstructionAdapter {
 	public void aload(Type type) {
 //		System.out.printf("aload %s\n", type);
 		super.aload(type);
+	}
+
+	// track
+	private void doReturn() {
+		super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/StackTracker", "pop", "()V", false);
+	}
+	@Override
+	public void ret(int var) {
+		doReturn();
+		super.ret(var);
+	}
+
+	@Override
+	public void areturn(Type t) {
+		doReturn();
+		super.areturn(t);
 	}
 
 	@Override
