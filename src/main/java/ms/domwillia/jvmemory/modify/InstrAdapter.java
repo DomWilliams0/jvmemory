@@ -91,6 +91,13 @@ public class InstrAdapter extends InstructionAdapter {
 
 	@Override
 	public void load(int var, Type type) {
+		String typePrefix = getTypePrefix(type);
+		if (typePrefix != null) {
+			String funcName = typePrefix + "loadPrint";
+
+			super.iconst(var);
+			super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", funcName, "(I)V", false);
+		}
 		super.load(var, type);
 	}
 

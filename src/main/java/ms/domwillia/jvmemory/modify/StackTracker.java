@@ -7,16 +7,20 @@ public class StackTracker {
 
 	public static void push(String clazz, String method) {
 		stack.push(new Frame(clazz, method));
-		System.out.printf(":::::::: PUSH %s:%s : %s\n", prettyClass(clazz), method, stack);
+		System.out.println(">>> " + getHead());
 	}
 
 	public static void pop() {
+		System.out.println("<<< " + getHead());
 		stack.pop();
-		System.out.printf(":::::::: POP : %s\n", stack);
 	}
 
 	private static String prettyClass(String clazz) {
 		return clazz.substring(clazz.lastIndexOf('/') + 1);
+	}
+
+	public static String getHead() {
+		return stack.peek().toString();
 	}
 
 	static class Frame {
