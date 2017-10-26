@@ -21,7 +21,11 @@ public class Agent implements ClassFileTransformer {
 			ClassReader reader = new ClassReader(classfileBuffer);
 			ClassWriter writer = new ClassWriter(reader, 0);
 			TestVisitor visitor = new TestVisitor(writer);
-			reader.accept(visitor, 0);
+			try {
+				reader.accept(visitor, 0);
+			} catch(RuntimeException e) {
+				e.printStackTrace();
+			}
 			return writer.toByteArray();
 		}
 		return null;
