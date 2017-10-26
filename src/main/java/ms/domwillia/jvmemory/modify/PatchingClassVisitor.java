@@ -6,11 +6,11 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
-public class TestVisitor extends ClassVisitor {
+public class PatchingClassVisitor extends ClassVisitor {
 
 	private String currentClass;
 
-	public TestVisitor(ClassWriter writer) {
+	public PatchingClassVisitor(ClassWriter writer) {
 		super(Opcodes.ASM6, writer);
 		currentClass = null;
 	}
