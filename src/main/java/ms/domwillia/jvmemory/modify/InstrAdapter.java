@@ -57,8 +57,6 @@ public class InstrAdapter extends InstructionAdapter {
 	@Override
 	public void store(int var, Type type) {
 		String typePrefix = getTypePrefix(type);
-		System.out.println("type = " + type);
-		System.out.println("typePrefix = " + typePrefix);
 		if (typePrefix != null) {
 			String funcName = typePrefix + "storePrint";
 			String sig = String.format("(%sI)V", type.getDescriptor());
