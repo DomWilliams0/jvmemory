@@ -6,14 +6,18 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
+import static org.objectweb.asm.Opcodes.GETSTATIC;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
+import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
 public class InstrAdapter extends InstructionAdapter {
 
+	private final boolean isConstructor;
 	public LocalVariablesSorter localVars;
 
-	public InstrAdapter(MethodVisitor mv) {
+	public InstrAdapter(MethodVisitor mv, boolean isConstructor) {
 		super(Opcodes.ASM6, mv);
+		this.isConstructor = isConstructor;
 	}
 
 	private String getTypePrefix(Type type) {
@@ -78,18 +82,28 @@ public class InstrAdapter extends InstructionAdapter {
 
 	@Override
 	public void putfield(String owner, String name, String desc) {
-		String typePrefix = getTypePrefix(Type.getType(desc));
-		if (typePrefix != null) {
-		String funcName = typePrefix + "getfieldPrint";
-		String sig = "(Ljava/lang/Object;" + desc + ")V";
+		// `this` is uninitialised in constructor
+		// TODO find a way to deal with this
+		if (isConstructor) {
+			super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+			super.visitLdcInsn(String.format("skipping `putfield %s %s` in %s constructor", name, desc, owner));
+			super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
 
-		// TODO if desc is long/double dup3, otherwise dup2
-		// TODO dont be a messy savage and extract all this into a separate class
-		if (desc.equals("J") || desc.equals("D"))
-			dup3(desc.equals("J") ? Type.LONG_TYPE : Type.DOUBLE_TYPE);
-		else
-			super.dup2();
-		super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", funcName, sig, false);
+		} else {
+			String typePrefix = getTypePrefix(Type.getType(desc));
+			if (typePrefix != null) {
+				String funcName = typePrefix + "getfieldPrint";
+				String sig = "(Ljava/lang/Object;" + desc + ")V";
+
+				// TODO if desc is long/double dup3, otherwise dup2
+				// TODO dont be a messy savage and extract all this into a separate class
+				if (desc.equals("J") || desc.equals("D"))
+					dup3(desc.equals("J") ? Type.LONG_TYPE : Type.DOUBLE_TYPE);
+				else
+					super.dup2();
+				super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", funcName, sig, false);
+
+			}
 
 		}
 		super.putfield(owner, name, desc);
