@@ -10,7 +10,8 @@ import static org.objectweb.asm.Opcodes.GETSTATIC;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
-public class InstrAdapter extends InstructionAdapter {
+public class InstructionPatcher extends InstructionAdapter {
+	private static final String STACK_TRACKER = "ms/domwillia/jvmemory/monitor/StackTracker";
 
 	private final String className;
 	private final String methodName;
@@ -18,7 +19,7 @@ public class InstrAdapter extends InstructionAdapter {
 
 	LocalVariablesSorter localVars;
 
-	InstrAdapter(MethodVisitor mv, String className, String methodName) {
+	InstructionPatcher(MethodVisitor mv, String className, String methodName) {
 		super(Opcodes.ASM6, mv);
 		this.className = className;
 		this.methodName = methodName;
@@ -30,36 +31,48 @@ public class InstrAdapter extends InstructionAdapter {
 		String sig = "(Ljava/lang/String;Ljava/lang/String;)V";
 		super.visitLdcInsn(className);
 		super.visitLdcInsn(methodName);
-		super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/StackTracker", "push", sig, false);
+		super.visitMethodInsn(INVOKESTATIC, STACK_TRACKER, "push", sig, false);
 		super.visitCode();
 	}
 
-	private String getTypePrefix(Type type) {
+	private String getTypeSpecificHandlerName(Type type) {
+		String name;
 		switch (type.getSort()) {
 			case Type.BOOLEAN:
-				return "bool";
+				name =  "boolean";
+				break;
 			case Type.CHAR:
-				return "char";
+				name =  "char";
+				break;
 			case Type.BYTE:
-				return "byte";
+				name =  "byte";
+				break;
 			case Type.SHORT:
-				return "short";
+				name =  "short";
+				break;
 			case Type.INT:
-				return "int";
+				name =  "int";
+				break;
 			case Type.FLOAT:
-				return "float";
+				name =  "float";
+				break;
 			case Type.LONG:
-				return "long";
+				name =  "long";
+				break;
 			case Type.DOUBLE:
-				return "double";
+				name =  "double";
+				break;
 			case Type.OBJECT:
-				return "object";
+				name =  "object";
+				break;
 			// TODO arrays just complicate things at this stage
 //			case Type.ARRAY:
 //				return "array";
 			default:
 				return null;
 		}
+
+		return name + "Do";
 	}
 
 	// does this depend on architecture/implementation?
@@ -77,26 +90,23 @@ public class InstrAdapter extends InstructionAdapter {
 
 	@Override
 	public void store(int var, Type type) {
-		String typePrefix = getTypePrefix(type);
-		if (typePrefix != null) {
-			String funcName = typePrefix + "storePrint";
-			String sig = String.format("(%sI)V", type.getDescriptor());
-
+		String handler = getTypeSpecificHandlerName(type);
+		if (handler != null) {
 			dupTypeSpecific(type);
 			super.iconst(var);
-			super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", funcName, sig, false);
+
+			String sig = String.format("(%sI)V", type.getDescriptor());
+			super.visitMethodInsn(INVOKESTATIC, getPrinterClass("store"), handler, sig, false);
 		}
 		super.store(var, type);
 	}
 
 	@Override
 	public void load(int var, Type type) {
-		String typePrefix = getTypePrefix(type);
-		if (typePrefix != null) {
-			String funcName = typePrefix + "loadPrint";
-
+		String handler = getTypeSpecificHandlerName(type);
+		if (handler != null) {
 			super.iconst(var);
-			super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", funcName, "(I)V", false);
+			super.visitMethodInsn(INVOKESTATIC, getPrinterClass("load"), handler, "(I)V", false);
 		}
 		super.load(var, type);
 	}
@@ -111,19 +121,22 @@ public class InstrAdapter extends InstructionAdapter {
 			super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
 
 		} else {
-			String typePrefix = getTypePrefix(Type.getType(desc));
-			if (typePrefix != null) {
-				String funcName = typePrefix + "getfieldPrint";
-				String sig = "(Ljava/lang/Object;" + desc + ")V";
-
-				// TODO if desc is long/double dup3, otherwise dup2
+			Type type = Type.getType(desc);
+			String handler = getTypeSpecificHandlerName(type);
+			if (handler != null) {
+				// if desc is long/double dup3, otherwise dup2
 				// TODO dont be a messy savage and extract all this into a separate class
-				if (desc.equals("J") || desc.equals("D"))
-					dup3(desc.equals("J") ? Type.LONG_TYPE : Type.DOUBLE_TYPE);
+				if (type.getSize() == 2)
+					dup3(type);
 				else
 					super.dup2();
-				super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/DebugPrinter", funcName, sig, false);
 
+				// push on extra args
+				super.visitLdcInsn(owner);
+				super.visitLdcInsn(name);
+
+				String sig = String.format("(Ljava/lang/Object;%sLjava/lang/String;Ljava/lang/String;)V", type.getDescriptor());
+				super.visitMethodInsn(INVOKESTATIC, getPrinterClass("putfield"), handler, sig, false);
 			}
 
 		}
@@ -167,8 +180,9 @@ public class InstrAdapter extends InstructionAdapter {
 
 	// track
 	private void doReturn() {
-		super.visitMethodInsn(INVOKESTATIC, "ms/domwillia/jvmemory/modify/StackTracker", "pop", "()V", false);
+		super.visitMethodInsn(INVOKESTATIC, STACK_TRACKER, "pop", "()V", false);
 	}
+
 	@Override
 	public void ret(int var) {
 		doReturn();
@@ -184,6 +198,11 @@ public class InstrAdapter extends InstructionAdapter {
 	@Override
 	public void visitMaxs(int maxStack, int maxLocals) {
 		// TODO dont hardcode, count the added instructions instead
-		super.visitMaxs(maxStack + 4, maxLocals);
+		super.visitMaxs(maxStack + 6, maxLocals);
+	}
+
+	private static String getPrinterClass(String what) {
+		String cap = Character.toUpperCase(what.charAt(0)) + what.substring(1);
+		return String.format("ms/domwillia/jvmemory/monitor/%sPrinter", cap);
 	}
 }

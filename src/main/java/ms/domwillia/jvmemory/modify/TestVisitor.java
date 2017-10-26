@@ -30,7 +30,7 @@ public class TestVisitor extends ClassVisitor {
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		InstrAdapter instr = new InstrAdapter(mv, currentClass, name);
+		InstructionPatcher instr = new InstructionPatcher(mv, currentClass, name);
 		LocalVariablesSorter localVarSorter = new LocalVariablesSorter(access, desc, instr);
 		instr.localVars = localVarSorter;
 		return localVarSorter;

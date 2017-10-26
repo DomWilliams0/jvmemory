@@ -1,7 +1,8 @@
-package ms.domwillia.jvmemory.modify;
+package ms.domwillia.jvmemory.monitor;
 
 import java.util.Stack;
 
+@SuppressWarnings("unused")
 public class StackTracker {
 	private static Stack<Frame> stack = new Stack<>();
 
