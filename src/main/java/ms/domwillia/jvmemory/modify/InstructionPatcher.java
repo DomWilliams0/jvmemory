@@ -144,6 +144,33 @@ public class InstructionPatcher extends InstructionAdapter {
 		super.putfield(owner, name, desc);
 	}
 
+	@Override
+	public void getfield(String owner, String name, String desc) {
+		// `this` is uninitialised in constructor
+		// TODO find a way to deal with this
+		if (isConstructor) {
+			super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+			super.visitLdcInsn(String.format("skipping `getfield %s %s` in %s constructor", name, desc, owner));
+			super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+
+		} else {
+			Type type = Type.getType(desc);
+			String handler = getTypeSpecificHandlerName(type);
+			if (handler != null) {
+				super.dup();
+
+				// push on extra args
+				super.visitLdcInsn(owner);
+				super.visitLdcInsn(name);
+
+				String sig = "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V";
+				super.visitMethodInsn(INVOKESTATIC, getPrinterClass("getfield"), handler, sig, false);
+			}
+
+		}
+		super.getfield(owner, name, desc);
+	}
+
 	// top of stack must be a wide type (double or long)
 	// TODO similar for dup4
 	private void dup3(Type type) {
@@ -160,25 +187,6 @@ public class InstructionPatcher extends InstructionAdapter {
 		super.dupX2();
 		super.load(tmp, type);
 	}
-
-	@Override
-	public void anew(Type type) {
-//		System.out.printf("new %s\n", type);
-		super.anew(type);
-	}
-
-	@Override
-	public void astore(Type type) {
-		// TODO astore and aload have 3 params - how to dup3?
-		super.astore(type);
-	}
-
-	@Override
-	public void aload(Type type) {
-//		System.out.printf("aload %s\n", type);
-		super.aload(type);
-	}
-
 	// track
 	private void doReturn() {
 		super.visitMethodInsn(INVOKESTATIC, STACK_TRACKER, "pop", "()V", false);
