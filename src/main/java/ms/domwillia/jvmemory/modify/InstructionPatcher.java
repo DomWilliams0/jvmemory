@@ -135,7 +135,8 @@ public class InstructionPatcher extends InstructionAdapter {
 				super.visitLdcInsn(owner);
 				super.visitLdcInsn(name);
 
-				String sig = String.format("(Ljava/lang/Object;%sLjava/lang/String;Ljava/lang/String;)V", type.getDescriptor());
+				String typeDescriptor = type.getSort() == Type.OBJECT ? "Ljava/lang/Object;" : type.getDescriptor();
+				String sig = String.format("(Ljava/lang/Object;%sLjava/lang/String;Ljava/lang/String;)V", typeDescriptor);
 				super.visitMethodInsn(INVOKESTATIC, getPrinterClass("putfield"), handler, sig, false);
 			}
 
