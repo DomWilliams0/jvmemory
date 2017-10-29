@@ -16,6 +16,7 @@ public class InstructionPatcher extends InstructionAdapter {
 	private final String className;
 	private final String methodName;
 	private final boolean isConstructor;
+	private int addedStackSpace;
 
 	LocalVariablesSorter localVars;
 
@@ -28,11 +29,14 @@ public class InstructionPatcher extends InstructionAdapter {
 
 	@Override
 	public void visitCode() {
+		addedStackSpace = 0;
+
 		String sig = "(Ljava/lang/String;Ljava/lang/String;)V";
 		super.visitLdcInsn(className);
 		super.visitLdcInsn(methodName);
 		super.visitMethodInsn(INVOKESTATIC, STACK_TRACKER, "push", sig, false);
 		super.visitCode();
+		addedStackSpace += 2;
 	}
 
 	private String getTypeSpecificHandlerName(Type type) {
@@ -94,6 +98,7 @@ public class InstructionPatcher extends InstructionAdapter {
 		if (handler != null) {
 			dupTypeSpecific(type);
 			super.iconst(var);
+			addedStackSpace += 2;
 
 			String sig = String.format("(%sI)V", type.getDescriptor());
 			super.visitMethodInsn(INVOKESTATIC, getPrinterClass("store"), handler, sig, false);
@@ -107,6 +112,7 @@ public class InstructionPatcher extends InstructionAdapter {
 		if (handler != null) {
 			super.iconst(var);
 			super.visitMethodInsn(INVOKESTATIC, getPrinterClass("load"), handler, "(I)V", false);
+			addedStackSpace += 1;
 		}
 		super.load(var, type);
 	}
@@ -119,6 +125,7 @@ public class InstructionPatcher extends InstructionAdapter {
 			super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
 			super.visitLdcInsn(String.format("skipping `putfield %s %s` in %s constructor", name, desc, owner));
 			super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+			addedStackSpace += 2;
 
 		} else {
 			Type type = Type.getType(desc);
@@ -126,14 +133,18 @@ public class InstructionPatcher extends InstructionAdapter {
 			if (handler != null) {
 				// if desc is long/double dup3, otherwise dup2
 				// TODO dont be a messy savage and extract all this into a separate class
-				if (type.getSize() == 2)
+				if (type.getSize() == 2) {
 					dup3(type);
-				else
+					addedStackSpace += 3;
+				} else {
 					super.dup2();
+					addedStackSpace += 2;
+				}
 
 				// push on extra args
 				super.visitLdcInsn(owner);
 				super.visitLdcInsn(name);
+				addedStackSpace += 2;
 
 				String typeDescriptor = type.getSort() == Type.OBJECT ? "Ljava/lang/Object;" : type.getDescriptor();
 				String sig = String.format("(Ljava/lang/Object;%sLjava/lang/String;Ljava/lang/String;)V", typeDescriptor);
@@ -152,6 +163,7 @@ public class InstructionPatcher extends InstructionAdapter {
 			super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
 			super.visitLdcInsn(String.format("skipping `getfield %s %s` in %s constructor", name, desc, owner));
 			super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+			addedStackSpace += 2;
 
 		} else {
 			Type type = Type.getType(desc);
@@ -162,6 +174,7 @@ public class InstructionPatcher extends InstructionAdapter {
 				// push on extra args
 				super.visitLdcInsn(owner);
 				super.visitLdcInsn(name);
+				addedStackSpace += 3;
 
 				String sig = "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V";
 				super.visitMethodInsn(INVOKESTATIC, getPrinterClass("getfield"), handler, sig, false);
@@ -206,8 +219,7 @@ public class InstructionPatcher extends InstructionAdapter {
 
 	@Override
 	public void visitMaxs(int maxStack, int maxLocals) {
-		// TODO dont hardcode, count the added instructions instead
-		super.visitMaxs(maxStack + 6, maxLocals);
+		super.visitMaxs(maxStack + addedStackSpace, maxLocals);
 	}
 
 	private static String getPrinterClass(String what) {
