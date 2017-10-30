@@ -1,5 +1,7 @@
 package ms.domwillia.jvmemory.modify;
 
+import ms.domwillia.jvmemory.monitor.LocalVarTracker;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -12,6 +14,7 @@ import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
 public class InstructionPatcher extends InstructionAdapter {
 	private static final String STACK_TRACKER = "ms/domwillia/jvmemory/monitor/StackTracker";
+	private static final String VAR_TRACKER = "ms/domwillia/jvmemory/monitor/LocalVarTracker";
 
 	private final String className;
 	private final String methodName;
@@ -37,6 +40,9 @@ public class InstructionPatcher extends InstructionAdapter {
 		super.visitMethodInsn(INVOKESTATIC, STACK_TRACKER, "push", sig, false);
 		super.visitCode();
 		addedStackSpace += 2;
+
+		// for visitLocalVariable
+		addedStackSpace += 4;
 	}
 
 	private String getTypeSpecificHandlerName(Type type) {
@@ -220,6 +226,12 @@ public class InstructionPatcher extends InstructionAdapter {
 	@Override
 	public void visitMaxs(int maxStack, int maxLocals) {
 		super.visitMaxs(maxStack + addedStackSpace, maxLocals);
+	}
+
+	@Override
+	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+		LocalVarTracker.registerLocalVar(className, methodName, name, index);
+		super.visitLocalVariable(name, desc, signature, start, end, index);
 	}
 
 	private static String getPrinterClass(String what) {
