@@ -4,10 +4,12 @@ import ms.domwillia.jvmemory.monitor.InjectedMonitor
 import ms.domwillia.jvmemory.monitor.LocalVarTracker
 import org.objectweb.asm.*
 import org.objectweb.asm.commons.LocalVariablesSorter
+import org.objectweb.asm.tree.FieldNode
 
 class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
 
     private lateinit var currentClass: String
+    private var isInterface: Boolean = false
     private lateinit var localVars: LocalVarTracker
 
     override fun visit(
@@ -20,32 +22,28 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
     ) {
         currentClass = name
         localVars = LocalVarTracker()
+        isInterface = access.and(Opcodes.ACC_INTERFACE) != 0
         super.visit(version, access, name, signature, superName, interfaces)
     }
 
     override fun visitEnd() {
-        println("==== $currentClass")
-        localVars.debugPrint()
-
-        // TODO write out to file
-        super.visitEnd()
-    }
-
-    private var hasInjectedField = false
-    override fun visitField(access: Int, name: String?, desc: String?, signature: String?, value: Any?): FieldVisitor {
-        if (!hasInjectedField) {
-            hasInjectedField = true
-
-            super.visitField(
+        if (!isInterface) {
+            // add injected field
+            val injectField = FieldNode(
                     Opcodes.ACC_FINAL + Opcodes.ACC_PRIVATE,
                     InjectedMonitor.fieldName,
                     Type.getDescriptor(InjectedMonitor::class.java),
-                    "()V",
+                    null,
                     null
             )
+            injectField.accept(cv)
         }
 
-        return super.visitField(access, name, desc, signature, value)
+        // TODO write out to log instead of printing
+        println("==== $currentClass")
+        localVars.debugPrint()
+
+        super.visitEnd()
     }
 
     override fun visitMethod(
@@ -60,6 +58,11 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         val localVarSorter = LocalVariablesSorter(access, desc, instr)
         instr.localVarSorter = localVarSorter
 
-        return localVarSorter
+        return if (instr.isConstructor) {
+            // special constructor patcher
+            ConstructorPatcher(currentClass, access, desc, localVarSorter)
+        } else {
+            localVarSorter
+        }
     }
 }

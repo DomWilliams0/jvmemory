@@ -16,7 +16,7 @@ class MethodPatcher(
 
     lateinit var localVarSorter: LocalVariablesSorter
 
-    private val isConstructor
+    val isConstructor
         get() = this.methodName == "<init>"
 
 }
