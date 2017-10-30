@@ -14,20 +14,22 @@ import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
 public class InstructionPatcher extends InstructionAdapter {
 	private static final String STACK_TRACKER = "ms/domwillia/jvmemory/monitor/StackTracker";
-	private static final String VAR_TRACKER = "ms/domwillia/jvmemory/monitor/LocalVarTracker";
+
+	private final LocalVarTracker localVarTracker;
 
 	private final String className;
 	private final String methodName;
 	private final boolean isConstructor;
 	private int addedStackSpace;
 
-	LocalVariablesSorter localVars;
+	LocalVariablesSorter localVarSorter;
 
-	InstructionPatcher(MethodVisitor mv, String className, String methodName) {
+	InstructionPatcher(MethodVisitor mv, String className, String methodName, LocalVarTracker localVarTracker) {
 		super(Opcodes.ASM6, mv);
 		this.className = className;
 		this.methodName = methodName;
 		this.isConstructor = methodName.equals("<init>");
+		this.localVarTracker = localVarTracker;
 	}
 
 	@Override
@@ -49,31 +51,31 @@ public class InstructionPatcher extends InstructionAdapter {
 		String name;
 		switch (type.getSort()) {
 			case Type.BOOLEAN:
-				name =  "boolean";
+				name = "boolean";
 				break;
 			case Type.CHAR:
-				name =  "char";
+				name = "char";
 				break;
 			case Type.BYTE:
-				name =  "byte";
+				name = "byte";
 				break;
 			case Type.SHORT:
-				name =  "short";
+				name = "short";
 				break;
 			case Type.INT:
-				name =  "int";
+				name = "int";
 				break;
 			case Type.FLOAT:
-				name =  "float";
+				name = "float";
 				break;
 			case Type.LONG:
-				name =  "long";
+				name = "long";
 				break;
 			case Type.DOUBLE:
-				name =  "double";
+				name = "double";
 				break;
 			case Type.OBJECT:
-				name =  "object";
+				name = "object";
 				break;
 			// TODO arrays just complicate things at this stage
 //			case Type.ARRAY:
@@ -199,13 +201,14 @@ public class InstructionPatcher extends InstructionAdapter {
 		// dup_x2:     obj l1 l2 obj
 		// lload tmp:  obj l1 l2 obj l1 l2
 
-		int tmp = localVars.newLocal(type);
+		int tmp = localVarSorter.newLocal(type);
 
 		super.dup2X1();
 		super.store(tmp, type);
 		super.dupX2();
 		super.load(tmp, type);
 	}
+
 	// track
 	private void doReturn() {
 		super.visitMethodInsn(INVOKESTATIC, STACK_TRACKER, "pop", "()V", false);
@@ -230,7 +233,7 @@ public class InstructionPatcher extends InstructionAdapter {
 
 	@Override
 	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-		LocalVarTracker.registerLocalVar(className, methodName, name, index);
+		localVarTracker.registerLocalVar(methodName, name, index);
 		super.visitLocalVariable(name, desc, signature, start, end, index);
 	}
 
