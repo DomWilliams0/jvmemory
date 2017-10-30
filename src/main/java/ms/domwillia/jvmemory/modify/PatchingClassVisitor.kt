@@ -2,7 +2,10 @@ package ms.domwillia.jvmemory.modify
 
 import ms.domwillia.jvmemory.monitor.InjectedMonitor
 import ms.domwillia.jvmemory.monitor.LocalVarTracker
-import org.objectweb.asm.*
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.LocalVariablesSorter
 import org.objectweb.asm.tree.FieldNode
 
@@ -32,7 +35,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
             val injectField = FieldNode(
                     Opcodes.ACC_FINAL + Opcodes.ACC_PRIVATE,
                     InjectedMonitor.fieldName,
-                    Type.getDescriptor(InjectedMonitor::class.java),
+                    InjectedMonitor.descriptor,
                     null,
                     null
             )
