@@ -4,16 +4,21 @@ import ms.domwillia.jvmemory.monitor.InjectedMonitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
-import org.objectweb.asm.commons.AdviceAdapter
+import org.objectweb.asm.commons.InstructionAdapter
 
 class ConstructorPatcher(
         private val className: String,
-        access: Int,
-        desc: String,
         mv: MethodVisitor
-) : AdviceAdapter(Opcodes.ASM6, mv, access, "<init>", desc) {
+) : InstructionAdapter(Opcodes.ASM6, mv) {
 
-    override fun onMethodExit(opcode: Int) {
+    override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
+        if (opcode == Opcodes.INVOKESPECIAL && owner == "java/lang/Object" && name == "<init>")
+            initialiseInjectedMonitor()
+
+        super.visitMethodInsn(opcode, owner, name, desc, itf)
+    }
+
+    private fun initialiseInjectedMonitor() {
         val monitorType = Type.getType(InjectedMonitor::class.java)
 
         // 4: aload_0
@@ -35,8 +40,6 @@ class ConstructorPatcher(
 
         // 12: putfield      #4                  // Field bean:LBean;
         super.visitFieldInsn(Opcodes.PUTFIELD, className, InjectedMonitor.fieldName, monitorType.descriptor)
-
-        super.onMethodExit(opcode)
     }
 
     override fun visitMaxs(maxStack: Int, maxLocals: Int) {

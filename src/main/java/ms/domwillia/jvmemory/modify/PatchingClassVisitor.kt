@@ -53,16 +53,24 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
             signature: String?,
             exceptions: Array<String>?
     ): MethodVisitor? {
-        val mv = super.visitMethod(access, name, desc, signature, exceptions)
+        var mv = super.visitMethod(access, name, desc, signature, exceptions)
+
+        // instruction patching
         val instr = MethodPatcher(mv, currentClass, name, localVars)
         val localVarSorter = LocalVariablesSorter(access, desc, instr)
         instr.localVarSorter = localVarSorter
 
-        return if (instr.isConstructor) {
-            // special constructor patcher
-            ConstructorPatcher(currentClass, access, desc, localVarSorter)
+        // special constructor patcher
+        mv = if (instr.isConstructor) {
+            ConstructorPatcher(currentClass, localVarSorter)
         } else {
             localVarSorter
         }
+
+        // call tracing
+        if (!isInterface)
+            mv = CallTracer(currentClass, mv, access, name, desc)
+
+        return mv
     }
 }
