@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.modify;
 
+import ms.domwillia.jvmemory.monitor.LocalVarTracker;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -24,6 +25,8 @@ public class PatchingClassVisitor extends ClassVisitor {
 	@Override
 	public void visitEnd() {
 		currentClass = null;
+		LocalVarTracker.debugPrint();
+		LocalVarTracker.clear();
 		super.visitEnd();
 	}
 
