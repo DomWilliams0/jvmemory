@@ -1,10 +1,8 @@
 package ms.domwillia.jvmemory.modify
 
+import ms.domwillia.jvmemory.monitor.InjectedMonitor
 import ms.domwillia.jvmemory.monitor.LocalVarTracker
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
+import org.objectweb.asm.*
 import org.objectweb.asm.commons.LocalVariablesSorter
 
 class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
@@ -33,6 +31,23 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         super.visitEnd()
     }
 
+    private var hasInjectedField = false
+    override fun visitField(access: Int, name: String?, desc: String?, signature: String?, value: Any?): FieldVisitor {
+        if (!hasInjectedField) {
+            hasInjectedField = true
+
+            super.visitField(
+                    Opcodes.ACC_FINAL + Opcodes.ACC_PRIVATE,
+                    InjectedMonitor.fieldName,
+                    Type.getDescriptor(InjectedMonitor::class.java),
+                    "()V",
+                    null
+            )
+        }
+
+        return super.visitField(access, name, desc, signature, value)
+    }
+
     override fun visitMethod(
             access: Int,
             name: String,
@@ -41,7 +56,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
             exceptions: Array<String>?
     ): MethodVisitor? {
         val mv = super.visitMethod(access, name, desc, signature, exceptions)
-        val instr = InstructionPatcher(mv, currentClass, name, localVars)
+        val instr = MethodPatcher(mv, currentClass, name, localVars)
         val localVarSorter = LocalVariablesSorter(access, desc, instr)
         instr.localVarSorter = localVarSorter
 
