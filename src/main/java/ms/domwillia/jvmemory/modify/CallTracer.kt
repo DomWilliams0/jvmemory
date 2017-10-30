@@ -1,6 +1,5 @@
 package ms.domwillia.jvmemory.modify
 
-import jdk.nashorn.internal.codegen.types.Type
 import ms.domwillia.jvmemory.monitor.InjectedMonitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
@@ -17,19 +16,18 @@ class CallTracer(private val className: String, mv: MethodVisitor?, access: Int,
     override fun onMethodEnter() {
         super.visitVarInsn(Opcodes.ALOAD, 0)
 
-        val injectType = Type.typeFor(InjectedMonitor::class.java)
         super.visitFieldInsn(
                 Opcodes.GETFIELD,
                 className,
                 InjectedMonitor.fieldName,
-                injectType.descriptor
+                InjectedMonitor.descriptor
         )
 
         super.visitLdcInsn(className)
         super.visitLdcInsn(methodName)
         super.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                injectType.internalName,
+                InjectedMonitor.internalName,
                 "enterMethod",
                 "(Ljava/lang/String;Ljava/lang/String;)V",
                 false
@@ -41,17 +39,16 @@ class CallTracer(private val className: String, mv: MethodVisitor?, access: Int,
     override fun onMethodExit(opcode: Int) {
         super.visitVarInsn(Opcodes.ALOAD, 0)
 
-        val injectType = Type.typeFor(InjectedMonitor::class.java)
         super.visitFieldInsn(
                 Opcodes.GETFIELD,
                 className,
                 InjectedMonitor.fieldName,
-                injectType.descriptor
+                InjectedMonitor.descriptor
         )
 
         super.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                injectType.internalName,
+                InjectedMonitor.internalName,
                 "exitMethod",
                 "()V",
                 false
