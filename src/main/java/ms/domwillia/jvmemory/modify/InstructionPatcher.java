@@ -236,6 +236,6 @@ public class InstructionPatcher extends InstructionAdapter {
 
 	private static String getPrinterClass(String what) {
 		String cap = Character.toUpperCase(what.charAt(0)) + what.substring(1);
-		return String.format("ms/domwillia/jvmemory/monitor/%sPrinter", cap);
+		return String.format("ms/domwillia/jvmemory/monitor/printer/%sPrinter", cap);
 	}
 }

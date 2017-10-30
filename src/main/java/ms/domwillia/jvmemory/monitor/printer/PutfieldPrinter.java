@@ -1,4 +1,6 @@
-package ms.domwillia.jvmemory.monitor;
+package ms.domwillia.jvmemory.monitor.printer;
+
+import ms.domwillia.jvmemory.monitor.StackTracker;
 
 @SuppressWarnings("unused")
 public class PutfieldPrinter {
