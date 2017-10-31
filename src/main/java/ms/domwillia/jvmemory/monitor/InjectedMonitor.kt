@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.monitor
 
+import ms.domwillia.jvmemory.monitor.printer.LoadPrinter
 import ms.domwillia.jvmemory.monitor.printer.StorePrinter
 import org.objectweb.asm.Type
 
@@ -36,6 +37,7 @@ class InjectedMonitor {
 
     private val stackTracker: StackTracker = StackTracker()
     private val storeMonitor: StorePrinter = StorePrinter(stackTracker)
+    private val loadMonitor: LoadPrinter = LoadPrinter(stackTracker)
 
     fun enterMethod(clazz: String, method: String) {
         stackTracker.push(clazz, method)
@@ -84,5 +86,40 @@ class InjectedMonitor {
         storeMonitor.objectDo(value, index)
     }
 
-    // TODO add instance of StorePrinter and LoadPrinter
+    // loading
+    fun onLoadBoolean(index: Int) {
+        loadMonitor.booleanDo(index)
+    }
+
+    fun onLoadChar(index: Int) {
+        loadMonitor.charDo(index)
+    }
+
+    fun onLoadByte(index: Int) {
+        loadMonitor.byteDo(index)
+    }
+
+    fun onLoadShort(index: Int) {
+        loadMonitor.shortDo(index)
+    }
+
+    fun onLoadInt(index: Int) {
+        loadMonitor.intDo(index)
+    }
+
+    fun onLoadFloat(index: Int) {
+        loadMonitor.floatDo(index)
+    }
+
+    fun onLoadLong(index: Int) {
+        loadMonitor.longDo(index)
+    }
+
+    fun onLoadDouble(index: Int) {
+        loadMonitor.doubleDo(index)
+    }
+
+    fun onLoadObject(index: Int) {
+        loadMonitor.objectDo(index)
+    }
 }

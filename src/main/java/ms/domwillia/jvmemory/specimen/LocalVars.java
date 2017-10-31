@@ -20,6 +20,10 @@ public class LocalVars implements Specimen {
 		short s = 2000;
 		boolean g = true;
 
+		int z = c;
+		double y = k;
+		Bean x = b;
+
 	}
 
 	class Bean {
