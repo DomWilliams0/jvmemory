@@ -51,20 +51,32 @@ class MethodPatcher(
         super.store(index, type)
     }
 
-//    override fun load(index: Int, type: Type) {
-//        getTypeSpecificHandlerName(type)?.let { handler ->
-//            super.iconst(index)
-//            super.visitMethodInsn(
-//                    INVOKESTATIC,
-//                    getPrinterClass("load"),
-//                    handler,
-//                    "(I)V",
-//                    false
-//            )
-//        }
-//
-//        super.load(index, type)
-//    }
+    override fun load(index: Int, type: Type) {
+        // TODO doesnt seem possible to inject more loads when `this` isnt initialised
+        // but store manages it?!
+        if (!isConstructor) {
+            InjectedMonitor.getTypeSpecificLocalVarFuncName(false, type)?.let { handler ->
+                super.load(0, OBJECT_TYPE)
+                super.visitFieldInsn(
+                        Opcodes.GETFIELD,
+                        className,
+                        InjectedMonitor.fieldName,
+                        InjectedMonitor.descriptor
+                )
+
+                super.iconst(index)
+                super.visitMethodInsn(
+                        Opcodes.INVOKEVIRTUAL,
+                        InjectedMonitor.internalName,
+                        handler,
+                        "(I)V",
+                        false
+                )
+            }
+        }
+
+        super.load(index, type)
+    }
 
     // does this depend on architecture/implementation?
     private fun dupTypeSpecific(type: Type) {

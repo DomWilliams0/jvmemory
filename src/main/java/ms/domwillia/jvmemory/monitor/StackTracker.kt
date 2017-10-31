@@ -6,7 +6,12 @@ class StackTracker {
     private val stack = Stack<Frame>()
 
     val head: String
-        get() = stack.peek().let { (clazz, method) -> "${prettyClass(clazz)}:$method" }
+        get() {
+            return when {
+                stack.empty() -> "-"
+                else -> stack.peek().let { (clazz, method) -> "${prettyClass(clazz)}:$method" }
+            }
+        }
 
 
     fun push(clazz: String, method: String) {
