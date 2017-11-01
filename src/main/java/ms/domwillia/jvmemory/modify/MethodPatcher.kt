@@ -67,24 +67,22 @@ class MethodPatcher(
                 println("skipping load")
                 skipNextLoad = false
             } else {
-                InjectedMonitor.getTypeSpecificLocalVarFuncName(false, type)?.let { handler ->
-                    super.load(0, OBJECT_TYPE)
-                    super.visitFieldInsn(
-                            Opcodes.GETFIELD,
-                            className,
-                            InjectedMonitor.fieldName,
-                            InjectedMonitor.descriptor
-                    )
+                super.load(0, OBJECT_TYPE)
+                super.visitFieldInsn(
+                        Opcodes.GETFIELD,
+                        className,
+                        InjectedMonitor.fieldName,
+                        InjectedMonitor.descriptor
+                )
 
-                    super.iconst(index)
-                    super.visitMethodInsn(
-                            Opcodes.INVOKEVIRTUAL,
-                            InjectedMonitor.internalName,
-                            handler,
-                            "(I)V",
-                            false
-                    )
-                }
+                super.iconst(index)
+                super.visitMethodInsn(
+                        Opcodes.INVOKEVIRTUAL,
+                        InjectedMonitor.internalName,
+                        "onLoadLocalVar",
+                        "(I)V",
+                        false
+                )
             }
         }
 
