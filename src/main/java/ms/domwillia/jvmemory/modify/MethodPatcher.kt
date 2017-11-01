@@ -29,7 +29,7 @@ class MethodPatcher(
             val tmpVar = localVarSorter.newLocal(type)
             super.store(tmpVar, type)
 
-            super.visitVarInsn(Opcodes.ALOAD, 0)
+            super.load(0, OBJECT_TYPE)
             super.visitFieldInsn(
                     Opcodes.GETFIELD,
                     className,
@@ -50,9 +50,6 @@ class MethodPatcher(
 
         super.store(index, type)
     }
-
-    // TODO when injecting monitored instructions (eg. aload_0 and getfield), set a flag
-    // TODO to ignore it so it isnt logged! this.__injectedMonitor__ is being logged here!
 
     override fun load(index: Int, type: Type) {
         // TODO doesnt seem possible to inject more loads when `this` isnt initialised
@@ -83,7 +80,6 @@ class MethodPatcher(
 
     override fun getfield(owner: String, name: String, desc: String) {
         // TODO uninitialisedThis causes problems again
-        // TODO use flag wrapper instead of this check
         if (!isConstructor && desc != InjectedMonitor.descriptor) {
             super.dup()
 
