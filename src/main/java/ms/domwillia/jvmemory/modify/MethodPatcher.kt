@@ -51,6 +51,9 @@ class MethodPatcher(
         super.store(index, type)
     }
 
+    // TODO when injecting monitored instructions (eg. aload_0 and getfield), set a flag
+    // TODO to ignore it so it isnt logged! this.__injectedMonitor__ is being logged here!
+
     override fun load(index: Int, type: Type) {
         // TODO doesnt seem possible to inject more loads when `this` isnt initialised
         // but store manages it?!
@@ -76,6 +79,50 @@ class MethodPatcher(
         }
 
         super.load(index, type)
+    }
+
+    override fun getfield(owner: String, name: String, desc: String) {
+        // TODO uninitialisedThis causes problems again
+        // TODO use flag wrapper instead of this check
+        if (!isConstructor && desc != InjectedMonitor.descriptor) {
+            super.dup()
+
+            // get injected monitor
+            super.load(0, OBJECT_TYPE)
+            super.getfield(
+                    className,
+                    InjectedMonitor.fieldName,
+                    InjectedMonitor.descriptor
+            )
+
+            // swap monitor and object
+            super.swap()
+
+            // calculate hashcode
+            super.invokevirtual(
+                    "Ljava/lang/Object;",
+                    "hashCode",
+                    "()I",
+                    false
+            )
+            // add other args
+            super.visitLdcInsn(owner)
+            super.visitLdcInsn(name)
+            super.visitLdcInsn(desc)
+
+            super.invokevirtual(
+                    InjectedMonitor.internalName,
+                    "onGetField",
+                    "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+                    false
+            )
+        }
+
+        super.getfield(owner, name, desc)
+    }
+
+    override fun visitMaxs(maxStack: Int, maxLocals: Int) {
+        super.visitMaxs(maxStack + 8, maxLocals)
     }
 
     // does this depend on architecture/implementation?
