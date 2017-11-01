@@ -11,10 +11,10 @@ class ConstructorPatcher(
 ) : InstructionAdapter(Opcodes.ASM6, mv) {
 
     override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
+        super.visitMethodInsn(opcode, owner, name, desc, itf)
+
         if (opcode == Opcodes.INVOKESPECIAL && owner == "java/lang/Object" && name == "<init>")
             initialiseInjectedMonitor()
-
-        super.visitMethodInsn(opcode, owner, name, desc, itf)
     }
 
     private fun initialiseInjectedMonitor() {
