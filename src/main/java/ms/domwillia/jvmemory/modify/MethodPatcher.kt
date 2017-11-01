@@ -51,27 +51,40 @@ class MethodPatcher(
         super.store(index, type)
     }
 
+    private var skipNextLoad = false
+    fun skipNextLoad() {
+        this.skipNextLoad = true
+    }
+
+
     override fun load(index: Int, type: Type) {
         // TODO doesnt seem possible to inject more loads when `this` isnt initialised
         // but store manages it?!
         if (!isConstructor) {
-            InjectedMonitor.getTypeSpecificLocalVarFuncName(false, type)?.let { handler ->
-                super.load(0, OBJECT_TYPE)
-                super.visitFieldInsn(
-                        Opcodes.GETFIELD,
-                        className,
-                        InjectedMonitor.fieldName,
-                        InjectedMonitor.descriptor
-                )
 
-                super.iconst(index)
-                super.visitMethodInsn(
-                        Opcodes.INVOKEVIRTUAL,
-                        InjectedMonitor.internalName,
-                        handler,
-                        "(I)V",
-                        false
-                )
+            // skip loading `this` for call tracing
+            if (skipNextLoad) {
+                println("skipping load")
+                skipNextLoad = false
+            } else {
+                InjectedMonitor.getTypeSpecificLocalVarFuncName(false, type)?.let { handler ->
+                    super.load(0, OBJECT_TYPE)
+                    super.visitFieldInsn(
+                            Opcodes.GETFIELD,
+                            className,
+                            InjectedMonitor.fieldName,
+                            InjectedMonitor.descriptor
+                    )
+
+                    super.iconst(index)
+                    super.visitMethodInsn(
+                            Opcodes.INVOKEVIRTUAL,
+                            InjectedMonitor.internalName,
+                            handler,
+                            "(I)V",
+                            false
+                    )
+                }
             }
         }
 

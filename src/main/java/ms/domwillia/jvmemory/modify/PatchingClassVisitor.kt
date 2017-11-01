@@ -72,7 +72,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
 
         // call tracing
         if (!isInterface)
-            mv = CallTracer(currentClass, mv, access, name, desc)
+            mv = CallTracer(currentClass, mv, access, name, desc, instr)
 
         return mv
     }
