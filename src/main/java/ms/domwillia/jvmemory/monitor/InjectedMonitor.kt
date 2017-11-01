@@ -4,6 +4,7 @@ import ms.domwillia.jvmemory.monitor.printer.LoadPrinter
 import ms.domwillia.jvmemory.monitor.printer.StorePrinter
 import org.objectweb.asm.Type
 
+@Suppress("unused")
 class InjectedMonitor {
 
     companion object {
@@ -47,6 +48,11 @@ class InjectedMonitor {
     fun exitMethod() {
         println("<<< ${stackTracker.head}")
         stackTracker.pop()
+    }
+
+    // fields
+    fun onGetField(objHash: Int, clazz: String, field: String, type: String) {
+        println("${stackTracker.head} > getfield $type $clazz#$field from object $objHash")
     }
 
     // storing
