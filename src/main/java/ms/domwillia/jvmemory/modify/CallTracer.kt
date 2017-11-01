@@ -5,7 +5,14 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.AdviceAdapter
 
-class CallTracer(private val className: String, mv: MethodVisitor?, access: Int, private val methodName: String, desc: String?) : AdviceAdapter(
+class CallTracer(
+        private val className: String,
+        mv: MethodVisitor?,
+        access: Int,
+        private val methodName: String,
+        desc: String?,
+        private val instr: MethodPatcher
+) : AdviceAdapter(
         Opcodes.ASM6,
         mv,
         access,
@@ -19,6 +26,7 @@ class CallTracer(private val className: String, mv: MethodVisitor?, access: Int,
 
     override fun onMethodEnter() {
         if (!isStaticConstructor) {
+            instr.skipNextLoad()
             super.visitVarInsn(Opcodes.ALOAD, 0)
 
             super.visitFieldInsn(
@@ -44,6 +52,7 @@ class CallTracer(private val className: String, mv: MethodVisitor?, access: Int,
 
     override fun onMethodExit(opcode: Int) {
         if (!isStaticConstructor) {
+            instr.skipNextLoad()
             super.visitVarInsn(Opcodes.ALOAD, 0)
 
             super.visitFieldInsn(
