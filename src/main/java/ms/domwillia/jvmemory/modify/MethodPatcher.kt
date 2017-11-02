@@ -1,6 +1,5 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.monitor.InjectedMonitor
 import ms.domwillia.jvmemory.monitor.LocalVarTracker
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
@@ -19,9 +18,10 @@ class MethodPatcher(
 
     lateinit var localVarSorter: LocalVariablesSorter
 
-    val isConstructor
-        get() = this.methodName == "<init>"
+    val isStaticConstructor
+        get() = this.methodName == "<clinit>"
 
+    /*
     override fun store(index: Int, type: Type) {
         InjectedMonitor.getHandler(type, InjectedMonitor.TypeSpecificOperation.STORE)?.let { handler ->
             // dup value and store in a tmp var
@@ -30,9 +30,8 @@ class MethodPatcher(
             val tmpVar = localVarSorter.newLocal(type)
             super.store(tmpVar, type)
 
-            super.load(0, OBJECT_TYPE)
             super.visitFieldInsn(
-                    Opcodes.GETFIELD,
+                    Opcodes.GETSTATIC,
                     className,
                     InjectedMonitor.fieldName,
                     InjectedMonitor.descriptor
@@ -60,7 +59,7 @@ class MethodPatcher(
     override fun load(index: Int, type: Type) {
         // TODO doesnt seem possible to inject more loads when `this` isnt initialised
         // but store manages it?!
-        if (!isConstructor) {
+        if (!isStaticConstructor) {
 
             // skip loading `this` for call tracing
             if (skipNextLoad) {
@@ -91,7 +90,7 @@ class MethodPatcher(
 
     override fun getfield(owner: String, name: String, desc: String) {
         // TODO uninitialisedThis causes problems again
-        if (!isConstructor && desc != InjectedMonitor.descriptor) {
+        if (!isStaticConstructor && desc != InjectedMonitor.descriptor) {
             super.dup()
 
             // get injected monitor
@@ -129,7 +128,7 @@ class MethodPatcher(
     }
 
     override fun putfield(owner: String, name: String, desc: String) {
-        if (!isConstructor) {
+        if (!isStaticConstructor) {
             val type = Type.getType(desc)
             InjectedMonitor.getHandler(type, InjectedMonitor.TypeSpecificOperation.PUTFIELD)?.let { handler ->
 
@@ -180,6 +179,7 @@ class MethodPatcher(
         }
         super.putfield(owner, name, desc)
     }
+    */
 
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null

@@ -1,13 +1,11 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.monitor.InjectedMonitor
 import ms.domwillia.jvmemory.monitor.LocalVarTracker
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.LocalVariablesSorter
-import org.objectweb.asm.tree.FieldNode
 
 class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
 
@@ -30,18 +28,6 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
     }
 
     override fun visitEnd() {
-        if (!isInterface) {
-            // add injected field
-            val injectField = FieldNode(
-                    Opcodes.ACC_FINAL + Opcodes.ACC_PRIVATE,
-                    InjectedMonitor.fieldName,
-                    InjectedMonitor.descriptor,
-                    null,
-                    null
-            )
-            injectField.accept(cv)
-        }
-
         // TODO write out to log instead of printing
         println("==== $currentClass")
         localVars.debugPrint()
@@ -63,16 +49,9 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         val localVarSorter = LocalVariablesSorter(access, desc, instr)
         instr.localVarSorter = localVarSorter
 
-        // special constructor patcher
-        mv = if (instr.isConstructor) {
-            ConstructorPatcher(currentClass, localVarSorter)
-        } else {
-            localVarSorter
-        }
-
         // call tracing
         if (!isInterface)
-            mv = CallTracer(currentClass, mv, access, name, desc, instr)
+            mv = CallTracer(currentClass, localVarSorter, access, name, desc, instr)
 
         return mv
     }
