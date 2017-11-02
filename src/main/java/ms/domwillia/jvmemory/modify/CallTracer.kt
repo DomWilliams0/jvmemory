@@ -25,51 +25,42 @@ class CallTracer(
         get() = methodName == "<clinit>"
 
     override fun onMethodEnter() {
-        if (!isStaticConstructor) {
-            instr.skipNextLoad()
-            super.visitVarInsn(Opcodes.ALOAD, 0)
+        super.visitFieldInsn(
+                Opcodes.GETSTATIC,
+                InjectedMonitor.internalName,
+                InjectedMonitor.instanceName,
+                InjectedMonitor.descriptor
+        )
 
-            super.visitFieldInsn(
-                    Opcodes.GETFIELD,
-                    className,
-                    InjectedMonitor.fieldName,
-                    InjectedMonitor.descriptor
-            )
+        super.visitLdcInsn(className)
+        super.visitLdcInsn(methodName)
+        super.visitMethodInsn(
+                Opcodes.INVOKEVIRTUAL,
+                InjectedMonitor.internalName,
+                "enterMethod",
+                "(Ljava/lang/String;Ljava/lang/String;)V",
+                false
+        )
 
-            super.visitLdcInsn(className)
-            super.visitLdcInsn(methodName)
-            super.visitMethodInsn(
-                    Opcodes.INVOKEVIRTUAL,
-                    InjectedMonitor.internalName,
-                    "enterMethod",
-                    "(Ljava/lang/String;Ljava/lang/String;)V",
-                    false
-            )
-
-        }
         super.onMethodEnter()
     }
 
     override fun onMethodExit(opcode: Int) {
-        if (!isStaticConstructor) {
-            instr.skipNextLoad()
-            super.visitVarInsn(Opcodes.ALOAD, 0)
+        super.visitFieldInsn(
+                Opcodes.GETSTATIC,
+                InjectedMonitor.internalName,
+                InjectedMonitor.instanceName,
+                InjectedMonitor.descriptor
+        )
 
-            super.visitFieldInsn(
-                    Opcodes.GETFIELD,
-                    className,
-                    InjectedMonitor.fieldName,
-                    InjectedMonitor.descriptor
-            )
+        super.visitMethodInsn(
+                Opcodes.INVOKEVIRTUAL,
+                InjectedMonitor.internalName,
+                "exitMethod",
+                "()V",
+                false
+        )
 
-            super.visitMethodInsn(
-                    Opcodes.INVOKEVIRTUAL,
-                    InjectedMonitor.internalName,
-                    "exitMethod",
-                    "()V",
-                    false
-            )
-        }
         super.onMethodExit(opcode)
     }
 
