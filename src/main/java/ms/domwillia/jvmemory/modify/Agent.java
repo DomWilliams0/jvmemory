@@ -3,6 +3,9 @@ package ms.domwillia.jvmemory.modify;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
@@ -26,7 +29,18 @@ public class Agent implements ClassFileTransformer {
 			} catch(RuntimeException e) {
 				e.printStackTrace();
 			}
-			return writer.toByteArray();
+
+			byte[] rewritten = writer.toByteArray();
+			File f = new File("/tmp/modified_" + className.replace('/', '.') + ".class");
+			try {
+				FileOutputStream x = new FileOutputStream(f);
+				x.write(rewritten);
+				x.close();
+				System.out.println("Wrote modified class to " + f.getAbsolutePath());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return rewritten;
 		}
 		return null;
 	}
