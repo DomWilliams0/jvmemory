@@ -10,8 +10,7 @@ class CallTracer(
         mv: MethodVisitor?,
         access: Int,
         private val methodName: String,
-        desc: String?,
-        private val instr: MethodPatcher
+        desc: String?
 ) : AdviceAdapter(
         Opcodes.ASM6,
         mv,
@@ -19,10 +18,6 @@ class CallTracer(
         methodName,
         desc
 ) {
-
-    // TODO need to add a static injectedmonitor, as there is no `this` in static constructor!
-    private val isStaticConstructor
-        get() = methodName == "<clinit>"
 
     override fun onMethodEnter() {
         super.visitFieldInsn(

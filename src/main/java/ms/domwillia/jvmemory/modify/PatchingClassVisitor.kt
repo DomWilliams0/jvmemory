@@ -45,13 +45,13 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
         // instruction patching
-        val instr = MethodPatcher(mv, currentClass, name, localVars)
+        val instr = MethodPatcher(mv, name, localVars)
         val localVarSorter = LocalVariablesSorter(access, desc, instr)
         instr.localVarSorter = localVarSorter
 
         // call tracing
         if (!isInterface)
-            mv = CallTracer(currentClass, localVarSorter, access, name, desc, instr)
+            mv = CallTracer(currentClass, localVarSorter, access, name, desc)
 
         return mv
     }
