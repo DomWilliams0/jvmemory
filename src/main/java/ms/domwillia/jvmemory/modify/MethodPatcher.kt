@@ -2,6 +2,7 @@ package ms.domwillia.jvmemory.modify
 
 import ms.domwillia.jvmemory.monitor.InjectedMonitor
 import ms.domwillia.jvmemory.monitor.LocalVarTracker
+import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
@@ -180,6 +181,12 @@ class MethodPatcher(
         super.putfield(owner, name, desc)
     }
 
+    override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
+        // TODO what if no debugging symbols? is desc null
+        localVarTracker.registerLocalVar(methodName, name, desc, index)
+        super.visitLocalVariable(name, desc, signature, start, end, index)
+    }
+
     override fun visitMaxs(maxStack: Int, maxLocals: Int) {
         // TODO this is arbitrary. look at yourself, what a mess!
         super.visitMaxs(maxStack + 8, maxLocals)
@@ -192,9 +199,4 @@ class MethodPatcher(
             else -> super.dup()
         }
     }
-
-    private fun getPrinterClass(what: String): String {
-        return "ms/domwillia/jvmemory/monitor/printer/${what.capitalize()}Printer"
-    }
-
 }
