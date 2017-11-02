@@ -1,6 +1,5 @@
 package ms.domwillia.jvmemory.monitor
 
-import ms.domwillia.jvmemory.monitor.printer.StorePrinter
 import org.objectweb.asm.Type
 
 @Suppress("unused")
@@ -41,7 +40,6 @@ class InjectedMonitor {
     }
 
     private val stackTracker: StackTracker = StackTracker()
-    private val storeMonitor: StorePrinter = StorePrinter(stackTracker)
 
     fun enterMethod(clazz: String, method: String) {
         stackTracker.push(clazz, method)
@@ -61,11 +59,15 @@ class InjectedMonitor {
         println("${stackTracker.head} > load local var $index")
     }
 
-    // put field
+    private fun onStoreLocalVar(type: String, value: Any, index: Int) {
+        println("${stackTracker.head} > store $type '$value' in local var $index")
+    }
+
     private fun onPutField(objHash: Int, clazz: String, field: String, type: String, value: Any) {
         println("${stackTracker.head} > putfield $type $clazz#$field on object $objHash = '$value'")
     }
 
+    // type specific delegates
     fun onPutFieldBoolean(objHash: Int, clazz: String, field: String, type: String, value: Boolean) {
         onPutField(objHash, clazz, field, type, value)
     }
@@ -103,40 +105,39 @@ class InjectedMonitor {
     }
 
     // storing
-    // TODO remove silly StorePrinter delegation
     fun onStoreBoolean(value: Boolean, index: Int) {
-        storeMonitor.booleanDo(value, index)
+        onStoreLocalVar("Boolean", value, index)
     }
 
     fun onStoreChar(value: Char, index: Int) {
-        storeMonitor.charDo(value, index)
+        onStoreLocalVar("Char", value, index)
     }
 
     fun onStoreByte(value: Byte, index: Int) {
-        storeMonitor.byteDo(value, index)
+        onStoreLocalVar("Byte", value, index)
     }
 
     fun onStoreShort(value: Short, index: Int) {
-        storeMonitor.shortDo(value, index)
+        onStoreLocalVar("Short", value, index)
     }
 
     fun onStoreInt(value: Int, index: Int) {
-        storeMonitor.intDo(value, index)
+        onStoreLocalVar("Int", value, index)
     }
 
     fun onStoreFloat(value: Float, index: Int) {
-        storeMonitor.floatDo(value, index)
+        onStoreLocalVar("Float", value, index)
     }
 
     fun onStoreLong(value: Long, index: Int) {
-        storeMonitor.longDo(value, index)
+        onStoreLocalVar("Long", value, index)
     }
 
     fun onStoreDouble(value: Double, index: Int) {
-        storeMonitor.doubleDo(value, index)
+        onStoreLocalVar("Double", value, index)
     }
 
     fun onStoreObject(value: Any, index: Int) {
-        storeMonitor.objectDo(value, index)
+        onStoreLocalVar("Object", value, index)
     }
 }
