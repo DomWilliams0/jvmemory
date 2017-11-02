@@ -3,31 +3,29 @@ package ms.domwillia.jvmemory.monitor
 import org.objectweb.asm.Type
 
 @Suppress("unused")
-class InjectedMonitor {
-    companion object {
-        val fieldName = "__injectedMonitor__"
-        val type = Type.getType(InjectedMonitor::class.java)
-        val internalName = type.internalName
-        val descriptor = type.descriptor
+object InjectedMonitor {
+    val instanceName = "INSTANCE" // ty kotlin for `object`
+    val type = Type.getType(InjectedMonitor::class.java)
+    val internalName = type.internalName
+    val descriptor = type.descriptor
 
-        fun getHandler(type: Type, op: TypeSpecificOperation): String? {
-            val typeName = when (type.sort) {
-                Type.BOOLEAN -> "Boolean"
-                Type.CHAR -> "Char"
-                Type.BYTE -> "Byte"
-                Type.SHORT -> "Short"
-                Type.INT -> "Int"
-                Type.FLOAT -> "Float"
-                Type.LONG -> "Long"
-                Type.DOUBLE -> "Double"
-                Type.OBJECT -> "Object"
-            // TODO arrays just complicate things at this stage
-            // Type.ARRAY -> "array"
-                else -> return null
-            }
-
-            return "on$op$typeName"
+    fun getHandler(type: Type, op: TypeSpecificOperation): String? {
+        val typeName = when (type.sort) {
+            Type.BOOLEAN -> "Boolean"
+            Type.CHAR -> "Char"
+            Type.BYTE -> "Byte"
+            Type.SHORT -> "Short"
+            Type.INT -> "Int"
+            Type.FLOAT -> "Float"
+            Type.LONG -> "Long"
+            Type.DOUBLE -> "Double"
+            Type.OBJECT -> "Object"
+        // TODO arrays just complicate things at this stage
+        // Type.ARRAY -> "array"
+            else -> return null
         }
+
+        return "on$op$typeName"
     }
 
     enum class TypeSpecificOperation {
