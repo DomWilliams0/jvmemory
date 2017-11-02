@@ -63,7 +63,7 @@ class MethodPatcher(
 
             // skip loading `this` for call tracing
             if (skipNextLoad) {
-                println("skipping load")
+                // nop
                 skipNextLoad = false
             } else {
                 super.load(0, OBJECT_TYPE)
