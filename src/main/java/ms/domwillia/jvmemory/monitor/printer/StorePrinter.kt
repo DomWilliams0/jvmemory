@@ -5,7 +5,7 @@ import ms.domwillia.jvmemory.monitor.StackTracker
 class StorePrinter(private val stackTracker: StackTracker) {
 
     private fun storePrint(type: String, value: Any, index: Int) {
-        println("${stackTracker.head} > store $type in '$value' in local var $index")
+        println("${stackTracker.head} > store $type '$value' in local var $index")
     }
 
     fun booleanDo(value: Boolean, index: Int) {
