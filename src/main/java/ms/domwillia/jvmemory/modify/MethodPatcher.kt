@@ -22,7 +22,7 @@ class MethodPatcher(
         get() = this.methodName == "<init>"
 
     override fun store(index: Int, type: Type) {
-        InjectedMonitor.getTypeSpecificLocalVarFuncName(true, type)?.let { handler ->
+        InjectedMonitor.getHandler(type, InjectedMonitor.TypeSpecificOperation.STORE)?.let { handler ->
             // dup value and store in a tmp var
             // TODO we can definitely reuse this tmpvar, should not make a new one for every single store!!
             dupTypeSpecific(type)
@@ -55,7 +55,6 @@ class MethodPatcher(
     fun skipNextLoad() {
         this.skipNextLoad = true
     }
-
 
     override fun load(index: Int, type: Type) {
         // TODO doesnt seem possible to inject more loads when `this` isnt initialised
@@ -128,7 +127,61 @@ class MethodPatcher(
         super.getfield(owner, name, desc)
     }
 
+    override fun putfield(owner: String, name: String, desc: String) {
+        if (!isConstructor) {
+            val type = Type.getType(desc)
+            InjectedMonitor.getHandler(type, InjectedMonitor.TypeSpecificOperation.PUTFIELD)?.let { handler ->
+
+                // store value in tmp var
+                val tmp = localVarSorter.newLocal(type)
+                super.store(tmp, type)
+
+                // dup obj
+                super.dup()
+
+                // calculate hashcode
+                super.invokevirtual(
+                        "Ljava/lang/Object;",
+                        "hashCode",
+                        "()I",
+                        false
+                )
+                // get injected monitor
+                super.load(0, OBJECT_TYPE)
+                super.getfield(
+                        className,
+                        InjectedMonitor.fieldName,
+                        InjectedMonitor.descriptor
+                )
+
+                // swap monitor and hashcode
+                super.swap()
+
+                // push others
+                super.visitLdcInsn(owner)
+                super.visitLdcInsn(name)
+                super.visitLdcInsn(desc)
+
+                // pop value
+                super.load(tmp, type)
+
+                val typeDescriptor = if (type.sort == Type.OBJECT) "Ljava/lang/Object;" else type.descriptor
+                super.invokevirtual(
+                        InjectedMonitor.internalName,
+                        handler,
+                        "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;$typeDescriptor)V",
+                        false
+                )
+
+                // pop value again for original call
+                super.load(tmp, type)
+            }
+        }
+        super.putfield(owner, name, desc)
+    }
+
     override fun visitMaxs(maxStack: Int, maxLocals: Int) {
+        // TODO this is arbitrary. look at yourself, what a mess!
         super.visitMaxs(maxStack + 8, maxLocals)
     }
 

@@ -5,14 +5,13 @@ import org.objectweb.asm.Type
 
 @Suppress("unused")
 class InjectedMonitor {
-
     companion object {
         val fieldName = "__injectedMonitor__"
         val type = Type.getType(InjectedMonitor::class.java)
         val internalName = type.internalName
         val descriptor = type.descriptor
 
-        fun getTypeSpecificLocalVarFuncName(storing: Boolean, type: Type): String? {
+        fun getHandler(type: Type, op: TypeSpecificOperation): String? {
             val typeName = when (type.sort) {
                 Type.BOOLEAN -> "Boolean"
                 Type.CHAR -> "Char"
@@ -28,10 +27,17 @@ class InjectedMonitor {
                 else -> return null
             }
 
-            val action = if (storing) "Store" else "Load"
-            return "on$action$typeName"
+            return "on$op$typeName"
         }
+    }
 
+    enum class TypeSpecificOperation {
+        STORE {
+            override fun toString(): String = "Store"
+        },
+        PUTFIELD {
+            override fun toString(): String = "PutField"
+        }
     }
 
     private val stackTracker: StackTracker = StackTracker()
@@ -47,17 +53,57 @@ class InjectedMonitor {
         stackTracker.pop()
     }
 
-    // fields
     fun onGetField(objHash: Int, clazz: String, field: String, type: String) {
         println("${stackTracker.head} > getfield $type $clazz#$field from object $objHash")
     }
 
-    // loading
     fun onLoadLocalVar(index: Int) {
         println("${stackTracker.head} > load local var $index")
     }
 
+    // put field
+    private fun onPutField(objHash: Int, clazz: String, field: String, type: String, value: Any) {
+        println("${stackTracker.head} > putfield $type $clazz#$field on object $objHash = '$value'")
+    }
+
+    fun onPutFieldBoolean(objHash: Int, clazz: String, field: String, type: String, value: Boolean) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
+    fun onPutFieldChar(objHash: Int, clazz: String, field: String, type: String, value: Char) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
+    fun onPutFieldByte(objHash: Int, clazz: String, field: String, type: String, value: Byte) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
+    fun onPutFieldShort(objHash: Int, clazz: String, field: String, type: String, value: Short) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
+    fun onPutFieldInt(objHash: Int, clazz: String, field: String, type: String, value: Int) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
+    fun onPutFieldFloat(objHash: Int, clazz: String, field: String, type: String, value: Float) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
+    fun onPutFieldLong(objHash: Int, clazz: String, field: String, type: String, value: Long) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
+    fun onPutFieldDouble(objHash: Int, clazz: String, field: String, type: String, value: Double) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
+    fun onPutFieldObject(objHash: Int, clazz: String, field: String, type: String, value: Any) {
+        onPutField(objHash, clazz, field, type, value)
+    }
+
     // storing
+    // TODO remove silly StorePrinter delegation
     fun onStoreBoolean(value: Boolean, index: Int) {
         storeMonitor.booleanDo(value, index)
     }
