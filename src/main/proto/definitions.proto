@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "ms.domwillia.jvmemory";
+option java_package = "ms.domwillia.jvmemory.protobuf";
 option java_outer_classname = "Definitions";
 
 message ClassDefinition {

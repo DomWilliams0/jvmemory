@@ -1,6 +1,8 @@
 package ms.domwillia.jvmemory.monitor
 
+import ms.domwillia.jvmemory.monitor.logging.Logger
 import org.objectweb.asm.Type
+import java.io.FileOutputStream
 
 @Suppress("unused")
 object Monitor {
@@ -8,6 +10,8 @@ object Monitor {
     val type = Type.getType(Monitor::class.java)
     val internalName = type.internalName
     val descriptor = type.descriptor
+
+    var logger = Logger(FileOutputStream("jvmemory.log"))
 
     fun getHandler(type: Type, op: TypeSpecificOperation): String? {
         val typeName = when (type.sort) {

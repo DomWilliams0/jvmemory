@@ -9,8 +9,8 @@ class ClassDefinition(
         val interfaces: Array<String>?
 ) {
     val flags: ClassFlags = parseFlags(access, forClass = true) as ClassFlags
-    private val methods: MutableList<MethodDefinition> = mutableListOf()
-    private val fields: MutableList<Field> = mutableListOf()
+    val methods: MutableList<MethodDefinition> = mutableListOf()
+    val fields: MutableList<Field> = mutableListOf()
 
     fun registerMethod(access: Int, name: String, desc: String): MethodDefinition {
         val method = MethodDefinition(access, name, desc)
