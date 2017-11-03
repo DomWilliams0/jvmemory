@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.modify
 
+import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.*
@@ -22,9 +23,8 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
     }
 
     override fun visitEnd() {
-        // TODO write out to log instead of printing
         currentClass.debugPrint()
-
+        Monitor.logger.logClassDefinition(currentClass)
         super.visitEnd()
     }
 
