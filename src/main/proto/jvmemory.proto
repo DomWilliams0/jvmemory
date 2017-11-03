@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-option java_package = "ms.domwillia.jvmemory";
-option java_outer_classname = "Messages";
-
-message Test {
-    string message = 1;
-}
