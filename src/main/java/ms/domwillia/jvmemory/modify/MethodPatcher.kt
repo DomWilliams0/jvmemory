@@ -1,6 +1,6 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.monitor.InjectedMonitor
+import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.LocalVarTracker
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
@@ -19,7 +19,7 @@ class MethodPatcher(
     lateinit var localVarSorter: LocalVariablesSorter
 
     override fun store(index: Int, type: Type) {
-        InjectedMonitor.getHandler(type, InjectedMonitor.TypeSpecificOperation.STORE)?.let { handler ->
+        Monitor.getHandler(type, Monitor.TypeSpecificOperation.STORE)?.let { handler ->
             // dup value and store in a tmp var
             // TODO we can definitely reuse this tmpvar, should not make a new one for every single store!!
             // TODO caching localvarsorter
@@ -29,16 +29,16 @@ class MethodPatcher(
 
             super.visitFieldInsn(
                     Opcodes.GETSTATIC,
-                    InjectedMonitor.internalName,
-                    InjectedMonitor.instanceName,
-                    InjectedMonitor.descriptor
+                    Monitor.internalName,
+                    Monitor.instanceName,
+                    Monitor.descriptor
             )
 
             super.load(tmpVar, type)
             super.iconst(index)
             super.visitMethodInsn(
                     Opcodes.INVOKEVIRTUAL,
-                    InjectedMonitor.internalName,
+                    Monitor.internalName,
                     handler,
                     "(${type.descriptor}I)V",
                     false
@@ -51,15 +51,15 @@ class MethodPatcher(
     override fun load(index: Int, type: Type) {
         super.visitFieldInsn(
                 Opcodes.GETSTATIC,
-                InjectedMonitor.internalName,
-                InjectedMonitor.instanceName,
-                InjectedMonitor.descriptor
+                Monitor.internalName,
+                Monitor.instanceName,
+                Monitor.descriptor
         )
 
         super.iconst(index)
         super.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                InjectedMonitor.internalName,
+                Monitor.internalName,
                 "onLoadLocalVar",
                 "(I)V",
                 false
@@ -73,9 +73,9 @@ class MethodPatcher(
         super.dup()
 
         super.getstatic(
-                InjectedMonitor.internalName,
-                InjectedMonitor.instanceName,
-                InjectedMonitor.descriptor
+                Monitor.internalName,
+                Monitor.instanceName,
+                Monitor.descriptor
         )
 
         // swap monitor and object
@@ -94,7 +94,7 @@ class MethodPatcher(
         super.visitLdcInsn(desc)
 
         super.invokevirtual(
-                InjectedMonitor.internalName,
+                Monitor.internalName,
                 "onGetField",
                 "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
                 false
@@ -106,7 +106,7 @@ class MethodPatcher(
     override fun putfield(owner: String, name: String, desc: String) {
         if (!(methodName == "<init>" && name == "this$0")) {
             val type = Type.getType(desc)
-            InjectedMonitor.getHandler(type, InjectedMonitor.TypeSpecificOperation.PUTFIELD)?.let { handler ->
+            Monitor.getHandler(type, Monitor.TypeSpecificOperation.PUTFIELD)?.let { handler ->
 
                 // store value in tmp var
                 val tmp = localVarSorter.newLocal(type)
@@ -124,9 +124,9 @@ class MethodPatcher(
                 )
                 // get monitor
                 super.getstatic(
-                        InjectedMonitor.internalName,
-                        InjectedMonitor.instanceName,
-                        InjectedMonitor.descriptor
+                        Monitor.internalName,
+                        Monitor.instanceName,
+                        Monitor.descriptor
                 )
 
                 // swap monitor and hashcode
@@ -142,7 +142,7 @@ class MethodPatcher(
 
                 val typeDescriptor = if (type.sort == Type.OBJECT) "Ljava/lang/Object;" else type.descriptor
                 super.invokevirtual(
-                        InjectedMonitor.internalName,
+                        Monitor.internalName,
                         handler,
                         "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;$typeDescriptor)V",
                         false

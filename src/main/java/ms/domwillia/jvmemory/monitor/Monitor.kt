@@ -3,9 +3,9 @@ package ms.domwillia.jvmemory.monitor
 import org.objectweb.asm.Type
 
 @Suppress("unused")
-object InjectedMonitor {
+object Monitor {
     val instanceName = "INSTANCE" // ty kotlin for `object`
-    val type = Type.getType(InjectedMonitor::class.java)
+    val type = Type.getType(Monitor::class.java)
     val internalName = type.internalName
     val descriptor = type.descriptor
 

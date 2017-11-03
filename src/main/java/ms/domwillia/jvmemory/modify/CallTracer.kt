@@ -1,6 +1,6 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.monitor.InjectedMonitor
+import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.AdviceAdapter
@@ -22,16 +22,16 @@ class CallTracer(
     override fun onMethodEnter() {
         super.visitFieldInsn(
                 Opcodes.GETSTATIC,
-                InjectedMonitor.internalName,
-                InjectedMonitor.instanceName,
-                InjectedMonitor.descriptor
+                Monitor.internalName,
+                Monitor.instanceName,
+                Monitor.descriptor
         )
 
         super.visitLdcInsn(className)
         super.visitLdcInsn(methodName)
         super.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                InjectedMonitor.internalName,
+                Monitor.internalName,
                 "enterMethod",
                 "(Ljava/lang/String;Ljava/lang/String;)V",
                 false
@@ -43,14 +43,14 @@ class CallTracer(
     override fun onMethodExit(opcode: Int) {
         super.visitFieldInsn(
                 Opcodes.GETSTATIC,
-                InjectedMonitor.internalName,
-                InjectedMonitor.instanceName,
-                InjectedMonitor.descriptor
+                Monitor.internalName,
+                Monitor.instanceName,
+                Monitor.descriptor
         )
 
         super.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                InjectedMonitor.internalName,
+                Monitor.internalName,
                 "exitMethod",
                 "()V",
                 false
