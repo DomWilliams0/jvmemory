@@ -5,11 +5,15 @@ import org.objectweb.asm.Opcodes
 interface Flags
 
 enum class Visibility {
-    PACKAGE, PUBLIC, PROTECTED, PRIVATE
+    PACKAGE, PUBLIC, PROTECTED, PRIVATE;
+
+    override fun toString() = super.toString().toLowerCase()
 }
 
 enum class ClassType {
-    CLASS, ENUM, INTERFACE, ABSTRACT
+    CLASS, ENUM, INTERFACE, ABSTRACT;
+
+    override fun toString() = super.toString().toLowerCase()
 }
 
 enum class FlagType {
