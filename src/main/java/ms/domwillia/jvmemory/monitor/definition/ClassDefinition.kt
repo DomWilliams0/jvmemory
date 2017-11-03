@@ -24,7 +24,8 @@ class ClassDefinition(
     }
 
     fun debugPrint() {
-        println("Class $name (${flags.type}, super=$superName, interfaces=${Arrays.toString(interfaces)}, generics=$signature")
+        print("Class $name (${flags.type}, super=$superName, interfaces=${Arrays.toString(interfaces)}")
+        println(if (signature != null) ", generics=$signature" else "")
         fields.forEach { f ->
             print("\tfield: ${f.flags.visibility}")
             if (f.flags.isStatic)
@@ -50,7 +51,7 @@ class ClassDefinition(
                 print("\t\tlocal var ${v.index} ${v.name} ${v.type}")
                 println(if (v.signature != null) ", generics=${v.signature}" else "")
             }
-            println("----------")
+            println("\t----------")
         }
         println("==========")
     }
