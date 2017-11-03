@@ -16,65 +16,36 @@ enum class ClassType {
     override fun toString() = super.toString().toLowerCase()
 }
 
-enum class FlagType {
-    CLASS, METHOD, FIELD
-}
-
 data class ClassFlags(
         val visibility: Visibility,
         val type: ClassType
 ) : Flags
 
-// TODO varargs?
-data class MethodFlags(
-        val visibility: Visibility,
-        val isFinal: Boolean,
-        val isStatic: Boolean,
-        val isAbstract: Boolean
-) : Flags
-
+// TODO if methods need more flags, readd MethodFlags
 data class FieldFlags(
         val visibility: Visibility,
-        val isStatic: Boolean,
-        val isFinal: Boolean
+        val isStatic: Boolean
 ) : Flags
 
-fun parseFlags(access: Int, flagType: FlagType): Flags {
+fun parseFlags(access: Int, forClass: Boolean = false): Flags {
     val vis = when {
         access.and(Opcodes.ACC_PUBLIC) != 0 -> Visibility.PUBLIC
         access.and(Opcodes.ACC_PROTECTED) != 0 -> Visibility.PROTECTED
         access.and(Opcodes.ACC_PRIVATE) != 0 -> Visibility.PRIVATE
         else -> Visibility.PACKAGE
     }
+    val static = access.and(Opcodes.ACC_STATIC) != 0
 
-    return when (flagType) {
-        FlagType.CLASS -> {
-            val classType = when {
-                access.and(Opcodes.ACC_ENUM) != 0 -> ClassType.ENUM
-                access.and(Opcodes.ACC_INTERFACE) != 0 -> ClassType.INTERFACE
-                access.and(Opcodes.ACC_ABSTRACT) != 0 -> ClassType.ABSTRACT
-                else -> ClassType.CLASS
-            }
-            ClassFlags(vis, classType)
+    return if (forClass) {
+        val classType = when {
+            access.and(Opcodes.ACC_ENUM) != 0 -> ClassType.ENUM
+            access.and(Opcodes.ACC_INTERFACE) != 0 -> ClassType.INTERFACE
+            access.and(Opcodes.ACC_ABSTRACT) != 0 -> ClassType.ABSTRACT
+            else -> ClassType.CLASS
         }
-        FlagType.METHOD -> {
-            MethodFlags(
-                    vis,
-                    access.and(Opcodes.ACC_FINAL) != 0,
-                    access.and(Opcodes.ACC_STATIC) != 0,
-                    access.and(Opcodes.ACC_ABSTRACT) != 0
-            )
-        }
-        FlagType.FIELD -> {
-            FieldFlags(
-                    vis,
-                    access.and(Opcodes.ACC_STATIC) != 0,
-                    access.and(Opcodes.ACC_FINAL) != 0
-
-            )
-        }
+        ClassFlags(vis, classType)
     }
-
+    else FieldFlags(vis, static)
 }
 
 /*
