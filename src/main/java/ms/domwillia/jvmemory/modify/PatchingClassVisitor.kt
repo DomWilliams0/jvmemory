@@ -1,13 +1,13 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.monitor.structure.ClassStructure
-import ms.domwillia.jvmemory.monitor.structure.ClassType
+import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
+import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.*
 import org.objectweb.asm.commons.LocalVariablesSorter
 
 class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
 
-    private lateinit var currentClass: ClassStructure
+    private lateinit var currentClass: ClassDefinition
 
     override fun visit(
             version: Int,
@@ -17,7 +17,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
             superName: String?,
             interfaces: Array<String>?
     ) {
-        currentClass = ClassStructure(name, access, signature, superName, interfaces)
+        currentClass = ClassDefinition(name, access, signature, superName, interfaces)
         super.visit(version, access, name, signature, superName, interfaces)
     }
 

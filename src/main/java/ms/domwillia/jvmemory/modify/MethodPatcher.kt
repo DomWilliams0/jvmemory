@@ -1,7 +1,7 @@
 package ms.domwillia.jvmemory.modify
 
 import ms.domwillia.jvmemory.monitor.Monitor
-import ms.domwillia.jvmemory.monitor.structure.MethodStructure
+import ms.domwillia.jvmemory.monitor.definition.MethodDefinition
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
@@ -13,7 +13,7 @@ import org.objectweb.asm.commons.LocalVariablesSorter
 class MethodPatcher(
         delegate: MethodVisitor,
         private val methodName: String,
-        private val structure: MethodStructure
+        private val definition: MethodDefinition
 ) : InstructionAdapter(Opcodes.ASM6, delegate) {
 
     lateinit var localVarSorter: LocalVariablesSorter
@@ -157,7 +157,7 @@ class MethodPatcher(
 
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
-        structure.registerLocalVariable(name, desc, signature, index)
+        definition.registerLocalVariable(name, desc, signature, index)
         super.visitLocalVariable(name, desc, signature, start, end, index)
     }
 
