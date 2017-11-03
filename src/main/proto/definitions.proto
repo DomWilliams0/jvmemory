@@ -8,38 +8,30 @@ message ClassDefinition {
     string class_type = 2;
     string visibility = 3;
     string super_class = 4;
-    string generics = 5;
 
-    repeated string interfaces = 6;
-    repeated FieldDefinition fields = 7;
-    repeated MethodDefinition methods = 8;
+    repeated string interfaces = 5;
+    repeated FieldDefinition fields = 6;
+    repeated MethodDefinition methods = 7;
 }
 
 message MethodDefinition {
     string name = 1;
     string signature = 2;
     string visibility = 3;
-    bool final = 4;
-    bool static = 5;
-    bool abstract = 6;
-    string generics = 7;
+    bool static = 4;
 
-    repeated string exceptions = 8;
-    repeated LocalVariable local_vars = 9;
+    repeated LocalVariable local_vars = 5;
 }
 
 message LocalVariable {
     int32 index = 1;
     string name = 2;
     string type = 3;
-    string generics = 4;
 }
 
 message FieldDefinition {
     string name = 1;
     string type = 2;
     string visibility = 3;
-    bool final = 4;
-    bool static = 5;
-    string generics = 6;
+    bool static = 4;
 }

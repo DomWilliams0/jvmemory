@@ -157,7 +157,7 @@ class MethodPatcher(
 
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
-        definition.registerLocalVariable(name, desc, signature, index)
+        definition.registerLocalVariable(name, desc, index)
         super.visitLocalVariable(name, desc, signature, start, end, index)
     }
 

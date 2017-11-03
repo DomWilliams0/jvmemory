@@ -17,7 +17,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
             superName: String?,
             interfaces: Array<String>?
     ) {
-        currentClass = ClassDefinition(name, access, signature, superName, interfaces)
+        currentClass = ClassDefinition(name, access, superName, interfaces)
         super.visit(version, access, name, signature, superName, interfaces)
     }
 
@@ -29,7 +29,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
     }
 
     override fun visitField(access: Int, name: String, desc: String, signature: String?, value: Any?): FieldVisitor {
-        currentClass.registerField(access, name, desc, signature)
+        currentClass.registerField(access, name, desc)
         return super.visitField(access, name, desc, signature, value)
     }
 
@@ -44,7 +44,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
         // instruction patching
-        val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc, signature, exceptions))
+        val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc))
         val localVarSorter = LocalVariablesSorter(access, desc, instr)
         instr.localVarSorter = localVarSorter
 

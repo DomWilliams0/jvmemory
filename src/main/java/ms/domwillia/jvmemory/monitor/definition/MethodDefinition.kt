@@ -3,16 +3,14 @@ package ms.domwillia.jvmemory.monitor.definition
 class MethodDefinition internal constructor(
         access: Int,
         val name: String,
-        val desc: String,
-        val signature: String?,
-        val exceptions: Array<String>?
+        val desc: String
 ) {
-    val flags: MethodFlags = parseFlags(access, FlagType.METHOD) as MethodFlags
+    val flags: FieldFlags = parseFlags(access) as FieldFlags
     val localVars: MutableList<LocalVariable> = mutableListOf()
 
-    fun registerLocalVariable(name: String, desc: String, signature: String?, index: Int) {
-        localVars.add(LocalVariable(index, name, desc, signature))
+    fun registerLocalVariable(name: String, desc: String, index: Int) {
+        localVars.add(LocalVariable(index, name, desc))
     }
 }
 
-data class LocalVariable(val index: Int, val name: String, val type: String, val signature: String?)
+data class LocalVariable(val index: Int, val name: String, val type: String)
