@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.monitor.structure
+package ms.domwillia.jvmemory.monitor.definition
 
 import org.objectweb.asm.Opcodes
 

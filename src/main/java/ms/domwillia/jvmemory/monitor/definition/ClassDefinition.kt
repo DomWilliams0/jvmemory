@@ -1,8 +1,8 @@
-package ms.domwillia.jvmemory.monitor.structure
+package ms.domwillia.jvmemory.monitor.definition
 
 import java.util.*
 
-class ClassStructure(
+class ClassDefinition(
         val name: String,
         access: Int,
         val signature: String?,
@@ -10,11 +10,11 @@ class ClassStructure(
         val interfaces: Array<String>?
 ) {
     val flags: ClassFlags = parseFlags(access, FlagType.CLASS) as ClassFlags
-    private val methods: MutableList<MethodStructure> = mutableListOf()
+    private val methods: MutableList<MethodDefinition> = mutableListOf()
     private val fields: MutableList<Field> = mutableListOf()
 
-    fun registerMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodStructure {
-        val method = MethodStructure(access, name, desc, signature, exceptions)
+    fun registerMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodDefinition {
+        val method = MethodDefinition(access, name, desc, signature, exceptions)
         methods.add(method)
         return method
     }

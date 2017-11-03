@@ -1,6 +1,6 @@
-package ms.domwillia.jvmemory.monitor.structure
+package ms.domwillia.jvmemory.monitor.definition
 
-class MethodStructure internal constructor(
+class MethodDefinition internal constructor(
         access: Int,
         val name: String,
         val desc: String,
