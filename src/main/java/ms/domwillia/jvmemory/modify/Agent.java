@@ -25,7 +25,7 @@ public class Agent implements ClassFileTransformer {
 			ClassWriter writer = new ClassWriter(reader, 0);
 			PatchingClassVisitor visitor = new PatchingClassVisitor(writer);
 			try {
-				reader.accept(visitor, 0);
+				reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 			} catch(RuntimeException e) {
 				e.printStackTrace();
 			}
