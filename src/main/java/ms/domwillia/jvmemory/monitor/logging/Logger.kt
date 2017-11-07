@@ -6,6 +6,7 @@ import ms.domwillia.jvmemory.monitor.definition.LocalVariable
 import ms.domwillia.jvmemory.monitor.definition.MethodDefinition
 import ms.domwillia.jvmemory.protobuf.Allocations
 import ms.domwillia.jvmemory.protobuf.Definitions
+import ms.domwillia.jvmemory.protobuf.Flow
 import ms.domwillia.jvmemory.protobuf.Message
 import java.io.OutputStream
 
@@ -50,6 +51,22 @@ class Logger(var stream: OutputStream) {
                         id = instanceId
                     }
             )
+        }.log()
+    }
+    fun logMethodEnter(className: String, methodName: String) {
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.METHOD_ENTER
+            setMethodEnter(Flow.MethodEnter.newBuilder().apply {
+                class_ = className
+                method = methodName
+            })
+        }.log()
+    }
+
+    fun logMethodExit() {
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.METHOD_EXIT
+            methodExit = Flow.MethodExit.getDefaultInstance()
         }.log()
     }
 

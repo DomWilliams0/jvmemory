@@ -5,11 +5,16 @@ option java_outer_classname = "Message";
 
 import "allocations.proto";
 import "definitions.proto";
+import "flow.proto";
 
 enum MessageType {
     CLASS_DECL = 0;
+
     ALLOC = 1;
     DEALLOC = 2;
+
+    METHOD_ENTER = 3;
+    METHOD_EXIT = 4;
 }
 
 message Variant {
@@ -19,6 +24,9 @@ message Variant {
 
         Allocation allocation = 3;
         Deallocation deallocation = 4;
+
+        MethodEnter methodEnter = 5;
+        MethodExit methodExit = 6;
     }
 
 }
