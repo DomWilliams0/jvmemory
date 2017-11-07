@@ -34,7 +34,7 @@ class ClassDefinition(
         methods.forEach { m ->
             print("\tmethod ${m.name}: ")
             if (m.flags.isStatic)
-                print(" static")
+                print("static ")
             println("${m.flags.visibility}")
 
             m.localVars.forEach { v ->
