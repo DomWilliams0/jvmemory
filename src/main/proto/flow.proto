@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option java_package = "ms.domwillia.jvmemory.protobuf";
+option java_outer_classname = "Flow";
+
+message MethodEnter {
+    string class = 1;
+    string method = 2;
+}
+
+message MethodExit {
+}

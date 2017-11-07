@@ -48,11 +48,13 @@ object Monitor {
     fun enterMethod(clazz: String, method: String) {
         stackTracker.push(clazz, method)
         println(">>> ${stackTracker.head}")
+        logger.logMethodEnter(clazz, method)
     }
 
     fun exitMethod() {
         println("<<< ${stackTracker.head}")
         stackTracker.pop()
+        logger.logMethodExit()
     }
 
     fun onAlloc(type: String): Long {
