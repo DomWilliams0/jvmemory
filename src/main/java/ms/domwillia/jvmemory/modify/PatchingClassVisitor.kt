@@ -53,6 +53,10 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         if (currentClass.flags.type != ClassType.INTERFACE)
             mv = CallTracer(currentClass.name, localVarSorter, access, name, desc)
 
+        // constructor patching
+        if ("<init>" == name)
+            mv = ConstructorPatcher(mv, currentClass.name)
+
         return mv
     }
 }

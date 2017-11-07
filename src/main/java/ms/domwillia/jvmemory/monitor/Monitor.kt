@@ -12,6 +12,7 @@ object Monitor {
     val descriptor = type.descriptor
 
     var logger = Logger(FileOutputStream("jvmemory.log"))
+    private var nextInstanceId: Long = 0
 
     fun getHandler(type: Type, op: TypeSpecificOperation): String? {
         val typeName = when (type.sort) {
@@ -51,6 +52,16 @@ object Monitor {
     fun exitMethod() {
         println("<<< ${stackTracker.head}")
         stackTracker.pop()
+    }
+
+    fun onAlloc(type: String): Long {
+        val id = nextInstanceId++
+        println("new $type: $id")
+        return id
+    }
+
+    fun onDealloc(id: Long) {
+        println("free $id")
     }
 
     fun onGetField(objHash: Int, clazz: String, field: String, type: String) {
