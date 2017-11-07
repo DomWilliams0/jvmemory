@@ -13,6 +13,7 @@ object Monitor {
 
     var logger = Logger(FileOutputStream("jvmemory.log"))
     private var nextInstanceId: Long = 0
+    val instanceIdFieldName = "__uniqueID__"
 
     fun getHandler(type: Type, op: TypeSpecificOperation): String? {
         val typeName = when (type.sort) {

@@ -5,6 +5,7 @@ import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.*
 import org.objectweb.asm.commons.LocalVariablesSorter
+import org.objectweb.asm.tree.FieldNode
 
 class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
 
@@ -25,6 +26,16 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
     override fun visitEnd() {
         currentClass.debugPrint()
         Monitor.logger.logClassDefinition(currentClass)
+
+        // add unique id field
+        FieldNode(
+                Opcodes.ACC_FINAL + Opcodes.ACC_PRIVATE,
+                Monitor.instanceIdFieldName,
+                "J",
+                null,
+                null
+        ).accept(cv)
+
         super.visitEnd()
     }
 
@@ -43,6 +54,10 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
+        // constructor patching
+        if ("<init>" == name)
+            mv = ConstructorPatcher(mv, currentClass.name)
+
         // instruction patching
         val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc))
         val localVarSorter = LocalVariablesSorter(access, desc, instr)
@@ -52,10 +67,6 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         // TODO check this at the method level instead of class level
         if (currentClass.flags.type != ClassType.INTERFACE)
             mv = CallTracer(currentClass.name, localVarSorter, access, name, desc)
-
-        // constructor patching
-        if ("<init>" == name)
-            mv = ConstructorPatcher(mv, currentClass.name)
 
         return mv
     }

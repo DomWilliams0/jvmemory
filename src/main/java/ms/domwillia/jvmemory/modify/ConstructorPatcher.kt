@@ -10,6 +10,8 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String) : Me
 
     private fun visitShouldLogConstructor() {
         val retLabel = Label()
+
+        // stack: this
         super.visitVarInsn(Opcodes.ALOAD, 0)
         super.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
@@ -17,7 +19,9 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String) : Me
                 "getClass",
                 "()Ljava/lang/Class;",
                 false
-                )
+        )
+
+        // stack: clazz
         super.visitLdcInsn(Type.getObjectType(className).className)
         super.visitMethodInsn(
                 Opcodes.INVOKESTATIC,
@@ -27,11 +31,16 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String) : Me
                 false
         )
 
+        // stack: clazz clazz
         super.visitJumpInsn(
                 Opcodes.IF_ACMPNE,
                 retLabel
         )
 
+        // stack:
+        super.visitVarInsn(Opcodes.ALOAD, 0)
+
+        // stack: this
         super.visitFieldInsn(
                 Opcodes.GETSTATIC,
                 Monitor.internalName,
@@ -39,6 +48,7 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String) : Me
                 Monitor.descriptor
         )
 
+        // stack: this monitor
         super.visitLdcInsn(className)
         super.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
@@ -47,8 +57,14 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String) : Me
                 "(Ljava/lang/String;)J",
                 false
         )
-        // TODO use return value
-        super.visitInsn(Opcodes.POP2)
+
+        // stack: this id
+        super.visitFieldInsn(
+                Opcodes.PUTFIELD,
+                className,
+                Monitor.instanceIdFieldName,
+                "J"
+        )
 
         super.visitLabel(retLabel)
     }
