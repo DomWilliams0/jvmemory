@@ -7,7 +7,7 @@ public class ObjectLifecycle implements Specimen {
 	@Override
 	public void go() {
 
-		for (int i = 0; i < 500; i++) {
+		for (int i = 0; i < 5000; i++) {
 			new EmptyChildBean.InnerBean();
 		}
 	}

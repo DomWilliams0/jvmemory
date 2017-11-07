@@ -6,38 +6,61 @@ import ms.domwillia.jvmemory.monitor.definition.LocalVariable
 import ms.domwillia.jvmemory.monitor.definition.MethodDefinition
 import ms.domwillia.jvmemory.protobuf.Allocations
 import ms.domwillia.jvmemory.protobuf.Definitions
+import ms.domwillia.jvmemory.protobuf.Message
 import java.io.OutputStream
 
 class Logger(var stream: OutputStream) {
 
     fun logClassDefinition(def: ClassDefinition) {
-        Definitions.ClassDefinition.newBuilder().apply {
-            name = def.name
-            classType = def.flags.type.toString()
-            visibility = def.flags.visibility.toString()
-            if (def.superName != "java/lang/Object") superClass = def.superName
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.CLASS_DECL
+            setClassDefinition(
+                    Definitions.ClassDefinition.newBuilder().apply {
+                        name = def.name
+                        classType = def.flags.type.toString()
+                        visibility = def.flags.visibility.toString()
+                        if (def.superName != "java/lang/Object") superClass = def.superName
 
-            if (def.interfaces != null) addAllInterfaces(def.interfaces.asIterable())
+                        if (def.interfaces != null) addAllInterfaces(def.interfaces.asIterable())
 
-            addAllMethods(def.methods.map { toProtoBuf(it) })
-            addAllFields(def.fields.map { toProtoBuf(it) })
-
-            build().writeTo(stream)
-        }
+                        addAllMethods(def.methods.map { toProtoBuf(it) })
+                        addAllFields(def.fields.map { toProtoBuf(it) })
+                    }
+            )
+        }.log()
     }
 
     fun logAllocation(desc: String, instanceId: Long) {
-        Allocations.Allocation.newBuilder().apply {
-            type = desc
-            id = instanceId
-            build().writeTo(stream)
-        }
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.ALLOC
+            setAllocation(
+                    Allocations.Allocation.newBuilder().apply {
+                        type = desc
+                        id = instanceId
+                    }
+            )
+        }.log()
     }
 
     fun logDeallocation(instanceId: Long) {
-        Allocations.Deallocation.newBuilder().apply {
-            id = instanceId
-            build().writeTo(stream)
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.DEALLOC
+            setDeallocation(
+                    Allocations.Deallocation.newBuilder().apply {
+                        id = instanceId
+                    }
+            )
+        }.log()
+    }
+
+    // ----------- helpers
+
+    private fun Message.Variant.Builder.log() {
+        val msg = build()
+
+        // i think this has to be synchronised because it may be called in finalise() by GC
+        synchronized(stream) {
+            msg.writeDelimitedTo(stream)
         }
     }
 
