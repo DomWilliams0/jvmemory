@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_package = "ms.domwillia.jvmemory.protobuf";
+option java_outer_classname = "Access";
+
+message GetField {
+    int64 id = 1;
+    string field = 2;
+}
+
+message PutField {
+    int64 id = 1;
+    string field = 2;
+}
+
+message Load {
+    int32 index = 1;
+}
+
+message Store {
+    int32 index = 1;
+    string type = 2;
+}

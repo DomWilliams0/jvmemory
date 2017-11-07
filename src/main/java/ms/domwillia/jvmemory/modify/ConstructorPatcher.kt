@@ -69,12 +69,13 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String) : Me
         super.visitLabel(retLabel)
     }
 
-    override fun visitInsn(opcode: Int) {
-
-        if (opcode == Opcodes.RETURN) {
+    override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
+        if (opcode == Opcodes.INVOKESPECIAL && owner == "java/lang/Object" && name == "<init>") {
+            super.visitMethodInsn(opcode, owner, name, desc, itf)
             visitShouldLogConstructor()
+            return
         }
 
-        super.visitInsn(opcode)
+        super.visitMethodInsn(opcode, owner, name, desc, itf)
     }
 }

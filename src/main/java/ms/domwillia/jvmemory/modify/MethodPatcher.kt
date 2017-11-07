@@ -81,13 +81,9 @@ class MethodPatcher(
         // swap monitor and object
         super.swap()
 
-        // calculate hashcode
-        super.invokevirtual(
-                "Ljava/lang/Object;",
-                "hashCode",
-                "()I",
-                false
-        )
+        // get id
+        super.getfield(owner, Monitor.instanceIdFieldName, "J")
+
         // add other args
         super.visitLdcInsn(owner)
         super.visitLdcInsn(name)
@@ -96,7 +92,7 @@ class MethodPatcher(
         super.invokevirtual(
                 Monitor.internalName,
                 "onGetField",
-                "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+                "(JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
                 false
         )
 
@@ -115,13 +111,9 @@ class MethodPatcher(
                 // dup obj
                 super.dup()
 
-                // calculate hashcode
-                super.invokevirtual(
-                        "Ljava/lang/Object;",
-                        "hashCode",
-                        "()I",
-                        false
-                )
+                // get id
+                super.getfield(owner, Monitor.instanceIdFieldName, "J")
+
                 // get monitor
                 super.getstatic(
                         Monitor.internalName,
@@ -144,7 +136,7 @@ class MethodPatcher(
                 super.invokevirtual(
                         Monitor.internalName,
                         handler,
-                        "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;$typeDescriptor)V",
+                        "(JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;$typeDescriptor)V",
                         false
                 )
 

@@ -4,10 +4,7 @@ import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.Field
 import ms.domwillia.jvmemory.monitor.definition.LocalVariable
 import ms.domwillia.jvmemory.monitor.definition.MethodDefinition
-import ms.domwillia.jvmemory.protobuf.Allocations
-import ms.domwillia.jvmemory.protobuf.Definitions
-import ms.domwillia.jvmemory.protobuf.Flow
-import ms.domwillia.jvmemory.protobuf.Message
+import ms.domwillia.jvmemory.protobuf.*
 import java.io.OutputStream
 
 class Logger(var stream: OutputStream) {
@@ -53,6 +50,7 @@ class Logger(var stream: OutputStream) {
             )
         }.log()
     }
+
     fun logMethodEnter(className: String, methodName: String) {
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.METHOD_ENTER
@@ -67,6 +65,45 @@ class Logger(var stream: OutputStream) {
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.METHOD_EXIT
             methodExit = Flow.MethodExit.getDefaultInstance()
+        }.log()
+    }
+
+    fun logGetField(objId: Long, fieldName: String) {
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.GETFIELD
+            setGetField(Access.GetField.newBuilder().apply {
+                id = objId
+                field = fieldName
+            })
+        }.log()
+    }
+
+    fun logPutField(objId: Long, fieldName: String) {
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.PUTFIELD
+            setPutField(Access.PutField.newBuilder().apply {
+                id = objId
+                field = fieldName
+            })
+        }.log()
+    }
+
+    fun logLoad(varIndex: Int) {
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.LOAD
+            setLoad(Access.Load.newBuilder().apply {
+                index = varIndex
+            })
+        }.log()
+    }
+
+    fun logStore(desc: String, varIndex: Int) {
+        Message.Variant.newBuilder().apply {
+            type = Message.MessageType.STORE
+            setStore(Access.Store.newBuilder().apply {
+                index = varIndex
+                type = desc
+            })
         }.log()
     }
 

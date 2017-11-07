@@ -67,57 +67,61 @@ object Monitor {
         logger.logDeallocation(id)
     }
 
-    fun onGetField(objHash: Int, clazz: String, field: String, type: String) {
-        println("${stackTracker.head} > getfield $type $clazz#$field from object $objHash")
+    fun onGetField(objId: Long, clazz: String, field: String, type: String) {
+        println("${stackTracker.head} > getfield $type $clazz#$field from object $objId")
+        logger.logGetField(objId, field)
     }
 
     fun onLoadLocalVar(index: Int) {
         println("${stackTracker.head} > load local var $index")
+        logger.logLoad(index)
     }
 
     private fun onStoreLocalVar(type: String, value: Any, index: Int) {
         println("${stackTracker.head} > store $type '$value' in local var $index")
+        logger.logStore(type, index)
     }
 
-    private fun onPutField(objHash: Int, clazz: String, field: String, type: String, value: Any) {
-        println("${stackTracker.head} > putfield $type $clazz#$field on object $objHash = '$value'")
+    private fun onPutField(objId: Long, clazz: String, field: String, type: String, value: Any) {
+        println("${stackTracker.head} > putfield $type $clazz#$field on object $objId = '$value'")
+        logger.logPutField(objId, field)
     }
 
     // type specific delegates
-    fun onPutFieldBoolean(objHash: Int, clazz: String, field: String, type: String, value: Boolean) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldBoolean(objId: Long, clazz: String, field: String, type: String, value: Boolean) {
+        onPutField(objId, clazz, field, type, value)
     }
 
-    fun onPutFieldChar(objHash: Int, clazz: String, field: String, type: String, value: Char) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldChar(objId: Long, clazz: String, field: String, type: String, value: Char) {
+        onPutField(objId, clazz, field, type, value)
     }
 
-    fun onPutFieldByte(objHash: Int, clazz: String, field: String, type: String, value: Byte) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldByte(objId: Long, clazz: String, field: String, type: String, value: Byte) {
+        onPutField(objId, clazz, field, type, value)
     }
 
-    fun onPutFieldShort(objHash: Int, clazz: String, field: String, type: String, value: Short) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldShort(objId: Long, clazz: String, field: String, type: String, value: Short) {
+        onPutField(objId, clazz, field, type, value)
     }
 
-    fun onPutFieldInt(objHash: Int, clazz: String, field: String, type: String, value: Int) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldInt(objId: Long, clazz: String, field: String, type: String, value: Int) {
+        onPutField(objId, clazz, field, type, value)
     }
 
-    fun onPutFieldFloat(objHash: Int, clazz: String, field: String, type: String, value: Float) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldFloat(objId: Long, clazz: String, field: String, type: String, value: Float) {
+        onPutField(objId, clazz, field, type, value)
     }
 
-    fun onPutFieldLong(objHash: Int, clazz: String, field: String, type: String, value: Long) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldLong(objId: Long, clazz: String, field: String, type: String, value: Long) {
+        onPutField(objId, clazz, field, type, value)
     }
 
-    fun onPutFieldDouble(objHash: Int, clazz: String, field: String, type: String, value: Double) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldDouble(objId: Long, clazz: String, field: String, type: String, value: Double) {
+        onPutField(objId, clazz, field, type, value)
     }
 
-    fun onPutFieldObject(objHash: Int, clazz: String, field: String, type: String, value: Any) {
-        onPutField(objHash, clazz, field, type, value)
+    fun onPutFieldObject(objId: Long, clazz: String, field: String, type: String, value: Any) {
+        onPutField(objId, clazz, field, type, value)
     }
 
     // storing
