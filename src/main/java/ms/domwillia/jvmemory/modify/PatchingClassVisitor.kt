@@ -10,6 +10,7 @@ import org.objectweb.asm.tree.FieldNode
 class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
 
     private lateinit var currentClass: ClassDefinition
+    private var hasDoneFinalize = false
 
     override fun visit(
             version: Int,
@@ -36,6 +37,20 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
                 null
         ).accept(cv)
 
+        // add finalize if missing
+        if (!hasDoneFinalize) {
+            FinalizePatcher(
+                    super.visitMethod(
+                            Opcodes.ACC_PROTECTED,
+                            "finalize",
+                            "()V",
+                            null,
+                            arrayOf(Type.getInternalName(Throwable::class.java))
+                    ),
+                    currentClass.name
+            ).generate()
+        }
+
         super.visitEnd()
     }
 
@@ -57,6 +72,10 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         // constructor patching
         if ("<init>" == name)
             mv = ConstructorPatcher(mv, currentClass.name)
+        else if ("finalize" == name) {
+            mv = FinalizePatcher(mv, currentClass.name)
+            hasDoneFinalize = true
+        }
 
         // instruction patching
         val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc))
