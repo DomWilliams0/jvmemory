@@ -6,6 +6,7 @@ option java_outer_classname = "Message";
 import "allocations.proto";
 import "definitions.proto";
 import "flow.proto";
+import "access.proto";
 
 enum MessageType {
     CLASS_DECL = 0;
@@ -15,6 +16,12 @@ enum MessageType {
 
     METHOD_ENTER = 3;
     METHOD_EXIT = 4;
+
+    GETFIELD = 5;
+    PUTFIELD = 6;
+
+    STORE = 7;
+    LOAD = 8;
 }
 
 message Variant {
@@ -27,6 +34,12 @@ message Variant {
 
         MethodEnter methodEnter = 5;
         MethodExit methodExit = 6;
+
+        GetField getField = 7;
+        PutField putField = 8;
+
+        Store store = 9;
+        Load load = 10;
     }
 
 }

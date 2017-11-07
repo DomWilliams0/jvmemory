@@ -1,11 +1,11 @@
 package ms.domwillia.jvmemory;
 
-import ms.domwillia.jvmemory.specimen.ObjectLifecycle;
+import ms.domwillia.jvmemory.specimen.FieldManipulation;
 
 public class SpecimenRunner {
 
 	public static void main(String[] args) {
-		new ObjectLifecycle().go();
+		new FieldManipulation().go();
 
 	}
 }
