@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option java_package = "ms.domwillia.jvmemory.protobuf";
+option java_outer_classname = "Message";
+
+import "allocations.proto";
+import "definitions.proto";
+
+enum MessageType {
+    CLASS_DECL = 0;
+    ALLOC = 1;
+    DEALLOC = 2;
+}
+
+message Variant {
+    MessageType type = 1;
+    oneof payload {
+        ClassDefinition classDefinition = 2;
+
+        Allocation allocation = 3;
+        Deallocation deallocation = 4;
+    }
+
+}

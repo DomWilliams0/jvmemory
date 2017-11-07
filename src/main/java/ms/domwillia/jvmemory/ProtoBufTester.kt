@@ -1,13 +1,16 @@
 package ms.domwillia.jvmemory
 
-import ms.domwillia.jvmemory.protobuf.Definitions
+import ms.domwillia.jvmemory.protobuf.Message
 import java.io.File
 
 object ProtoBufTester {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val def = Definitions.ClassDefinition.parseFrom(File("jvmemory.log").readBytes())
-        println(def)
+        val stream = File("jvmemory.log").inputStream()
+        while(true) {
+            val msg = Message.Variant.parseDelimitedFrom(stream) ?: break
+            println("msg = $msg")
+        }
     }
 }

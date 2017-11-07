@@ -12,7 +12,7 @@ object Monitor {
     val descriptor = type.descriptor
 
     var logger = Logger(FileOutputStream("jvmemory.log"))
-    private var nextInstanceId: Long = 0
+    private var nextInstanceId: Long = 1
     val instanceIdFieldName = "__uniqueID__"
 
     fun getHandler(type: Type, op: TypeSpecificOperation): String? {
