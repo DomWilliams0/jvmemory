@@ -57,12 +57,12 @@ object Monitor {
 
     fun onAlloc(type: String): Long {
         val id = nextInstanceId++
-        println("new $type: $id")
+        logger.logAllocation(type, id)
         return id
     }
 
     fun onDealloc(id: Long) {
-        println("free $id")
+        logger.logDeallocation(id)
     }
 
     fun onGetField(objHash: Int, clazz: String, field: String, type: String) {

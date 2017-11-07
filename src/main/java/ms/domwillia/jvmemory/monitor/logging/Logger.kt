@@ -4,6 +4,7 @@ import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.Field
 import ms.domwillia.jvmemory.monitor.definition.LocalVariable
 import ms.domwillia.jvmemory.monitor.definition.MethodDefinition
+import ms.domwillia.jvmemory.protobuf.Allocations
 import ms.domwillia.jvmemory.protobuf.Definitions
 import java.io.OutputStream
 
@@ -21,6 +22,21 @@ class Logger(var stream: OutputStream) {
             addAllMethods(def.methods.map { toProtoBuf(it) })
             addAllFields(def.fields.map { toProtoBuf(it) })
 
+            build().writeTo(stream)
+        }
+    }
+
+    fun logAllocation(desc: String, instanceId: Long) {
+        Allocations.Allocation.newBuilder().apply {
+            type = desc
+            id = instanceId
+            build().writeTo(stream)
+        }
+    }
+
+    fun logDeallocation(instanceId: Long) {
+        Allocations.Deallocation.newBuilder().apply {
+            id = instanceId
             build().writeTo(stream)
         }
     }
