@@ -18,7 +18,7 @@ def main():
     try:
         in_file = sys.argv[1]
     except IndexError:
-        return _exit(f"Usage: {sys.argv[0]} <monitor output log>\n")
+        return _exit(f"Usage: {sys.argv[0]} <monitor output log>")
 
     try:
         with open(in_file, "rb") as f:
