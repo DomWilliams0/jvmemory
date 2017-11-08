@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.6
 import sys
+from proto import message_pb2
 
 
 def _exit(msg):
