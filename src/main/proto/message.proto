@@ -26,20 +26,21 @@ enum MessageType {
 
 message Variant {
     MessageType type = 1;
+    int64 threadId = 2;
     oneof payload {
-        ClassDefinition classDefinition = 2;
+        ClassDefinition classDefinition = 3;
 
-        Allocation allocation = 3;
-        Deallocation deallocation = 4;
+        Allocation allocation = 4;
+        Deallocation deallocation = 5;
 
-        MethodEnter methodEnter = 5;
-        MethodExit methodExit = 6;
+        MethodEnter methodEnter = 6;
+        MethodExit methodExit = 7;
 
-        GetField getField = 7;
-        PutField putField = 8;
+        GetField getField = 8;
+        PutField putField = 9;
 
-        Store store = 9;
-        Load load = 10;
+        Store store = 10;
+        Load load = 11;
     }
 
 }

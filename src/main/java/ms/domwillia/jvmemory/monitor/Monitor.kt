@@ -43,17 +43,11 @@ object Monitor {
         }
     }
 
-    private val stackTracker: StackTracker = StackTracker()
-
     fun enterMethod(clazz: String, method: String) {
-        stackTracker.push(clazz, method)
-        println(">>> ${stackTracker.head}")
         logger.logMethodEnter(clazz, method)
     }
 
     fun exitMethod() {
-        println("<<< ${stackTracker.head}")
-        stackTracker.pop()
         logger.logMethodExit()
     }
 
@@ -68,22 +62,18 @@ object Monitor {
     }
 
     fun onGetField(objId: Long, clazz: String, field: String, type: String) {
-        println("${stackTracker.head} > getfield $type $clazz#$field from object $objId")
         logger.logGetField(objId, field)
     }
 
     fun onLoadLocalVar(index: Int) {
-        println("${stackTracker.head} > load local var $index")
         logger.logLoad(index)
     }
 
     private fun onStoreLocalVar(type: String, value: Any, index: Int) {
-        println("${stackTracker.head} > store $type '$value' in local var $index")
         logger.logStore(type, index)
     }
 
     private fun onPutField(objId: Long, clazz: String, field: String, type: String, value: Any) {
-        println("${stackTracker.head} > putfield $type $clazz#$field on object $objId = '$value'")
         logger.logPutField(objId, field)
     }
 
