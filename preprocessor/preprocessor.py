@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.6
 import sys
+
 from proto import message_pb2
 
 
@@ -9,9 +10,23 @@ def _exit(msg):
 
 
 def read_messages(f):
-    # TODO read protobuf messages
-    return
-    yield
+    from google.protobuf.internal.decoder import _DecodeVarint32 as decoder
+
+    while True:
+        len_raw = f.peek()
+        if not len_raw:
+            break
+
+        len_int, to_consume = decoder(len_raw, 0)
+        f.read(to_consume)
+
+        msg_raw = f.read(len_int)
+        if not msg_raw:
+            break
+
+        msg = message_pb2.Variant()
+        msg.ParseFromString(msg_raw)
+        yield msg
 
 
 def main():
@@ -23,8 +38,8 @@ def main():
     try:
         with open(in_file, "rb") as f:
             for msg in read_messages(f):
-                # TODO use msg
-                print(f"Read {msg}")
+                msg_type = message_pb2.MessageType.Name(msg.type)
+                print(f"Read {msg_type}")
 
     except OSError as e:
         return _exit("Bad input file: " + e.strerror)
