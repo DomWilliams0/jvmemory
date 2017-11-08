@@ -1,11 +1,11 @@
 package ms.domwillia.jvmemory;
 
-import ms.domwillia.jvmemory.specimen.FieldManipulation;
+import ms.domwillia.jvmemory.specimen.Threads;
 
 public class SpecimenRunner {
 
 	public static void main(String[] args) {
-		new FieldManipulation().go();
+		new Threads().go();
 
 	}
 }

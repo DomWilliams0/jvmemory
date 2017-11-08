@@ -110,6 +110,7 @@ class Logger(var stream: OutputStream) {
     // ----------- helpers
 
     private fun Message.Variant.Builder.log() {
+        threadId = Thread.currentThread().id
         val msg = build()
 
         // i think this has to be synchronised because it may be called in finalise() by GC
