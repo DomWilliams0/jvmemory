@@ -38,7 +38,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
         ).accept(cv)
 
         // add finalize if missing
-        if (!hasDoneFinalize) {
+        if (!hasDoneFinalize && currentClass.flags.type == ClassType.CLASS) {
             FinalizePatcher(
                     super.visitMethod(
                             Opcodes.ACC_PROTECTED,
