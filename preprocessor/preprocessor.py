@@ -1,6 +1,8 @@
 #!/usr/bin/env python3.6
 import sys
 
+import networkx
+
 from proto import message_pb2
 
 
@@ -15,8 +17,7 @@ class Processor:
         self.thread_id = thread_id
         self.callstack = []
 
-        self.callstack_graph = open(f"callgraph-thread{thread_id}.txt", "w")
-        self.callstack_graph.write("digraph g {\n")
+        self.graph = networkx.DiGraph()
         self.current = "root"
 
     def handle_message(self, msg):
@@ -28,7 +29,8 @@ class Processor:
         self.callstack.append(top)
         print(f"{self.thread_id} >>> {top}")
 
-        self.callstack_graph.write(f"\"{self.current}\" -> \"{top}\"\n")
+        count = self.graph.get_edge_data(self.current, top, default={}).get("count", 0)
+        self.graph.add_edge(self.current, top, count=count + 1)
         self.current = top
 
     def handle_method_exit(self, _msg):
@@ -40,9 +42,12 @@ class Processor:
             self.current = "root"
 
     def on_end(self):
-        # TODO build up an internal graph instead of writing out graphviz directly
-        self.callstack_graph.write("}")
-        self.callstack_graph.close()
+        # with open("testgraph.dot", "w") as f:
+        #     f.write("digraph {")
+        #     for ((u, v), data) in self.graph.edges.items():
+        #         f.write(f"\"{u}\" -> \"{v}\" [label=\"{data['count']}\"]\n")
+        #     f.write("}")
+        pass
 
 
 Processor.HANDLERS.update({val: getattr(Processor, f"handle_{key.lower()}", _null_handler)
@@ -56,16 +61,33 @@ HOST = "localhost"
 
 
 def serve_callgraph():
+    def convert_to_cytoscapejs(graph):
+        cytoscaped = []
+        cytoscaped.extend({
+                              "data": {
+                                  "id": n
+                              }
+                          } for n in graph.nodes)
+        cytoscaped.extend({
+                              "data": {
+                                  "source": u,
+                                  "target": v,
+                                  **data
+                              }
+                          } for ((u, v), data) in graph.edges.items())
+        return cytoscaped
+
     # TODO only care about main thread for now
     proc = processors[1]
 
     from tornado import web, ioloop
     import json
 
+    graph = json.dumps(convert_to_cytoscapejs(proc.graph))
+
     class CallgraphHandler(web.RequestHandler):
         def get(self):
-            callgraph = {}  # TODO generate from processor
-            self.write(json.dumps(callgraph))
+            self.write(graph)
 
     app = web.Application([
         (r"/callgraph", CallgraphHandler)
