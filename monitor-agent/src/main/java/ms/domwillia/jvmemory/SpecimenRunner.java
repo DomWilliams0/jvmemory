@@ -1,10 +1,10 @@
 package ms.domwillia.jvmemory;
 
-import ms.domwillia.jvmemory.specimen.Enums;
+import ms.domwillia.jvmemory.specimen.Functions;
 
 public class SpecimenRunner {
 
 	public static void main(String[] args) {
-		new Enums().go();
+		new Functions().go();
 	}
 }
