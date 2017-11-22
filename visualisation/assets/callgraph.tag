@@ -4,21 +4,7 @@
     <script>
         this.on("mount", function () {
             var cy = cytoscape({
-
-                container: document.getElementById('cg'),
-
-                elements: [ // list of graph elements to start with
-                    { // node a
-                        data: {id: 'a'}
-                    },
-                    { // node b
-                        data: {id: 'b'}
-                    },
-                    { // edge ab
-                        data: {id: 'ab', source: 'a', target: 'b'}
-                    }
-                ],
-
+                container: $('#cg'),
                 style: [ // the stylesheet for the graph
                     {
                         selector: 'node',
@@ -27,7 +13,6 @@
                             'label': 'data(id)'
                         }
                     },
-
                     {
                         selector: 'edge',
                         style: {
@@ -38,13 +23,13 @@
                         }
                     }
                 ],
-
                 layout: {
                     name: 'grid',
                     rows: 1
                 }
-
             });
+
+            // TODO request graph
         });
     </script>
 </callgraph>
