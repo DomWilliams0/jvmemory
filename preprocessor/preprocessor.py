@@ -15,17 +15,34 @@ class Processor:
         self.thread_id = thread_id
         self.callstack = []
 
+        self.callstack_graph = open(f"callgraph-thread{thread_id}.txt", "w")
+        self.callstack_graph.write("digraph g {\n")
+        self.current = "root"
+
     def handle_message(self, msg):
         payload = getattr(msg, msg.WhichOneof("payload"))
         self.HANDLERS[msg.type](self, payload)
 
     def handle_method_enter(self, msg):
-        self.callstack.append(f"{getattr(msg, 'class')}:{msg.method}")
-        print(f"{self.thread_id} >>> {self.callstack[-1]}")
+        top = f"{getattr(msg, 'class')}:{msg.method}"
+        self.callstack.append(top)
+        print(f"{self.thread_id} >>> {top}")
+
+        self.callstack_graph.write(f"\"{self.current}\" -> \"{top}\"\n")
+        self.current = top
 
     def handle_method_exit(self, _msg):
         print(f"{self.thread_id} <<< {self.callstack[-1]}")
         self.callstack.pop()
+        try:
+            self.current = self.callstack[-1]
+        except IndexError:
+            self.current = "root"
+
+    def on_end(self):
+        # TODO build up an internal graph instead of writing out graphviz directly
+        self.callstack_graph.write("}")
+        self.callstack_graph.close()
 
 
 Processor.HANDLERS.update({val: getattr(Processor, f"handle_{key.lower()}", _null_handler)
@@ -73,6 +90,9 @@ def main():
                     proc = processors[msg.threadId] = Processor(msg.threadId)
 
                 proc.handle_message(msg)
+
+        for proc in processors.values():
+            proc.on_end()
 
     except OSError as e:
         return _exit("Bad input file: " + e.strerror)
