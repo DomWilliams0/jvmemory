@@ -51,6 +51,29 @@ Processor.HANDLERS.update({val: getattr(Processor, f"handle_{key.lower()}", _nul
 # thread id -> processor
 processors = {}
 
+PORT = 48771
+HOST = "localhost"
+
+
+def serve_callgraph():
+    # TODO only care about main thread for now
+    proc = processors[1]
+
+    from tornado import web, ioloop
+    import json
+
+    class CallgraphHandler(web.RequestHandler):
+        def get(self):
+            callgraph = {}  # TODO generate from processor
+            self.write(json.dumps(callgraph))
+
+    app = web.Application([
+        (r"/callgraph", CallgraphHandler)
+    ])
+    app.listen(PORT, address=HOST)
+    print(f"Listening on {HOST}:{PORT}")
+    ioloop.IOLoop.current().start()
+
 
 def main():
     def _exit(msg):
@@ -93,6 +116,8 @@ def main():
 
         for proc in processors.values():
             proc.on_end()
+
+        serve_callgraph()
 
     except OSError as e:
         return _exit("Bad input file: " + e.strerror)
