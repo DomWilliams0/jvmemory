@@ -89,6 +89,9 @@ def serve_callgraph():
         def get(self):
             self.write(graph)
 
+        def set_default_headers(self):
+            self.set_header("Access-Control-Allow-Origin", "*")
+
     app = web.Application([
         (r"/callgraph", CallgraphHandler)
     ])
