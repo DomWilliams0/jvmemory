@@ -1,0 +1,6 @@
+[submodule "visualisation/lib/riot"]
+	path = visualisation/lib/riot
+	url = https://github.com/riot/riot.git
+[submodule "visualisation/lib/cytoscape.js"]
+	path = visualisation/lib/cytoscape.js
+	url = https://github.com/cytoscape/cytoscape.js
