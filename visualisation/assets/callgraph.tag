@@ -42,9 +42,10 @@
                     directed: true,
                     fit: false,
                     spacingFactor: 1,
+                    nodeDimensionsIncludeLabels: true,
                     stop: function () {
                         cy.nodes().forEach(function (n) {
-                            var y = n.position("y")
+                            var y = n.position("y");
                             n.position("y", cy.height()-y)
                         })
                     }
