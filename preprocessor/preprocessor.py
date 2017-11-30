@@ -49,6 +49,47 @@ class BaseProcessor:
         pass
 
 
+class DebugProcessor(BaseProcessor):
+    def _log(self, what):
+        print(f"{self.thread_id} - {what}")
+
+    def handle_putfield(self, msg):
+        self._log(f"putfield '{msg.field}' on obj ${msg.id}")
+
+    def handle_class_decl(self, msg):
+        self._log(f"{msg.visibility} {msg.class_type} {msg.name} : {msg.super_class or 'java/lang/Object'}")
+        if msg.interfaces:
+            self._log(f"\tinterfaces: {msg.interfaces}")
+        for f in msg.fields:
+            self._log(f"\t{f.visibility}{' static ' if f.static else ' '}{f.type} {f.name}")
+        for m in msg.methods:
+            self._log(f"\t{m.visibility}{' static ' if m.static else ' '}{m.name} - {m.signature}")
+            for lv in m.local_vars:
+                self._log(f"\t\tlocal var {lv.index} {lv.type} '{lv.name}'")
+        print()
+
+    def handle_store(self, msg):
+        self._log(f"store {msg.index} of type {msg.type}")
+
+    def handle_dealloc(self, msg):
+        self._log(f"dealloc {msg.id}")
+
+    def handle_load(self, msg):
+        self._log(f"load {msg.index}")
+
+    def handle_getfield(self, msg):
+        self._log(f"getfield '{msg.field}' on obj ${msg.id}")
+
+    def handle_method_exit(self, msg):
+        self._log("<<<")
+
+    def handle_alloc(self, msg):
+        self._log(f"alloc {msg.id} of type {msg.type}")
+
+    def handle_method_enter(self, msg):
+        self._log(f">>> {getattr(msg, 'class')}:{msg.method}")
+
+
 class CallGraphProcessor(BaseProcessor):
     def __init__(self, thread_id):
         super().__init__(thread_id)
