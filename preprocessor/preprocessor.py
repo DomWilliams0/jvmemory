@@ -3,6 +3,7 @@ import sys
 
 import networkx
 
+import vis_server
 from proto import message_pb2
 
 
@@ -12,7 +13,6 @@ class BaseProcessor:
 
         self._handlers = {val: getattr(self, f"handle_{key.lower()}")
                           for (key, val) in message_pb2.MessageType.items()}
-        print(self._handlers)
 
     def on_end(self):
         pass
@@ -86,49 +86,6 @@ class CallGraphProcessor(BaseProcessor):
 # thread id -> processor
 processors = {}
 
-PORT = 48771
-HOST = "localhost"
-
-
-def serve_callgraph():
-    def convert_to_cytoscapejs(graph):
-        cytoscaped = []
-        cytoscaped.extend({
-                              "data": {
-                                  "id": n
-                              }
-                          } for n in graph.nodes)
-        cytoscaped.extend({
-                              "data": {
-                                  "source": u,
-                                  "target": v,
-                                  **data
-                              }
-                          } for ((u, v), data) in graph.edges.items())
-        return cytoscaped
-
-    # TODO only care about main thread for now
-    proc = processors[1]
-
-    from tornado import web, ioloop
-    import json
-
-    graph = json.dumps(convert_to_cytoscapejs(proc.graph))
-
-    class CallgraphHandler(web.RequestHandler):
-        def get(self):
-            self.write(graph)
-
-        def set_default_headers(self):
-            self.set_header("Access-Control-Allow-Origin", "*")
-
-    app = web.Application([
-        (r"/callgraph", CallgraphHandler)
-    ])
-    app.listen(PORT, address=HOST)
-    print(f"Listening on {HOST}:{PORT}")
-    ioloop.IOLoop.current().start()
-
 
 def main():
     def _exit(msg):
@@ -165,14 +122,16 @@ def main():
                 try:
                     proc = processors[msg.threadId]
                 except KeyError:
-                    proc = processors[msg.threadId] = CallGraphProcessor(msg.threadId)
+                    proc = processors[msg.threadId] = DebugProcessor(msg.threadId)
 
                 proc.handle_message(msg)
 
         for proc in processors.values():
             proc.on_end()
 
-        serve_callgraph()
+        # lord forgive me for this hack
+        if isinstance(processors[1], CallGraphProcessor):
+            vis_server.serve_callgraph(list(processors.values()))
 
     except OSError as e:
         return _exit("Bad input file: " + e.strerror)
