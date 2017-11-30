@@ -6,23 +6,56 @@ import networkx
 from proto import message_pb2
 
 
-def _null_handler(_self, _msg):
-    pass
-
-
-class Processor:
-    HANDLERS = {}  # initialised after class definition
-
+class BaseProcessor:
     def __init__(self, thread_id):
         self.thread_id = thread_id
-        self.callstack = []
 
-        self.graph = networkx.DiGraph()
-        self.current = "root"
+        self._handlers = {val: getattr(self, f"handle_{key.lower()}")
+                          for (key, val) in message_pb2.MessageType.items()}
+        print(self._handlers)
+
+    def on_end(self):
+        pass
 
     def handle_message(self, msg):
         payload = getattr(msg, msg.WhichOneof("payload"))
-        self.HANDLERS[msg.type](self, payload)
+        self._handlers[msg.type](payload)
+
+    def handle_method_enter(self, msg):
+        pass
+
+    def handle_method_exit(self, msg):
+        pass
+
+    def handle_class_decl(self, msg):
+        pass
+
+    def handle_alloc(self, msg):
+        pass
+
+    def handle_dealloc(self, msg):
+        pass
+
+    def handle_getfield(self, msg):
+        pass
+
+    def handle_putfield(self, msg):
+        pass
+
+    def handle_store(self, msg):
+        pass
+
+    def handle_load(self, msg):
+        pass
+
+
+class CallGraphProcessor(BaseProcessor):
+    def __init__(self, thread_id):
+        super().__init__(thread_id)
+
+        self.callstack = []
+        self.graph = networkx.DiGraph()
+        self.current = "root"
 
     def handle_method_enter(self, msg):
         top = f"{getattr(msg, 'class')}:{msg.method}"
@@ -49,9 +82,6 @@ class Processor:
         #     f.write("}")
         pass
 
-
-Processor.HANDLERS.update({val: getattr(Processor, f"handle_{key.lower()}", _null_handler)
-                           for (key, val) in message_pb2.MessageType.items()})
 
 # thread id -> processor
 processors = {}
@@ -135,7 +165,7 @@ def main():
                 try:
                     proc = processors[msg.threadId]
                 except KeyError:
-                    proc = processors[msg.threadId] = Processor(msg.threadId)
+                    proc = processors[msg.threadId] = CallGraphProcessor(msg.threadId)
 
                 proc.handle_message(msg)
 
