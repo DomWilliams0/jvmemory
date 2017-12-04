@@ -90,7 +90,7 @@ class DebugProcessor(BaseProcessor):
         self._log(f">>> {getattr(msg, 'class')}:{msg.method}")
 
 
-class CallGraphProcessor(BaseProcessor):
+class CallGraphProcessor(DebugProcessor):
     def __init__(self, thread_id):
         super().__init__(thread_id)
 
@@ -163,7 +163,7 @@ def main():
                 try:
                     proc = processors[msg.threadId]
                 except KeyError:
-                    proc = processors[msg.threadId] = DebugProcessor(msg.threadId)
+                    proc = processors[msg.threadId] = CallGraphProcessor(msg.threadId)
 
                 proc.handle_message(msg)
 
