@@ -48,16 +48,11 @@ def serve_callgraph(processors):
                           } for ((u, v), data) in graph.edges.items())
         return cytoscaped
 
-    def generate_history(graph):
-        return [
-            [func, data["count"]] for ((_, func), data) in graph.edges.items()
-        ]
-
     # TODO only care about main thread for now
     proc = processors[0]
 
     graph = json.dumps(convert_to_cytoscapejs(proc.graph))
-    history = json.dumps(generate_history(proc.graph))
+    history = json.dumps(proc.history)
 
     app = web.Application([
         (r"/callgraph", CallgraphHandler, {"graph": graph}),

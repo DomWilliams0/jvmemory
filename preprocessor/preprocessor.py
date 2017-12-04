@@ -98,9 +98,12 @@ class CallGraphProcessor(DebugProcessor):
         self.graph = networkx.DiGraph()
         self.current = "root"
 
+        self.history = []
+
     def handle_method_enter(self, msg):
         top = f"{getattr(msg, 'class')}:{msg.method}"
         self.callstack.append(top)
+        self.history.append(top)
         print(f"{self.thread_id} >>> {top}")
 
         count = self.graph.get_edge_data(self.current, top, default={}).get("count", 0)
