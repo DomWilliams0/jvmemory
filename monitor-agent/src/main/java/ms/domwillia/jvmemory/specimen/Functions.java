@@ -1,9 +1,6 @@
 package ms.domwillia.jvmemory.specimen;
 
-import javax.swing.*;
-
-
-public class Functions extends JFrame implements Specimen {
+public class Functions implements Specimen {
 
 	void repeatMe() {
 	}
