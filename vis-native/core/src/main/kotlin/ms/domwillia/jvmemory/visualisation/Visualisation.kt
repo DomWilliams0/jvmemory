@@ -1,9 +1,9 @@
-package ms.domwillia.jvmemory.vis
+package ms.domwillia.jvmemory.visualisation
 
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 
-class JVMemoryVisualisation : KtxGame<KtxScreen>() {
+class Visualisation : KtxGame<KtxScreen>() {
 
     override fun create() {
         addScreen(TestScreen())

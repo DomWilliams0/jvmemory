@@ -3,7 +3,7 @@ apply plugin: "kotlin"
 sourceCompatibility = 1.6
 sourceSets.main.java.srcDirs = [ "src/" ]
 
-project.ext.mainClassName = "ms.domwillia.jvmemory.vis.DesktopLauncher"
+project.ext.mainClassName = "ms.domwillia.jvmemory.visualisation.DesktopLauncher"
 project.ext.assetsDir = new File("../core/assets");
 
 task run(dependsOn: classes, type: JavaExec) {

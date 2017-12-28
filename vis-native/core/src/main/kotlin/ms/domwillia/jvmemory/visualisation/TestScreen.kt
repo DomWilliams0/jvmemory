@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.vis
+package ms.domwillia.jvmemory.visualisation
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
