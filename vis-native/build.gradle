@@ -55,6 +55,12 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+
+        def ktxVersion = "1.9.7-b1"
+        compile group: 'io.github.libktx', name: 'ktx-box2d', version: ktxVersion
+        compile group: 'io.github.libktx', name: 'ktx-scene2d', version: ktxVersion
+        compile group: 'io.github.libktx', name: 'ktx-collections', version: ktxVersion
+        compile group: 'io.github.libktx', name: 'ktx-app', version: ktxVersion
     }
 }
 
