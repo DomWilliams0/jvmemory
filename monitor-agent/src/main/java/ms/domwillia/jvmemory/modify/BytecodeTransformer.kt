@@ -10,7 +10,7 @@ import java.security.ProtectionDomain
 class BytecodeTransformer : ClassFileTransformer {
 
     override fun transform(loader: ClassLoader, className: String,
-                           classBeingRedefined: Class<*>, protectionDomain: ProtectionDomain,
+                           classBeingRedefined: Class<*>?, protectionDomain: ProtectionDomain,
                            classfileBuffer: ByteArray): ByteArray? {
 
         if (className.startsWith("ms/domwillia") &&
