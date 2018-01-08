@@ -4,7 +4,11 @@ public class AllocationsTracking implements Specimen {
 
 	@Override
 	public void go() {
-		new TestBean(20, 5.5, new Baggage("rather heavy", 100));
+		Baggage baggageA = new Baggage("rather heavy", 100);
+		Baggage baggageB = new Baggage("quite light", 20);
+
+		TestBean bean = new TestBean(20, 5.5, baggageA);
+		bean.baggage = baggageB;
 	}
 
 	private class TestBean {
