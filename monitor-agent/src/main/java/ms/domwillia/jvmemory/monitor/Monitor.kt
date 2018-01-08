@@ -45,6 +45,10 @@ object Monitor {
         }
     }
 
+    private fun assertAllocated(id: Long) {
+        assert(id > 0L, { "Uninitialised object id: onAlloc wasn't called" })
+    }
+
     fun enterMethod(clazz: String, method: String) {
         logger.logMethodEnter(clazz, method)
     }
@@ -61,10 +65,12 @@ object Monitor {
     }
 
     fun onDealloc(id: Long) {
+        assertAllocated(id)
         logger.logDeallocation(id)
     }
 
     fun onGetField(objId: Long, clazz: String, field: String, type: String) {
+        assertAllocated(objId)
         logger.logGetField(objId, field)
     }
 
@@ -77,6 +83,7 @@ object Monitor {
     }
 
     private fun onPutField(objId: Long, clazz: String, field: String, type: String, value: Any) {
+        assertAllocated(objId)
         logger.logPutField(objId, field)
     }
 
