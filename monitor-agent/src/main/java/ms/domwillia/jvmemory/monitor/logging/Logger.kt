@@ -11,7 +11,7 @@ class Logger(var stream: OutputStream) {
 
     fun logClassDefinition(def: ClassDefinition) {
         Message.Variant.newBuilder().apply {
-            type = Message.MessageType.CLASS_DECL
+            type = Message.MessageType.CLASS_DEF
             setClassDefinition(
                     Definitions.ClassDefinition.newBuilder().apply {
                         name = def.name

@@ -9,7 +9,7 @@ import "flow.proto";
 import "access.proto";
 
 enum MessageType {
-    CLASS_DECL = 0;
+    CLASS_DEF = 0;
 
     ALLOC = 1;
     DEALLOC = 2;
