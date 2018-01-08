@@ -15,6 +15,8 @@ object Monitor {
     private var nextInstanceId: Long = 1
     val instanceIdFieldName = "__uniqueID__"
 
+    var effectiveId: Long = 0
+
     fun getHandler(type: Type, op: TypeSpecificOperation): String? {
         val typeName = when (type.sort) {
             Type.BOOLEAN -> "Boolean"
@@ -54,6 +56,7 @@ object Monitor {
     fun onAlloc(type: String): Long {
         val id = nextInstanceId++
         logger.logAllocation(type, id)
+        effectiveId = id
         return id
     }
 

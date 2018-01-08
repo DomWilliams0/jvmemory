@@ -11,7 +11,7 @@ class DebugProcessor(threadId: Long) : Processor(threadId) {
     }
 
     override fun allocate(message: Allocations.Allocation) {
-        println("ALLOCATE ${message.id}")
+        println("ALLOCATE ${message.type} ${message.id}")
     }
 
     override fun deallocate(message: Allocations.Deallocation) {
@@ -23,7 +23,7 @@ class DebugProcessor(threadId: Long) : Processor(threadId) {
     }
 
     override fun putField(message: Access.PutField) {
-        println("PUTFIELD ${message.field}")
+        println("PUTFIELD ${message.field} on ${message.id}")
     }
 
     override fun store(message: Access.Store) {
