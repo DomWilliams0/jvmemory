@@ -1,10 +1,10 @@
 package ms.domwillia.jvmemory;
 
-import ms.domwillia.jvmemory.specimen.FullExample;
+import ms.domwillia.jvmemory.specimen.AllocationsTracking;
 
 public class SpecimenRunner {
 
 	public static void main(String[] args) {
-		new FullExample().go();
+		new AllocationsTracking().go();
 	}
 }

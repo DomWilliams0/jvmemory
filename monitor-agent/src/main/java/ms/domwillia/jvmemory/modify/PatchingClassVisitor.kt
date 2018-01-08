@@ -71,7 +71,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
 
         // constructor patching
         if ("<init>" == name)
-            mv = ConstructorPatcher(mv, currentClass.name)
+            mv = ConstructorPatcher(mv, currentClass.name, currentClass.superName)
 
         // dealloc
         else if ("finalize" == name) {
