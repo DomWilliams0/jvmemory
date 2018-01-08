@@ -1,6 +1,6 @@
-package ms.domwillia.jvmemory.specimen;
+package ms.domwillia.specimen;
 
-import ms.domwillia.jvmemory.specimen.helper.EmptyChildBean;
+import ms.domwillia.specimen.helper.EmptyChildBean;
 
 public class ObjectLifecycle implements Specimen {
 
