@@ -10,21 +10,42 @@ import java.security.ProtectionDomain
 
 class BytecodeTransformer : ClassFileTransformer {
 
-    private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? {
-        // TODO decide between system and user classes
-        return if (className.startsWith("ms/domwillia") &&
-                (!className.startsWith("ms/domwillia/jvmemory/") || className.startsWith("ms/domwillia/specimen"))) {
-            ::UserClassVisitor
-        } else {
-            null
-        }
+    private enum class PatcherType {
+        USER,
+        SYSTEM,
+        NONE
     }
 
-    override fun transform(loader: ClassLoader, className: String,
-                           classBeingRedefined: Class<*>?, protectionDomain: ProtectionDomain,
+    private fun createVisitor(className: String): Pair<PatcherType, ((ClassWriter) -> ClassVisitor)?> {
+        val type = when {
+        // blacklist jvmemory classes
+            className.startsWith("ms/domwillia/jvmemory") -> PatcherType.NONE
+
+        // user classes
+        // TODO controlled by user
+            className.startsWith("ms/domwillia/specimen") -> PatcherType.USER
+
+        // ide
+            className.startsWith("com/intellij") -> PatcherType.NONE
+
+        // system
+            else -> PatcherType.SYSTEM
+        }
+
+        val func = when (type) {
+            BytecodeTransformer.PatcherType.USER -> ::UserClassVisitor
+            BytecodeTransformer.PatcherType.SYSTEM -> ::SystemClassVisitor
+            BytecodeTransformer.PatcherType.NONE -> null
+        }
+
+        return Pair(type, func)
+    }
+
+    override fun transform(loader: ClassLoader?, className: String,
+                           classBeingRedefined: Class<*>?, protectionDomain: ProtectionDomain?,
                            classfileBuffer: ByteArray): ByteArray? {
 
-        val visitor = createVisitor(className)
+        val (type, visitor) = createVisitor(className)
         val rewritten = visitor?.run {
 
             val reader = ClassReader(classfileBuffer)
@@ -40,21 +61,31 @@ class BytecodeTransformer : ClassFileTransformer {
             writer.toByteArray()
         }
 
-        rewritten?.let {
+        if (type == PatcherType.USER) {
             val outPath = "/tmp/modified_" + className.replace('/', '.') + ".class"
             File(outPath).outputStream().use { file ->
                 file.write(rewritten)
             }
             println("Wrote modified class to $outPath")
-
         }
+
         return rewritten
     }
 
     companion object {
         @JvmStatic
         fun premain(agentArgs: String?, inst: Instrumentation) {
-            inst.addTransformer(BytecodeTransformer())
+            inst.addTransformer(BytecodeTransformer(), true)
+
+//            inst.allLoadedClasses
+//                    .filter(inst::isModifiableClass)
+//                    .forEach {
+//                        try {
+//                            inst.retransformClasses(it)
+//                        } catch (e: Exception) {
+//                            e.printStackTrace()
+//                        }
+//                    }
         }
     }
 }
