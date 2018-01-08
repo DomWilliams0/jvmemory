@@ -7,7 +7,11 @@ import ms.domwillia.jvmemory.protobuf.Flow
 
 class DebugProcessor(threadId: Long) : Processor(threadId) {
     override fun defineClass(message: Definitions.ClassDefinition) {
-        println("DEFINE ${message.name}")
+        val fields = message.fieldsList
+                .dropLast(1)
+                .fold("", { acc, def -> acc + def.name + ", " })
+                .dropLast(2)
+        println("DEFINE ${message.name} with fields: $fields")
     }
 
     override fun allocate(message: Allocations.Allocation) {
