@@ -11,7 +11,7 @@ import org.objectweb.asm.commons.LocalVariablesSorter
 
 // TODO helper data class for class+method
 class MethodPatcher(
-        delegate: MethodVisitor,
+        delegate: MethodVisitor?,
         private val methodName: String,
         private val definition: MethodDefinition
 ) : InstructionAdapter(Opcodes.ASM6, delegate) {
