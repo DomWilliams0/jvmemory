@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.specimen;
+package ms.domwillia.specimen;
 
 public interface Specimen {
 	void go();

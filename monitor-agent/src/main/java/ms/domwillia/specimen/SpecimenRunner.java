@@ -1,6 +1,4 @@
-package ms.domwillia.jvmemory;
-
-import ms.domwillia.jvmemory.specimen.AllocationsTracking;
+package ms.domwillia.specimen;
 
 public class SpecimenRunner {
 

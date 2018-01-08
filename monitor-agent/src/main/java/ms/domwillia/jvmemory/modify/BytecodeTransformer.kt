@@ -13,7 +13,7 @@ class BytecodeTransformer : ClassFileTransformer {
     private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? {
         // TODO decide between system and user classes
         return if (className.startsWith("ms/domwillia") &&
-                (!className.startsWith("ms/domwillia/jvmemory/") || className.startsWith("ms/domwillia/jvmemory/specimen"))) {
+                (!className.startsWith("ms/domwillia/jvmemory/") || className.startsWith("ms/domwillia/specimen"))) {
             ::UserClassVisitor
         } else {
             null

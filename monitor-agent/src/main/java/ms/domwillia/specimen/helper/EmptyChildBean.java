@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.specimen.helper;
+package ms.domwillia.specimen.helper;
 
 public class EmptyChildBean extends EmptyBean {
 	public EmptyChildBean() {
