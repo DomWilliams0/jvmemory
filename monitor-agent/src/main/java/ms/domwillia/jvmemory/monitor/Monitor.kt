@@ -14,6 +14,7 @@ object Monitor {
     var logger = Logger(FileOutputStream("jvmemory.log"))
     private var nextInstanceId: Long = 1
     val instanceIdFieldName = "__uniqueID__"
+    private val invalidInstanceId: Long = 0
 
     var effectiveId: Long = 0
 
@@ -82,46 +83,55 @@ object Monitor {
         logger.logStore(type, index)
     }
 
-    private fun onPutField(objId: Long, clazz: String, field: String, type: String, value: Any) {
+    private fun onPutField(objId: Long, clazz: String, field: String, type: String, valueId: Long) {
         assertAllocated(objId)
-        logger.logPutField(objId, field)
+        logger.logPutField(objId, field, valueId)
     }
 
     // type specific delegates
     fun onPutFieldBoolean(objId: Long, clazz: String, field: String, type: String, value: Boolean) {
-        onPutField(objId, clazz, field, type, value)
+        onPutField(objId, clazz, field, type, invalidInstanceId)
     }
 
     fun onPutFieldChar(objId: Long, clazz: String, field: String, type: String, value: Char) {
-        onPutField(objId, clazz, field, type, value)
+        onPutField(objId, clazz, field, type, invalidInstanceId)
     }
 
     fun onPutFieldByte(objId: Long, clazz: String, field: String, type: String, value: Byte) {
-        onPutField(objId, clazz, field, type, value)
+        onPutField(objId, clazz, field, type, invalidInstanceId)
     }
 
     fun onPutFieldShort(objId: Long, clazz: String, field: String, type: String, value: Short) {
-        onPutField(objId, clazz, field, type, value)
+        onPutField(objId, clazz, field, type, invalidInstanceId)
     }
 
     fun onPutFieldInt(objId: Long, clazz: String, field: String, type: String, value: Int) {
-        onPutField(objId, clazz, field, type, value)
+        onPutField(objId, clazz, field, type, invalidInstanceId)
     }
 
     fun onPutFieldFloat(objId: Long, clazz: String, field: String, type: String, value: Float) {
-        onPutField(objId, clazz, field, type, value)
+        onPutField(objId, clazz, field, type, invalidInstanceId)
     }
 
     fun onPutFieldLong(objId: Long, clazz: String, field: String, type: String, value: Long) {
-        onPutField(objId, clazz, field, type, value)
+        onPutField(objId, clazz, field, type, invalidInstanceId)
     }
 
     fun onPutFieldDouble(objId: Long, clazz: String, field: String, type: String, value: Double) {
-        onPutField(objId, clazz, field, type, value)
+        onPutField(objId, clazz, field, type, invalidInstanceId)
     }
 
     fun onPutFieldObject(objId: Long, clazz: String, field: String, type: String, value: Any) {
-        onPutField(objId, clazz, field, type, value)
+        val valId: Long = try {
+            value::class.java.getDeclaredField(instanceIdFieldName).run {
+                isAccessible = true
+                getLong(value)
+            }
+        } catch (e: NoSuchFieldException) {
+            0L
+        }
+
+        onPutField(objId, clazz, field, type, valId)
     }
 
     // storing

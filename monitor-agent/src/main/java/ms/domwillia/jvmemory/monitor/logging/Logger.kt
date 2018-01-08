@@ -78,12 +78,13 @@ class Logger(var stream: OutputStream) {
         }.log()
     }
 
-    fun logPutField(objId: Long, fieldName: String) {
+    fun logPutField(objId: Long, fieldName: String, valId: Long) {
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.PUTFIELD
             setPutField(Access.PutField.newBuilder().apply {
                 id = objId
                 field = fieldName
+                valueId = valId
             })
         }.log()
     }

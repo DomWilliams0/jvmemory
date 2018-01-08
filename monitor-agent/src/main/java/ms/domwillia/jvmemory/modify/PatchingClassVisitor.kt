@@ -30,7 +30,7 @@ class PatchingClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, wri
 
         // add unique id field
         FieldNode(
-                Opcodes.ACC_FINAL + Opcodes.ACC_PRIVATE,
+                Opcodes.ACC_FINAL + Opcodes.ACC_PUBLIC,
                 Monitor.instanceIdFieldName,
                 "J",
                 null,

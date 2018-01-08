@@ -27,7 +27,7 @@ class DebugProcessor(threadId: Long) : Processor(threadId) {
     }
 
     override fun putField(message: Access.PutField) {
-        println("PUTFIELD ${message.field} on ${message.id}")
+        println("PUTFIELD ${message.id}'s ${message.field} set to ${message.valueId}")
     }
 
     override fun store(message: Access.Store) {

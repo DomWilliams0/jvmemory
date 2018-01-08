@@ -11,6 +11,7 @@ message GetField {
 message PutField {
     int64 id = 1;
     string field = 2;
+    int64 value_id = 3;
 }
 
 message Load {
