@@ -3,7 +3,7 @@ package ms.domwillia.jvmemory.parser
 import ms.domwillia.jvmemory.protobuf.Message
 import java.io.File
 
-fun parseLog(path: String) {
+fun parseLog(path: String, processor: (Long) -> Processor) {
     val f = File(path)
     if (!f.isFile)
         throw IllegalArgumentException("Bad log file path given")
@@ -15,7 +15,7 @@ fun parseLog(path: String) {
         generateSequence { Message.Variant.parseDelimitedFrom(stream) }
     }
     for (m in messages) {
-        val proc = processors.getOrPut(m.threadId, { DebugProcessor(m.threadId) })
+        val proc = processors.getOrPut(m.threadId, { processor(m.threadId) })
         proc.handle(m)
     }
 }
