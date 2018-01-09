@@ -3,23 +3,27 @@ package ms.domwillia.jvmemory.modify
 import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.LocalVariablesSorter
+import org.objectweb.asm.tree.FieldNode
 
 class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
 
     private var hasDoneFinalize = false
 
     override fun visitEnd() {
-        currentClass.debugPrint()
-        Monitor.logger.logClassDefinition(currentClass)
         super.visitEnd()
-    }
+        currentClass.debugPrint()
 
-    override fun visitField(access: Int, name: String, desc: String, signature: String?, value: Any?): FieldVisitor {
-        currentClass.registerField(access, name, desc)
-        return super.visitField(access, name, desc, signature, value)
+        // add unique id field
+        FieldNode(
+                Opcodes.ACC_FINAL + Opcodes.ACC_PUBLIC,
+                Monitor.instanceIdFieldName,
+                "J",
+                null,
+                null
+        ).accept(cv)
     }
 
     override fun visitMethod(
@@ -32,10 +36,15 @@ class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
-        // dealloc
-        if ("finalize" == name) {
-            mv = FinalizePatcher(mv, currentClass.name)
-            hasDoneFinalize = true
+        when (name) {
+        // constructor
+            "<init>" -> mv = ConstructorPatcher(mv, currentClass.name, currentClass.superName)
+
+        // destructor
+            "finalize" -> {
+                mv = FinalizePatcher(mv, currentClass.name)
+                hasDoneFinalize = true
+            }
         }
 
         // instruction patching
