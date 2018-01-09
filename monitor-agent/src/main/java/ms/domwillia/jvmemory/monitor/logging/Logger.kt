@@ -17,7 +17,7 @@ class Logger(var stream: OutputStream) {
                         name = def.name
                         classType = def.flags.type.toString()
                         visibility = def.flags.visibility.toString()
-                        if (def.superName != "java/lang/Object") superClass = def.superName
+                        if (def.superName != null && def.superName != "java/lang/Object") superClass = def.superName
 
                         if (def.interfaces != null) addAllInterfaces(def.interfaces.asIterable())
 

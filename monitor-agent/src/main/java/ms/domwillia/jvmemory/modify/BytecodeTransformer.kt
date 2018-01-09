@@ -77,15 +77,15 @@ class BytecodeTransformer : ClassFileTransformer {
         fun premain(agentArgs: String?, inst: Instrumentation) {
             inst.addTransformer(BytecodeTransformer(), true)
 
-//            inst.allLoadedClasses
-//                    .filter(inst::isModifiableClass)
-//                    .forEach {
-//                        try {
-//                            inst.retransformClasses(it)
-//                        } catch (e: Exception) {
-//                            e.printStackTrace()
-//                        }
-//                    }
+            inst.allLoadedClasses
+                    .filter(inst::isModifiableClass)
+                    .forEach {
+                        try {
+                            inst.retransformClasses(it)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
         }
     }
 }
