@@ -3,7 +3,6 @@ package ms.domwillia.jvmemory.visualisation
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
 import ktx.app.KtxScreen
-import ms.domwillia.jvmemory.parser.parseLog
 
 class TestScreen : KtxScreen {
     override fun render(delta: Float) {
