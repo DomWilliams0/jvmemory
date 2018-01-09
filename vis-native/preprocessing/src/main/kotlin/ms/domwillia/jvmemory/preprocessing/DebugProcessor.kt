@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.parser
+package ms.domwillia.jvmemory.preprocessing
 
 import ms.domwillia.jvmemory.protobuf.Access
 import ms.domwillia.jvmemory.protobuf.Allocations

@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.parser
+package ms.domwillia.jvmemory.preprocessing
 
 import ms.domwillia.jvmemory.protobuf.*
 
@@ -27,5 +27,7 @@ open class Processor(val threadId: Long) {
     open fun putField(message: Access.PutField) {}
     open fun store(message: Access.Store) {}
     open fun load(message: Access.Load) {}
+
+    open fun finish() {}
 
 }
