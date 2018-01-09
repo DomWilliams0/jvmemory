@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.parser
+package ms.domwillia.jvmemory.preprocessing
 
 import ms.domwillia.jvmemory.protobuf.Message
 import java.io.File
@@ -18,4 +18,6 @@ fun parseLog(path: String, processor: (Long) -> Processor) {
         val proc = processors.getOrPut(m.threadId, { processor(m.threadId) })
         proc.handle(m)
     }
+
+    processors.forEach { it.value.finish() }
 }

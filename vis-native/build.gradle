@@ -97,8 +97,9 @@ project(":core") {
 
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
 
-        compile group: 'org.tinyjee.jgraphx', name: 'jgraphx', version: '3.4.1.3'
-
+        compile group: 'net.sf.jung', name: 'jung-api', version: '2.1.1'
+        compile group: 'net.sf.jung', name: 'jung-graph-impl', version: '2.1.1'
+        compile group: 'net.sf.jung', name: 'jung-algorithms', version: '2.1.1'
     }
 
     protobuf {

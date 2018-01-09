@@ -1,5 +1,8 @@
 package ms.domwillia.specimen;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AllocationsTracking implements Specimen {
 
 	@Override
@@ -9,6 +12,15 @@ public class AllocationsTracking implements Specimen {
 
 		TestBean bean = new TestBean(20, 5.5, baggageA);
 		bean.baggage = baggageB;
+
+		List<Baggage> baggages = new ArrayList<>();
+		baggages.add(new Baggage("first", 5));
+		baggages.add(new Baggage("second", 10));
+
+		for (Baggage b : baggages) {
+			bean.baggage = b;
+		}
+		bean.baggage = baggageA;
 	}
 
 	private class TestBean {
