@@ -2,7 +2,7 @@ package ms.domwillia.jvmemory.parser
 
 import ms.domwillia.jvmemory.protobuf.*
 
-abstract class Processor(val threadId: Long) {
+open class Processor(val threadId: Long) {
 
     fun handle(msg: Message.Variant) = when (msg.type) {
         Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter)
@@ -18,14 +18,14 @@ abstract class Processor(val threadId: Long) {
         }
     }
 
-    abstract fun enterMethod(message: Flow.MethodEnter)
-    abstract fun exitMethod(message: Flow.MethodExit)
-    abstract fun defineClass(message: Definitions.ClassDefinition)
-    abstract fun allocate(message: Allocations.Allocation)
-    abstract fun deallocate(message: Allocations.Deallocation)
-    abstract fun getField(message: Access.GetField)
-    abstract fun putField(message: Access.PutField)
-    abstract fun store(message: Access.Store)
-    abstract fun load(message: Access.Load)
+    open fun enterMethod(message: Flow.MethodEnter) {}
+    open fun exitMethod(message: Flow.MethodExit) {}
+    open fun defineClass(message: Definitions.ClassDefinition) {}
+    open fun allocate(message: Allocations.Allocation) {}
+    open fun deallocate(message: Allocations.Deallocation) {}
+    open fun getField(message: Access.GetField) {}
+    open fun putField(message: Access.PutField) {}
+    open fun store(message: Access.Store) {}
+    open fun load(message: Access.Load) {}
 
 }
