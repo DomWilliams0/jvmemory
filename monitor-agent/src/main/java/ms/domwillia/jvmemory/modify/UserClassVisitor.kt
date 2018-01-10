@@ -1,12 +1,9 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.LocalVariablesSorter
-import org.objectweb.asm.tree.FieldNode
 
 class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
 
@@ -15,15 +12,6 @@ class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
     override fun visitEnd() {
         super.visitEnd()
         currentClass.debugPrint()
-
-        // add unique id field
-        FieldNode(
-                Opcodes.ACC_FINAL + Opcodes.ACC_PUBLIC,
-                Monitor.instanceIdFieldName,
-                "J",
-                null,
-                null
-        ).accept(cv)
     }
 
     override fun visitMethod(
@@ -41,6 +29,7 @@ class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
             "<init>" -> mv = ConstructorPatcher(mv, currentClass.name, currentClass.superName)
 
         // destructor
+        // TODO replace with ObjectFree JVMTI event
             "finalize" -> {
                 mv = FinalizePatcher(mv, currentClass.name)
                 hasDoneFinalize = true

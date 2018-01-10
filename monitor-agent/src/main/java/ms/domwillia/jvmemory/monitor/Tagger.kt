@@ -2,7 +2,7 @@ package ms.domwillia.jvmemory.monitor
 
 object Tagger {
 
-    var internalName = Tagger::class.java.typeName
+    val internalName: String = Tagger::class.java.typeName
 
     /**
      * Generates a new tag for a new object
@@ -13,6 +13,7 @@ object Tagger {
      * Assigns the last allocated tag to this object, without allocating a new one
      * Handy for super classes
      */
+    @JvmStatic
     external fun assignCurrentTag(o: Any)
 
     /**
