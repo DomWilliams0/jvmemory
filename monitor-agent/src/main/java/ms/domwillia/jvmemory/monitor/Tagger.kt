@@ -2,8 +2,6 @@ package ms.domwillia.jvmemory.monitor
 
 object Tagger {
 
-    val internalName: String = Tagger::class.java.typeName
-
     /**
      * Generates a new tag for a new object
      */
