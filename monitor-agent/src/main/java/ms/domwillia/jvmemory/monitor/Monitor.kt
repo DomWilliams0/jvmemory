@@ -43,13 +43,10 @@ object Monitor {
 
     // wrappers for Tagger methods, as calls to Tagger directly result in a NoClassDefFoundError
     @JvmStatic
-    fun assignCurrentTag(o: Any) = Tagger.assignCurrentTag(o)
+    fun <X> allocateTag(o: Any, expectedClass: Class<out X>) = Tagger.allocateTag(o, expectedClass)
 
     @JvmStatic
     fun getTag(o: Any) = Tagger.getTag(o)
-
-    @JvmStatic
-    fun allocateTag(o: Any) = Tagger.allocateTag(o)
 
     fun enterMethod(clazz: String, method: String) {
         logger.logMethodEnter(clazz, method)
@@ -59,8 +56,8 @@ object Monitor {
         logger.logMethodExit()
     }
 
-    fun onAlloc(obj: Any, type: String) {
-        val id = Tagger.allocateTag(obj)
+    // TODO to be called from native agent
+    fun onAlloc(id: Long, type: String) {
         logger.logAllocation(type, id)
     }
 

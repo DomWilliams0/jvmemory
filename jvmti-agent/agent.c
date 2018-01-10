@@ -7,7 +7,8 @@
 static JavaVM *jvm = NULL;
 static jvmtiEnv *env = NULL;
 
-static jlong last_id = 1;
+static jlong next_id = 1;
+static jlong last_id = 0;
 
 static jvmtiError add_capabilities() {
 	jvmtiCapabilities capa = {0};
@@ -74,36 +75,36 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm, char *options, void *reserve
 JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_allocateTag(
 		JNIEnv *jnienv,
 		jclass klass,
-		jobject obj) {
+		jobject obj,
+		jclass expectedClass) {
 
-	jlong new_tag = last_id;
+	jclass runtimeClass = (*jnienv)->GetObjectClass(jnienv, obj);
+	jlong new_tag;
+
+	if ((*jnienv)->IsSameObject(jnienv, runtimeClass, expectedClass) == JNI_TRUE) {
+		new_tag = next_id++;
+		last_id = new_tag;
+	} else {
+		new_tag = last_id;
+	}
+
 	jvmtiError err;
 	if ((err = (*env)->SetTag(env, obj, new_tag)) == JVMTI_ERROR_NONE) {
-		last_id++;
-
+		// debug log
 		char *name = NULL;
-		jclass obj_klass = (*jnienv)->GetObjectClass(jnienv, obj);
-		if ((err = (*env)->GetClassSignature(env, obj_klass, &name, NULL)) == JVMTI_ERROR_NONE) {
+		if ((err = (*env)->GetClassSignature(env, runtimeClass, &name, NULL)) == JVMTI_ERROR_NONE) {
 			printf("allocated tag %ld to object of class '%s'\n", new_tag, name);
 			(*env)->Deallocate(env, name);
 			name = NULL;
 		} else {
 			printf("could not get class name: %d\n", err);
 		}
-
 	} else {
 		printf("could not allocate tag: %d\n", err);
 		new_tag = 0;
 	}
+
 	return new_tag;
-}
-
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_assignCurrentTag(
-		JNIEnv *jnienv,
-		jclass klass,
-		jobject obj) {
-
-	// TODO
 }
 
 JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_getTag(
@@ -111,6 +112,7 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_getTag(
 		jclass klass,
 		jobject obj) {
 
-	// TODO
-	return 0L;
+	jlong tag = 0L;
+	(*env)->GetTag(env, obj, &tag);
+	return tag;
 }

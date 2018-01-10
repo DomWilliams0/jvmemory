@@ -49,7 +49,7 @@ class BytecodeTransformer : ClassFileTransformer {
         val rewritten = visitor?.run {
 
             val reader = ClassReader(classfileBuffer)
-            val writer = ClassWriter(reader, 0)
+            val writer = ClassWriter(reader, ClassWriter.COMPUTE_FRAMES)
 
             try {
                 // teehee
