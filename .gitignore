@@ -2,6 +2,7 @@
 out
 target
 preprocessor/proto
+*.so
 
 ## Java
 
