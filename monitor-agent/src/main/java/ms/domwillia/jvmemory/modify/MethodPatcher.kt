@@ -82,7 +82,7 @@ class MethodPatcher(
         super.swap()
 
         // get id
-        super.getfield(owner, Monitor.instanceIdFieldName, "J")
+        super.invokestatic(Monitor.internalName, "getTag", "(Ljava/lang/Object;)J", false)
 
         // add other args
         super.visitLdcInsn(owner)
@@ -112,7 +112,7 @@ class MethodPatcher(
                 super.dup()
 
                 // get id
-                super.getfield(owner, Monitor.instanceIdFieldName, "J")
+                super.invokestatic(Monitor.internalName, "getTag", "(Ljava/lang/Object;)J", false)
 
                 // get monitor
                 super.getstatic(

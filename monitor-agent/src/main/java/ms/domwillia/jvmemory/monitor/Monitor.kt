@@ -41,20 +41,22 @@ object Monitor {
         }
     }
 
+    // wrappers for Tagger methods, as calls to Tagger directly result in a NoClassDefFoundError
+    @JvmStatic
+    fun assignCurrentTag(o: Any) = Tagger.assignCurrentTag(o)
+
+    @JvmStatic
+    fun getTag(o: Any) = Tagger.getTag(o)
+
+    @JvmStatic
+    fun allocateTag(o: Any) = Tagger.allocateTag(o)
+
     fun enterMethod(clazz: String, method: String) {
         logger.logMethodEnter(clazz, method)
     }
 
     fun exitMethod() {
         logger.logMethodExit()
-    }
-
-    @JvmStatic
-            /**
-             * Required, as calls to Tagger directly result in a NoClassDefFoundError
-             */
-    fun assignCurrentTag(o: Any) {
-        Tagger.assignCurrentTag(o)
     }
 
     fun onAlloc(obj: Any, type: String) {
