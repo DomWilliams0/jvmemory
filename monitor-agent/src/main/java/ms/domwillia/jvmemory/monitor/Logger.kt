@@ -113,11 +113,7 @@ class Logger(var stream: OutputStream) {
     private fun Message.Variant.Builder.log() {
         threadId = Thread.currentThread().id
         val msg = build()
-
-        // i think this has to be synchronised because it may be called in finalise() by GC
-        synchronized(stream) {
-            msg.writeDelimitedTo(stream)
-        }
+        msg.writeDelimitedTo(stream)
     }
 
     private fun toProtoBuf(lv: LocalVariable): Definitions.LocalVariable =
