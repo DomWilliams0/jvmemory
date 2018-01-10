@@ -82,17 +82,19 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_allocateTag(
 		last_id++;
 
 		char *name = NULL;
-		if ((err = (*env)->GetClassSignature(env, klass, &name, NULL)) == JVMTI_ERROR_NONE) {
+		jclass obj_klass = (*jnienv)->GetObjectClass(jnienv, obj);
+		if ((err = (*env)->GetClassSignature(env, obj_klass, &name, NULL)) == JVMTI_ERROR_NONE) {
 			printf("allocated tag %ld to object of class '%s'\n", new_tag, name);
 			(*env)->Deallocate(env, name);
 			name = NULL;
+		} else {
+			printf("could not get class name: %d\n", err);
 		}
 
 	} else {
 		printf("could not allocate tag: %d\n", err);
 		new_tag = 0;
 	}
-
 	return new_tag;
 }
 
