@@ -4,6 +4,7 @@
 
 #include "exports.h"
 #include "array.h"
+#include "util.h"
 
 static JavaVM *jvm = NULL;
 static jvmtiEnv *env = NULL;
@@ -24,19 +25,12 @@ static jvmtiError add_capabilities() {
 
 static void JNICALL callback_dealloc(jvmtiEnv *jvmti_env, jlong tag);
 
-// one liners that return jvmtiError only
-#define DO_SAFE(code) do {\
-	jvmtiError err = code;\
-	if (err != JVMTI_ERROR_NONE)\
-	return err;\
-} while (0)
-
 static jvmtiError register_callbacks() {
 	jvmtiEventCallbacks callbacks = {0};
 	callbacks.ObjectFree = &callback_dealloc;
 
-	DO_SAFE((*env)->SetEventCallbacks(env, &callbacks, sizeof(callbacks)));
-	DO_SAFE((*env)->SetEventNotificationMode(env, JVMTI_ENABLE, JVMTI_EVENT_OBJECT_FREE, (jthread)NULL));
+	DO_SAFE_RETURN((*env)->SetEventCallbacks(env, &callbacks, sizeof(callbacks)));
+	DO_SAFE_RETURN((*env)->SetEventNotificationMode(env, JVMTI_ENABLE, JVMTI_EVENT_OBJECT_FREE, (jthread)NULL));
 
 	return JVMTI_ERROR_NONE;
 }
@@ -47,29 +41,18 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm, char *options, void *reserve
 	// set globals
 	jvm = javavm;
 	if ((ret = (*jvm)->GetEnv(jvm, (void **)&env, JVMTI_VERSION_1_2)) != JNI_OK) {
-		printf("failed to create environment: %d\n", ret);
+		fprintf(stderr, "failed to create environment: %d\n", ret);
 		return ret;
 	}
 
-	// TODO check_jvmti_error and get error message
-
 	// add required capabilities
-	if ((ret = add_capabilities()) != JVMTI_ERROR_NONE) {
-		printf("failed to add required capabilities: %d\n", ret);
-		return JNI_ABORT;
-	}
+	DO_SAFE(add_capabilities(), "adding required capabilities");
 
 	// register callbacks
-	if ((ret = register_callbacks()) != JVMTI_ERROR_NONE) {
-		printf("failed to register event callbacks: %d\n", ret);
-		return JNI_ABORT;
-	}
+	DO_SAFE(register_callbacks(), "registering callbacks");
 
 	// init list
-	if (array_init(&freed_objects) != 0) {
-		puts("failed to init freed objects list");
-		return JNI_ABORT;
-	}
+	DO_SAFE_COND(array_init(&freed_objects) == 0, "initialising freed objects array");
 
 	return JNI_OK;
 }
@@ -87,8 +70,11 @@ static void log_allocation(JNIEnv *jnienv, jlong tag, jclass klass) {
 	// get internal name
 	{
 		jclass cls = (*jnienv)->FindClass(jnienv, "org/objectweb/asm/Type");
+		EXCEPTION_CHECK(jnienv);
 		jmethodID method = (*jnienv)->GetStaticMethodID(jnienv, cls, "getInternalName", "(Ljava/lang/Class;)Ljava/lang/String;");
+		EXCEPTION_CHECK(jnienv);
 		jstring result = (*jnienv)->CallStaticObjectMethod(jnienv, cls, method, klass);
+		EXCEPTION_CHECK(jnienv);
 
 		class_name = result;
 	}
@@ -96,9 +82,13 @@ static void log_allocation(JNIEnv *jnienv, jlong tag, jclass klass) {
 	// call onAlloc
 	{
 		jclass cls = (*jnienv)->FindClass(jnienv, "ms/domwillia/jvmemory/monitor/Monitor");
+		EXCEPTION_CHECK(jnienv);
 		jfieldID instanceID = (*jnienv)->GetStaticFieldID(jnienv, cls, "INSTANCE", "Lms/domwillia/jvmemory/monitor/Monitor;");
+		EXCEPTION_CHECK(jnienv);
 		jobject instance = (*jnienv)->GetStaticObjectField(jnienv, cls, instanceID);
+		EXCEPTION_CHECK(jnienv);
 		jmethodID method = (*jnienv)->GetMethodID(jnienv, cls, "onAlloc", "(JLjava/lang/String;)V");
+		EXCEPTION_CHECK(jnienv);
 		(*jnienv)->CallVoidMethod(jnienv, instance, method, tag, class_name);
 	}
 }
