@@ -1,6 +1,5 @@
 package ms.domwillia.jvmemory.monitor
 
-import ms.domwillia.jvmemory.monitor.logging.Logger
 import org.objectweb.asm.Type
 import java.io.FileOutputStream
 

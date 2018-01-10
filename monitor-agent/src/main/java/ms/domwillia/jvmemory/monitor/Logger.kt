@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.monitor.logging
+package ms.domwillia.jvmemory.monitor
 
 import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.Field
