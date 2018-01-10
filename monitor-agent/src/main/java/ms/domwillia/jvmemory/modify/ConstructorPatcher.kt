@@ -1,6 +1,7 @@
 package ms.domwillia.jvmemory.modify
 
 import ms.domwillia.jvmemory.monitor.Monitor
+import ms.domwillia.jvmemory.monitor.Tagger
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
@@ -12,6 +13,8 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String, priv
     private fun visitShouldLogConstructor() {
         // TODO this could do with some deduplication
         fun generateAndAssignId() {
+            // Monitor.INSTANCE.onAlloc(this, className)
+
             // stack:
             super.visitVarInsn(Opcodes.ALOAD, 0)
 
@@ -24,52 +27,33 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String, priv
             )
 
             // stack: this monitor
+            super.visitVarInsn(Opcodes.ALOAD, 0)
             super.visitLdcInsn(className)
             super.visitMethodInsn(
                     Opcodes.INVOKEVIRTUAL,
                     Monitor.internalName,
                     "onAlloc",
-                    "(Ljava/lang/String;)J",
+                    "(Ljava/lang/Object;Ljava/lang/String;)V",
                     false
             )
 
-            // stack: this id
-            super.visitFieldInsn(
-                    Opcodes.PUTFIELD,
-                    className,
-                    Monitor.instanceIdFieldName,
-                    "J"
-            )
+            // stack: this
+            // TODO pop needed?
         }
 
         fun assignCurrentEffectiveId() {
+            // Monitor.assignCurrentTag(this)
+
             // stack:
             super.visitVarInsn(Opcodes.ALOAD, 0)
 
             // stack: this
-            super.visitFieldInsn(
-                    Opcodes.GETSTATIC,
-                    Monitor.internalName,
-                    Monitor.instanceName,
-                    Monitor.descriptor
-            )
-
-            // stack: this monitor
-            // getter is used here because accessing the field directly throws a NoSuchFieldError
             super.visitMethodInsn(
-                    Opcodes.INVOKEVIRTUAL,
-                    Monitor.internalName,
-                    "getEffectiveId",
-                    "()J",
+                    Opcodes.INVOKESTATIC,
+                    Tagger.internalName,
+                    "assignCurrentTag",
+                    "(Ljava/lang/Object;)V",
                     false
-            )
-
-            // stack: this effectiveId
-            super.visitFieldInsn(
-                    Opcodes.PUTFIELD,
-                    className,
-                    Monitor.instanceIdFieldName,
-                    "J"
             )
         }
 

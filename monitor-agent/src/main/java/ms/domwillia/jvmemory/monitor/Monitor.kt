@@ -11,11 +11,7 @@ object Monitor {
     val descriptor = type.descriptor
 
     var logger = Logger(FileOutputStream("jvmemory.log"))
-    private var nextInstanceId: Long = 1
-    val instanceIdFieldName = "__uniqueID__"
     private val invalidInstanceId: Long = 0
-
-    var effectiveId: Long = 0
 
     fun getHandler(type: Type, op: TypeSpecificOperation): String? {
         val typeName = when (type.sort) {
@@ -45,10 +41,6 @@ object Monitor {
         }
     }
 
-    private fun assertAllocated(id: Long) {
-        assert(id > 0L, { "Uninitialised object id: onAlloc wasn't called" })
-    }
-
     fun enterMethod(clazz: String, method: String) {
         logger.logMethodEnter(clazz, method)
     }
@@ -57,20 +49,16 @@ object Monitor {
         logger.logMethodExit()
     }
 
-    fun onAlloc(type: String): Long {
-        val id = nextInstanceId++
+    fun onAlloc(obj: Any, type: String) {
+        val id = Tagger.allocateTag(obj)
         logger.logAllocation(type, id)
-        effectiveId = id
-        return id
     }
 
     fun onDealloc(id: Long) {
-        assertAllocated(id)
         logger.logDeallocation(id)
     }
 
     fun onGetField(objId: Long, clazz: String, field: String, type: String) {
-        assertAllocated(objId)
         logger.logGetField(objId, field)
     }
 
@@ -83,7 +71,6 @@ object Monitor {
     }
 
     private fun onPutField(objId: Long, clazz: String, field: String, type: String, valueId: Long) {
-        assertAllocated(objId)
         logger.logPutField(objId, field, valueId)
     }
 
@@ -121,15 +108,7 @@ object Monitor {
     }
 
     fun onPutFieldObject(objId: Long, clazz: String, field: String, type: String, value: Any) {
-        val valId: Long = try {
-            value::class.java.getDeclaredField(instanceIdFieldName).run {
-                isAccessible = true
-                getLong(value)
-            }
-        } catch (e: NoSuchFieldException) {
-            0L
-        }
-
+        val valId = Tagger.getTag(value)
         onPutField(objId, clazz, field, type, valId)
     }
 
