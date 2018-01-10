@@ -70,6 +70,31 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm, char *options, void *reserve
 	return JNI_OK;
 }
 
+void log_allocation(JNIEnv *jnienv, jlong tag, jclass klass) {
+	jstring class_name;
+
+	// TODO cache these field and method IDs
+	// TODO exception checks
+
+	// get internal name
+	{
+		jclass cls = (*jnienv)->FindClass(jnienv, "org/objectweb/asm/Type");
+		jmethodID method = (*jnienv)->GetStaticMethodID(jnienv, cls, "getInternalName", "(Ljava/lang/Class;)Ljava/lang/String;");
+		jstring result = (*jnienv)->CallStaticObjectMethod(jnienv, cls, method, klass);
+
+		class_name = result;
+	}
+
+	// call onAlloc
+	{
+		jclass cls = (*jnienv)->FindClass(jnienv, "ms/domwillia/jvmemory/monitor/Monitor");
+		jfieldID instanceID = (*jnienv)->GetStaticFieldID(jnienv, cls, "INSTANCE", "Lms/domwillia/jvmemory/monitor/Monitor;");
+		jobject instance = (*jnienv)->GetStaticObjectField(jnienv, cls, instanceID);
+		jmethodID method = (*jnienv)->GetMethodID(jnienv, cls, "onAlloc", "(JLjava/lang/String;)V");
+		(*jnienv)->CallVoidMethod(jnienv, instance, method, tag, class_name);
+	}
+}
+
 // exported functions
 
 JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_allocateTag(
@@ -84,6 +109,9 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_allocateTag(
 	if ((*jnienv)->IsSameObject(jnienv, runtimeClass, expectedClass) == JNI_TRUE) {
 		new_tag = next_id++;
 		last_id = new_tag;
+
+		log_allocation(jnienv, new_tag, expectedClass);
+
 	} else {
 		new_tag = last_id;
 	}
