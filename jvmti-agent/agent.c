@@ -2,31 +2,12 @@
 #include <jni.h>
 #include <jvmti.h>
 
+#include "exports.h"
+
 static JavaVM *jvm = NULL;
 static jvmtiEnv *env = NULL;
 
 static jlong last_id = 1;
-
-JNIEXPORT void JNICALL Java_JavaTest_tagMe(JNIEnv *jnienv, jobject this, jobject obj) {
-	jlong new_tag = last_id;
-	jvmtiError err;
-	if ((err = (*env)->SetTag(env, obj, new_tag)) == JVMTI_ERROR_NONE) {
-		last_id++;
-
-		char *name = NULL;
-		jclass class = (*jnienv)->GetObjectClass(jnienv, obj);
-		if ((err = (*env)->GetClassSignature(env, class, &name, NULL)) == JVMTI_ERROR_NONE) {
-			printf("allocated tag %ld to object of class '%s'\n", new_tag, name);
-			(*env)->Deallocate(env, name);
-			name = NULL;
-		} else {
-			printf("shit %d\n", err);
-		}
-
-	} else {
-		printf("could not allocate tag: %d\n", err);
-	}
-}
 
 static jvmtiError add_capabilities() {
 	jvmtiCapabilities capa = {0};
@@ -88,4 +69,46 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm, char *options, void *reserve
 	return JNI_OK;
 }
 
+// exported functions
 
+JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_allocateTag(
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject obj) {
+
+	jlong new_tag = last_id;
+	jvmtiError err;
+	if ((err = (*env)->SetTag(env, obj, new_tag)) == JVMTI_ERROR_NONE) {
+		last_id++;
+
+		char *name = NULL;
+		if ((err = (*env)->GetClassSignature(env, klass, &name, NULL)) == JVMTI_ERROR_NONE) {
+			printf("allocated tag %ld to object of class '%s'\n", new_tag, name);
+			(*env)->Deallocate(env, name);
+			name = NULL;
+		}
+
+	} else {
+		printf("could not allocate tag: %d\n", err);
+		new_tag = 0;
+	}
+
+	return new_tag;
+}
+
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_assignCurrentTag(
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject obj) {
+
+	// TODO
+}
+
+JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_getTag(
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject obj) {
+
+	// TODO
+	return 0L;
+}
