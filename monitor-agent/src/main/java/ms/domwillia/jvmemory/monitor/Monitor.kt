@@ -49,6 +49,14 @@ object Monitor {
         logger.logMethodExit()
     }
 
+    @JvmStatic
+            /**
+             * Required, as calls to Tagger directly result in a NoClassDefFoundError
+             */
+    fun assignCurrentTag(o: Any) {
+        Tagger.assignCurrentTag(o)
+    }
+
     fun onAlloc(obj: Any, type: String) {
         val id = Tagger.allocateTag(obj)
         logger.logAllocation(type, id)

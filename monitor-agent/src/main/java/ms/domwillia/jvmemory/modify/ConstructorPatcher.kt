@@ -1,7 +1,6 @@
 package ms.domwillia.jvmemory.modify
 
 import ms.domwillia.jvmemory.monitor.Monitor
-import ms.domwillia.jvmemory.monitor.Tagger
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
@@ -50,7 +49,7 @@ class ConstructorPatcher(mv: MethodVisitor?, private val className: String, priv
             // stack: this
             super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
-                    Tagger.internalName,
+                    Monitor.internalName,
                     "assignCurrentTag",
                     "(Ljava/lang/Object;)V",
                     false
