@@ -13,7 +13,7 @@ ifeq ($(RELEASE), 0)
 	CFLAGS += -DDEBUG -O0 -g
 endif
 
-SRCS := $(shell find . -type f -name '*.c')
+SRCS := agent.c
 OBJS := $(notdir $(SRCS:%.c=%.o))
 
 .PHONY: default

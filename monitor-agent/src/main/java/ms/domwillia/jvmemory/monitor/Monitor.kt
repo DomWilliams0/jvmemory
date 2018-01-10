@@ -56,11 +56,12 @@ object Monitor {
         logger.logMethodExit()
     }
 
-    // TODO to be called from native agent
+    // called from native agent
     fun onAlloc(id: Long, type: String) {
         logger.logAllocation(type, id)
     }
 
+    // called from native agent
     fun onDealloc(id: Long) {
         logger.logDeallocation(id)
     }
