@@ -7,8 +7,6 @@ import org.objectweb.asm.commons.LocalVariablesSorter
 
 class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
 
-    private var hasDoneFinalize = false
-
     override fun visitEnd() {
         super.visitEnd()
         currentClass.debugPrint()
@@ -24,17 +22,8 @@ class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
-        when (name) {
         // constructor
-            "<init>" -> mv = ConstructorPatcher(mv, currentClass.name, currentClass.superName)
-
-        // destructor
-        // TODO replace with ObjectFree JVMTI event
-            "finalize" -> {
-                mv = FinalizePatcher(mv, currentClass.name)
-                hasDoneFinalize = true
-            }
-        }
+        if (name == "<init>") mv = ConstructorPatcher(mv, currentClass.name, currentClass.superName)
 
         // instruction patching
         val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc))
