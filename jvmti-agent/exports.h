@@ -23,14 +23,6 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_allocateTag
 JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_getTag
   (JNIEnv *, jclass, jobject);
 
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Tagger
- * Method:    flushQueuedDeallocations
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_flushQueuedDeallocations
-  (JNIEnv *, jclass);
-
 #ifdef __cplusplus
 }
 #endif
