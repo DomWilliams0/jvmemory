@@ -10,18 +10,10 @@ extern "C" {
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Tagger
  * Method:    allocateTag
- * Signature: (Ljava/lang/Object;)J
+ * Signature: (Ljava/lang/Object;Ljava/lang/Class;)J
  */
 JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_allocateTag
-  (JNIEnv *, jclass, jobject);
-
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Tagger
- * Method:    assignCurrentTag
- * Signature: (Ljava/lang/Object;)V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_assignCurrentTag
-  (JNIEnv *, jclass, jobject);
+  (JNIEnv *, jclass, jobject, jclass);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Tagger
