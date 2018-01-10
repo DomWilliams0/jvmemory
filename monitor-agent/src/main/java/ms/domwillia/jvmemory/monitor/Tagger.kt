@@ -7,8 +7,4 @@ object Tagger {
 
     @JvmStatic
     external fun getTag(o: Any): Long
-
-    @JvmStatic
-    external fun flushQueuedDeallocations()
-    // TODO actually call this
 }
