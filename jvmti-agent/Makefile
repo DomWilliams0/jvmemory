@@ -4,7 +4,7 @@ endif
 
 JVM_INCS = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
 
-CFLAGS = -Wall -Wextra -Wpedantic -fPIC -O1 $(JVM_INCS)
+CFLAGS = -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC -O1 $(JVM_INCS)
 CC = gcc
 TARGET = libagent.so
 
