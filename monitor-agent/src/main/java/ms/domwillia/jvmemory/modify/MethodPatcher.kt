@@ -104,16 +104,18 @@ class MethodPatcher(
             val type = Type.getType(desc)
             Monitor.getHandler(type, Monitor.TypeSpecificOperation.PUTFIELD)?.let { handler ->
 
+                // stack: obj value
                 // store value in tmp var
                 val tmp = localVarSorter.newLocal(type)
                 super.store(tmp, type)
 
-                // dup obj
+                // stack: obj
                 super.dup()
 
-                // get id
+                // stack: obj obj
                 super.invokestatic(Monitor.internalName, "getTag", "(Ljava/lang/Object;)J", false)
 
+                // stack: obj id1 id2
                 // get monitor
                 super.getstatic(
                         Monitor.internalName,
@@ -121,17 +123,21 @@ class MethodPatcher(
                         Monitor.descriptor
                 )
 
-                // swap monitor and hashcode
-                super.swap()
+                // stack: obj id1 id2 monitor
+                super.dupX2()
+                super.pop()
 
-                // push others
+                // stack: obj monitor id1 id2
+                // push other args
                 super.visitLdcInsn(owner)
                 super.visitLdcInsn(name)
                 super.visitLdcInsn(desc)
 
+                // stack: obj monitor id1 id2 owner name desc
                 // pop value
                 super.load(tmp, type)
 
+                // stack: obj monitor id1 id2 owner name desc value
                 val typeDescriptor = if (type.sort == Type.OBJECT) "Ljava/lang/Object;" else type.descriptor
                 super.invokevirtual(
                         Monitor.internalName,
