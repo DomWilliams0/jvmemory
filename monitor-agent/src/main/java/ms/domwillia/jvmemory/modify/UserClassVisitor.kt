@@ -22,9 +22,6 @@ class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
-        // constructor
-        if (name == "<init>") mv = ConstructorPatcher(mv, currentClass.name, currentClass.superName)
-
         // instruction patching
         val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc))
         val localVarSorter = LocalVariablesSorter(access, desc, instr)
