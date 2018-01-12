@@ -65,19 +65,12 @@ class MethodPatcher(
         // stack: value
         super.store(index, type)
     }
-    /*
-
     override fun load(index: Int, type: Type) {
-        super.visitFieldInsn(
-                Opcodes.GETSTATIC,
-                Monitor.internalName,
-                Monitor.instanceName,
-                Monitor.descriptor
-        )
+        // Monitor.onLoadLocalVar(index)
 
         super.iconst(index)
         super.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
+                Opcodes.INVOKESTATIC,
                 Monitor.internalName,
                 "onLoadLocalVar",
                 "(I)V",
@@ -87,6 +80,7 @@ class MethodPatcher(
         super.load(index, type)
     }
 
+    /*
     override fun getfield(owner: String, name: String, desc: String) {
         // TODO uninitialisedThis causes problems again
         super.dup()
