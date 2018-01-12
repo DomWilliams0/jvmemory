@@ -1,9 +1,11 @@
 package ms.domwillia.jvmemory.modify.visitor
 
+import ms.domwillia.jvmemory.modify.MethodPatcher
 import ms.domwillia.jvmemory.modify.tracer.CallTracer
 import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.commons.LocalVariablesSorter
 
 class UserClassVisitor(writer: ClassWriter) : BaseClassVisitor(writer) {
 
@@ -23,10 +25,12 @@ class UserClassVisitor(writer: ClassWriter) : BaseClassVisitor(writer) {
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
         // instruction patching
-        // TODO temporarily disabled while constructors are sorted out
-//        val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc))
-//        val localVarSorter = LocalVariablesSorter(access, desc, instr)
-//        instr.localVarSorter = localVarSorter
+        mv = run {
+            val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc))
+            val localVarSorter = LocalVariablesSorter(access, desc, instr)
+            instr.localVarSorter = localVarSorter
+            instr
+        }
 
         // call tracing
         // TODO check this at the method level instead of class level

@@ -48,7 +48,7 @@ object Monitor {
      * @param valueId The tag of the value, or 0 if not an object
      * @param index The local variable index
      */
-    @JvmStatic external private fun onStoreLocalVar(valueId: Long, index: Int)
+    @JvmStatic external fun onStoreLocalVar(valueId: Long, index: Int)
 
     /**
      * @param objId The tag of the object whose field is being set
