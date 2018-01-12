@@ -1,7 +1,6 @@
 package ms.domwillia.jvmemory.modify.visitor
 
 import ms.domwillia.jvmemory.modify.tracer.ObjectConstructorTracer
-import ms.domwillia.jvmemory.modify.tracer.SystemConstructorTracer
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
 
@@ -16,14 +15,9 @@ class SystemClassVisitor(writer: ClassWriter) : BaseClassVisitor(writer) {
     ): MethodVisitor? {
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
-        // constructor
-        if (name == "<init>") {
-            // not object
-            mv = if (currentClass.superName != null)
-                SystemConstructorTracer(currentClass.name, mv, access, desc)
-            // object
-            else
-                ObjectConstructorTracer(mv)
+        // java/lang/Object constructor only
+        if (currentClass.superName == null && name == "<init>") {
+            mv = ObjectConstructorTracer(mv)
         }
 
         return mv

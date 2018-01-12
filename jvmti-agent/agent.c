@@ -8,11 +8,11 @@
 
 // TODO are any of these globals thread safe?
 //		i dont think so
+//		does it matter?
 static JavaVM *jvm = NULL;
 static jvmtiEnv *env = NULL;
 
 static jlong next_id = 1;
-static jlong last_id = 0;
 
 static struct array freed_objects;
 static jrawMonitorID free_lock;
@@ -139,10 +139,8 @@ static void JNICALL free_thread_runnable(jvmtiEnv* env, JNIEnv* jnienv, void *ar
 
 // callbacks
 
-static void JNICALL callback_dealloc(jvmtiEnv *env, jlong tag) {
+static void JNICALL callback_dealloc(jvmtiEnv *jvmti_env, jlong tag) {
 	// no JVMTI or JNI functions can be called in this callback
-	// TODO add tag to a list of dealloced tags, which is processed at a safe place
-	//		for every queued free, call the java Monitor onDealloc method
 	array_add(&freed_objects, tag);
 }
 
@@ -165,45 +163,31 @@ static void JNICALL callback_gc_finish(jvmtiEnv* env) {
 
 // exported functions
 
-JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_allocateTag(
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
 		JNIEnv *jnienv,
 		jclass klass,
-		jobject obj,
-		jclass expectedClass) {
+		jobject obj) {
 
-	jclass runtimeClass = (*jnienv)->GetObjectClass(jnienv, obj);
-	jlong new_tag;
-
-	if ((*jnienv)->IsSameObject(jnienv, runtimeClass, expectedClass) == JNI_TRUE) {
-		new_tag = next_id++;
-		last_id = new_tag;
-
-		log_allocation(jnienv, new_tag, expectedClass);
-
-	} else {
-		new_tag = last_id;
-	}
+	jlong new_tag = next_id++;
 
 	jvmtiError err;
 	if ((err = (*env)->SetTag(env, obj, new_tag)) == JVMTI_ERROR_NONE) {
 		// debug log
 		char *name = NULL;
-		if ((err = (*env)->GetClassSignature(env, expectedClass, &name, NULL)) == JVMTI_ERROR_NONE) {
+        jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
+		if ((err = (*env)->GetClassSignature(env, cls, &name, NULL)) == JVMTI_ERROR_NONE) {
 			printf("allocated tag %ld to object of class '%s'\n", new_tag, name);
 			(*env)->Deallocate(env, (unsigned char *)name);
 			name = NULL;
 		} else {
-			printf("could not get class name: %d\n", err);
+			fprintf(stderr, "could not get class name: %d\n", err);
 		}
 	} else {
-		printf("could not allocate tag: %d\n", err);
-		new_tag = 0;
+		fprintf(stderr, "could not allocate tag: %d\n", err);
 	}
-
-	return new_tag;
 }
 
-JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_getTag(
+JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(
 		JNIEnv *jnienv,
 		jclass klass,
 		jobject obj) {
@@ -211,4 +195,33 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Tagger_getTag(
 	jlong tag = 0L;
 	(*env)->GetTag(env, obj, &tag);
 	return tag;
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    enterMethod
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod(
+		JNIEnv *jnienv,
+		jclass klass,
+		jstring class_name,
+		jstring method_name) {
+
+	const char *cls = (*jnienv)->GetStringUTFChars(jnienv, class_name, NULL);
+	const char *mthd = (*jnienv)->GetStringUTFChars(jnienv, method_name, NULL);
+    printf(">>> %s:%s\n", cls, mthd);
+    (*jnienv)->ReleaseStringUTFChars(jnienv, class_name, cls);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, method_name, mthd);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    exitMethod
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
+		JNIEnv *jnienv,
+		jclass klass) {
+    printf("<<<\n");
 }

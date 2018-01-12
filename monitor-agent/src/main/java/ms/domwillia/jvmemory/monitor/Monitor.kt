@@ -4,112 +4,56 @@ import org.objectweb.asm.Type
 
 @Suppress("unused")
 object Monitor {
+    @Deprecated("Monitor.INSTANCE no longer exists")
     val instanceName = "INSTANCE" // ty kotlin for `object`
-    val type = Type.getType(Monitor::class.java)
-    val internalName = type.internalName
-    val descriptor = type.descriptor
 
-    private val invalidInstanceId: Long = 0
+    val internalName: String
+    val descriptor: String
 
-    // wrappers for Tagger methods, as calls to Tagger directly result in a NoClassDefFoundError
-    @JvmStatic
-    fun <X> allocateTag(o: Any, expectedClass: Class<out X>) = Tagger.allocateTag(o, expectedClass)
-
-    @JvmStatic
-    fun getTag(o: Any) = Tagger.getTag(o)
-
-    fun enterConstructor(clazz: String) {}
-
-    fun enterMethod(clazz: String, method: String) {}
-
-    fun exitMethod() {}
-
-    // called from native agent
-    fun onAlloc(id: Long, type: String) {}
-
-    // called from native agent
-    fun onDealloc(id: Long) {}
-
-    fun onGetField(objId: Long, clazz: String, field: String, type: String) {}
-
-    fun onLoadLocalVar(index: Int) {}
-
-    private fun onStoreLocalVar(type: String, value: Any, index: Int) {}
-
-    private fun onPutField(objId: Long, clazz: String, field: String, type: String, valueId: Long) {}
-
-    // type specific delegates
-    fun onPutFieldBoolean(objId: Long, clazz: String, field: String, type: String, value: Boolean) {
-        onPutField(objId, clazz, field, type, invalidInstanceId)
+    init {
+        val type = Type.getType(Monitor::class.java)
+        internalName = type.internalName
+        descriptor = type.descriptor
     }
 
-    fun onPutFieldChar(objId: Long, clazz: String, field: String, type: String, value: Char) {
-        onPutField(objId, clazz, field, type, invalidInstanceId)
-    }
+    val invalidInstanceId: Long = 0
 
-    fun onPutFieldByte(objId: Long, clazz: String, field: String, type: String, value: Byte) {
-        onPutField(objId, clazz, field, type, invalidInstanceId)
-    }
+    /**
+     * To be called from within java/lang/Object's constructor only
+     */
+    @JvmStatic external fun allocateTag(o: Any)
 
-    fun onPutFieldShort(objId: Long, clazz: String, field: String, type: String, value: Short) {
-        onPutField(objId, clazz, field, type, invalidInstanceId)
-    }
+    @JvmStatic external fun getTag(o: Any): Long
 
-    fun onPutFieldInt(objId: Long, clazz: String, field: String, type: String, value: Int) {
-        onPutField(objId, clazz, field, type, invalidInstanceId)
-    }
+    @JvmStatic external fun enterMethod(clazz: String, method: String)
 
-    fun onPutFieldFloat(objId: Long, clazz: String, field: String, type: String, value: Float) {
-        onPutField(objId, clazz, field, type, invalidInstanceId)
-    }
+    @JvmStatic external fun exitMethod()
 
-    fun onPutFieldLong(objId: Long, clazz: String, field: String, type: String, value: Long) {
-        onPutField(objId, clazz, field, type, invalidInstanceId)
-    }
+    @JvmStatic external fun onAlloc(id: Long, type: String)
 
-    fun onPutFieldDouble(objId: Long, clazz: String, field: String, type: String, value: Double) {
-        onPutField(objId, clazz, field, type, invalidInstanceId)
-    }
+    @JvmStatic external fun onDealloc(id: Long)
 
-    fun onPutFieldObject(objId: Long, clazz: String, field: String, type: String, value: Any) {
-        val valId = Tagger.getTag(value)
-        onPutField(objId, clazz, field, type, valId)
-    }
+    /**
+     * @param objId The tag of the object whose field is being accessed
+     * @param field The name of the field being accessed
+     */
+    @JvmStatic external fun onGetField(objId: Long, field: String)
 
-    // storing
-    fun onStoreBoolean(value: Boolean, index: Int) {
-        onStoreLocalVar("Boolean", value, index)
-    }
+    /**
+     * @param index The local variable index
+     */
+    @JvmStatic external fun onLoadLocalVar(index: Int)
 
-    fun onStoreChar(value: Char, index: Int) {
-        onStoreLocalVar("Char", value, index)
-    }
+    /**
+     * @param valueId The tag of the value, or 0 if not an object
+     * @param index The local variable index
+     */
+    @JvmStatic external private fun onStoreLocalVar(valueId: Long, index: Int)
 
-    fun onStoreByte(value: Byte, index: Int) {
-        onStoreLocalVar("Byte", value, index)
-    }
-
-    fun onStoreShort(value: Short, index: Int) {
-        onStoreLocalVar("Short", value, index)
-    }
-
-    fun onStoreInt(value: Int, index: Int) {
-        onStoreLocalVar("Int", value, index)
-    }
-
-    fun onStoreFloat(value: Float, index: Int) {
-        onStoreLocalVar("Float", value, index)
-    }
-
-    fun onStoreLong(value: Long, index: Int) {
-        onStoreLocalVar("Long", value, index)
-    }
-
-    fun onStoreDouble(value: Double, index: Int) {
-        onStoreLocalVar("Double", value, index)
-    }
-
-    fun onStoreObject(value: Any, index: Int) {
-        onStoreLocalVar("Object", value, index)
-    }
+    /**
+     * @param objId The tag of the object whose field is being set
+     * @param field The name of the field being set
+     * @param valueId The tag of the value, or 0 if not an object
+     */
+    @JvmStatic external fun onPutField(objId: Long, field: String, valueId: Long)
 }

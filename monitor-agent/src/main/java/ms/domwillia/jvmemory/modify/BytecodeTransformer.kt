@@ -19,8 +19,6 @@ class BytecodeTransformer : ClassFileTransformer {
         NONE
     }
 
-    private val systemBlacklist = arrayOf("java/lang/Throwable", "java/lang/Exception", "java/nio/HeapCharBuffer")
-
     private fun createVisitor(className: String): Pair<PatcherType, ((ClassWriter) -> ClassVisitor)?> {
         val type = when {
         // blacklist jvmemory classes
@@ -31,15 +29,11 @@ class BytecodeTransformer : ClassFileTransformer {
         // TODO controlled by user
             className.startsWith("ms/domwillia/specimen") -> PatcherType.USER
 
-        // blacklist
-            className.startsWith("com/intellij") -> PatcherType.NONE
-            className.startsWith("sun") -> PatcherType.NONE
-            className.startsWith("java/nio") -> PatcherType.NONE
-            className.startsWith("java/io") -> PatcherType.NONE
-            systemBlacklist.contains(className) -> PatcherType.NONE
-
         // system
-            else -> PatcherType.SYSTEM
+            className == "java/lang/Object" -> PatcherType.SYSTEM
+
+        // no need to instrument any other classes
+            else -> PatcherType.NONE
         }
 
         val func = when (type) {
@@ -86,18 +80,8 @@ class BytecodeTransformer : ClassFileTransformer {
         @JvmStatic
         fun premain(agentArgs: String?, inst: Instrumentation) {
             inst.appendToBootstrapClassLoaderSearch(JarFile("out/artifacts/bootstrap/bootstrap.jar"))
-            println("hello and off we go")
             inst.addTransformer(BytecodeTransformer(), true)
-
-            inst.allLoadedClasses
-                    .filter(inst::isModifiableClass)
-                    .forEach {
-                        try {
-                            inst.retransformClasses(it)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
+            inst.retransformClasses(java.lang.Object::class.java)
         }
     }
 }
