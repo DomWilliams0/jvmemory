@@ -1,29 +1,9 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.monitor.Monitor
-import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
-import org.objectweb.asm.*
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.MethodVisitor
 
-open class SystemClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
-
-    protected lateinit var currentClass: ClassDefinition
-
-    override fun visit(
-            version: Int,
-            access: Int,
-            name: String,
-            signature: String?,
-            superName: String?,
-            interfaces: Array<String>?
-    ) {
-        currentClass = ClassDefinition(name, access, superName, interfaces)
-        super.visit(version, access, name, signature, superName, interfaces)
-    }
-
-    override fun visitField(access: Int, name: String, desc: String, signature: String?, value: Any?): FieldVisitor {
-        currentClass.registerField(access, name, desc)
-        return super.visitField(access, name, desc, signature, value)
-    }
+class SystemClassVisitor(writer: ClassWriter) : BaseClassVisitor(writer) {
 
     override fun visitMethod(
             access: Int,
@@ -36,27 +16,14 @@ open class SystemClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, 
 
         // constructor
         if (name == "<init>") {
-            mv = ConstructorPatcher(mv, currentClass.name, currentClass.superName)
-
-            // system classes only
-            // TODO this is awful and only for testing
-            if (getClassType() == BytecodeTransformer.PatcherType.SYSTEM) {
-                // not object
-                if (currentClass.superName != null)
-                    mv = SystemConstructorTracer(currentClass.name, mv, access, desc)
-                // object
-                else
-                    mv = ObjectConstructorTracer(mv)
-            }
+            // not object
+            mv = if (currentClass.superName != null)
+                SystemConstructorTracer(currentClass.name, mv, access, desc)
+            // object
+            else
+                ObjectConstructorTracer(mv)
         }
 
         return mv
     }
-
-    override fun visitEnd() {
-        Monitor.logger.logClassDefinition(currentClass)
-    }
-
-    // TODO temporary
-    open protected fun getClassType(): BytecodeTransformer.PatcherType = BytecodeTransformer.PatcherType.SYSTEM
 }

@@ -30,6 +30,7 @@ class ObjectConstructorTracer(mv: MethodVisitor?) : MethodVisitor(Opcodes.ASM6, 
                 "(Ljava/lang/String;)V",
                 false
         )
+        // TODO should call allocateTag instead
 
         super.visitInsn(opcode)
     }

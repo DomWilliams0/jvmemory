@@ -5,7 +5,7 @@ import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.commons.LocalVariablesSorter
 
-class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
+class UserClassVisitor(writer: ClassWriter) : BaseClassVisitor(writer) {
 
     override fun visitEnd() {
         super.visitEnd()
@@ -34,6 +34,4 @@ class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
 
         return mv
     }
-
-    override fun getClassType(): BytecodeTransformer.PatcherType = BytecodeTransformer.PatcherType.USER
 }
