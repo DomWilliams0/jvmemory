@@ -19,34 +19,53 @@ class MethodPatcher(
     lateinit var localVarSorter: LocalVariablesSorter
 
     override fun store(index: Int, type: Type) {
-        getHandler(type, TypeSpecificOperation.STORE)?.let { handler ->
-            // dup value and store in a tmp var
-            // TODO we can definitely reuse this tmpvar, should not make a new one for every single store!!
-            // TODO caching localvarsorter
-            dupTypeSpecific(type)
-            val tmpVar = localVarSorter.newLocal(type)
-            super.store(tmpVar, type)
 
-            super.visitFieldInsn(
-                    Opcodes.GETSTATIC,
-                    Monitor.internalName,
-                    Monitor.instanceName,
-                    Monitor.descriptor
-            )
+        // object:
+        // Monitor.onStoreLocalVar(Monitor.getTag(value), index)
+        // others:
+        // Monitor.onStoreLocalVar(0, index)
 
-            super.load(tmpVar, type)
-            super.iconst(index)
-            super.visitMethodInsn(
-                    Opcodes.INVOKEVIRTUAL,
+        // stack: value
+
+        if (type.sort == Type.OBJECT) {
+            // dup value
+            super.dup()
+
+            // stack: value value
+
+            // get tag
+            super.invokestatic(
                     Monitor.internalName,
-                    handler,
-                    "(${type.descriptor}I)V",
+                    "getTag",
+                    "(Ljava/lang/Object;)J",
                     false
             )
+
+            // stack: value tag_long
+        } else {
+            super.load(0, Type.LONG_TYPE)
+            // stack: value tag_long
         }
 
+        // stack: value tag_long
+
+        // push index
+        super.iconst(index)
+
+        // stack: value tag_long index
+
+        // log
+        super.invokestatic(
+                Monitor.internalName,
+                "onStoreLocalVar",
+                "(JI)V",
+                false
+        )
+
+        // stack: value
         super.store(index, type)
     }
+    /*
 
     override fun load(index: Int, type: Type) {
         super.visitFieldInsn(
@@ -153,15 +172,11 @@ class MethodPatcher(
         super.putfield(owner, name, desc)
     }
 
+*/
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
         definition.registerLocalVariable(name, desc, index)
         super.visitLocalVariable(name, desc, signature, start, end, index)
-    }
-
-    override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-        // TODO this is arbitrary. look at yourself, what a mess!
-        super.visitMaxs(maxStack + 8, maxLocals)
     }
 
     // does this depend on architecture/implementation?
@@ -171,37 +186,4 @@ class MethodPatcher(
             else -> super.dup()
         }
     }
-
-    // helpers
-
-    enum class TypeSpecificOperation {
-        STORE {
-            override fun toString(): String = "Store"
-        },
-        PUTFIELD {
-            override fun toString(): String = "PutField"
-        }
-    }
-
-    companion object {
-        private fun getHandler(type: Type, op: TypeSpecificOperation): String? {
-            val typeName = when (type.sort) {
-                Type.BOOLEAN -> "Boolean"
-                Type.CHAR -> "Char"
-                Type.BYTE -> "Byte"
-                Type.SHORT -> "Short"
-                Type.INT -> "Int"
-                Type.FLOAT -> "Float"
-                Type.LONG -> "Long"
-                Type.DOUBLE -> "Double"
-                Type.OBJECT -> "Object"
-            // TODO arrays just complicate things at this stage
-            // Type.ARRAY -> "array"
-                else -> return null
-            }
-
-            return "on$op$typeName"
-        }
-    }
-
 }

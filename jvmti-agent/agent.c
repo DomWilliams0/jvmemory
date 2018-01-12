@@ -226,3 +226,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
 		jclass klass) {
     printf("<<<\n");
 }
+
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVar(
+		JNIEnv *jnienv,
+		jclass klass,
+		jlong value_id,
+		jint index) {
+	printf("store %ld in local var %d\n", value_id, index);
+}
