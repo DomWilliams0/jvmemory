@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.modify
+package ms.domwillia.jvmemory.modify.tracer
 
 import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.MethodVisitor

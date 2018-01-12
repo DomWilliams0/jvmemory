@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.modify
+package ms.domwillia.jvmemory.modify.visitor
 
 import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import org.objectweb.asm.ClassVisitor

@@ -1,5 +1,7 @@
-package ms.domwillia.jvmemory.modify
+package ms.domwillia.jvmemory.modify.visitor
 
+import ms.domwillia.jvmemory.modify.MethodPatcher
+import ms.domwillia.jvmemory.modify.tracer.CallTracer
 import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
