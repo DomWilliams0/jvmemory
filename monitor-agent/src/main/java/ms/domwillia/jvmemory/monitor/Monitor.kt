@@ -1,7 +1,6 @@
 package ms.domwillia.jvmemory.monitor
 
 import org.objectweb.asm.Type
-import java.io.FileOutputStream
 
 @Suppress("unused")
 object Monitor {
@@ -10,7 +9,6 @@ object Monitor {
     val internalName = type.internalName
     val descriptor = type.descriptor
 
-    var logger = Logger(FileOutputStream("jvmemory.log"))
     private val invalidInstanceId: Long = 0
 
     // wrappers for Tagger methods, as calls to Tagger directly result in a NoClassDefFoundError
@@ -20,44 +18,25 @@ object Monitor {
     @JvmStatic
     fun getTag(o: Any) = Tagger.getTag(o)
 
-    fun enterConstructor(clazz: String) {
-        if (clazz != "java/lang/Object")
-            logger.logMethodEnter(clazz, "<init>")
-    }
+    fun enterConstructor(clazz: String) {}
 
-    fun enterMethod(clazz: String, method: String) {
-        logger.logMethodEnter(clazz, method)
-    }
+    fun enterMethod(clazz: String, method: String) {}
 
-    fun exitMethod() {
-        logger.logMethodExit()
-    }
+    fun exitMethod() {}
 
     // called from native agent
-    fun onAlloc(id: Long, type: String) {
-        logger.logAllocation(type, id)
-    }
+    fun onAlloc(id: Long, type: String) {}
 
     // called from native agent
-    fun onDealloc(id: Long) {
-        logger.logDeallocation(id)
-    }
+    fun onDealloc(id: Long) {}
 
-    fun onGetField(objId: Long, clazz: String, field: String, type: String) {
-        logger.logGetField(objId, field)
-    }
+    fun onGetField(objId: Long, clazz: String, field: String, type: String) {}
 
-    fun onLoadLocalVar(index: Int) {
-        logger.logLoad(index)
-    }
+    fun onLoadLocalVar(index: Int) {}
 
-    private fun onStoreLocalVar(type: String, value: Any, index: Int) {
-        logger.logStore(type, index)
-    }
+    private fun onStoreLocalVar(type: String, value: Any, index: Int) {}
 
-    private fun onPutField(objId: Long, clazz: String, field: String, type: String, valueId: Long) {
-        logger.logPutField(objId, field, valueId)
-    }
+    private fun onPutField(objId: Long, clazz: String, field: String, type: String, valueId: Long) {}
 
     // type specific delegates
     fun onPutFieldBoolean(objId: Long, clazz: String, field: String, type: String, value: Boolean) {
