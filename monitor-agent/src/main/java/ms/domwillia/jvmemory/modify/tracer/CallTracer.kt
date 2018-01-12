@@ -20,17 +20,10 @@ class CallTracer(
 ) {
 
     override fun onMethodEnter() {
-        super.visitFieldInsn(
-                Opcodes.GETSTATIC,
-                Monitor.internalName,
-                Monitor.instanceName,
-                Monitor.descriptor
-        )
-
         super.visitLdcInsn(className)
         super.visitLdcInsn(methodName)
         super.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
+                Opcodes.INVOKESTATIC,
                 Monitor.internalName,
                 "enterMethod",
                 "(Ljava/lang/String;Ljava/lang/String;)V",
@@ -41,15 +34,8 @@ class CallTracer(
     }
 
     override fun onMethodExit(opcode: Int) {
-        super.visitFieldInsn(
-                Opcodes.GETSTATIC,
-                Monitor.internalName,
-                Monitor.instanceName,
-                Monitor.descriptor
-        )
-
         super.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
+                Opcodes.INVOKESTATIC,
                 Monitor.internalName,
                 "exitMethod",
                 "()V",
@@ -57,9 +43,5 @@ class CallTracer(
         )
 
         super.onMethodExit(opcode)
-    }
-
-    override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-        super.visitMaxs(maxStack + 2, maxLocals)
     }
 }

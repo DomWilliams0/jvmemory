@@ -15,22 +15,14 @@ class ObjectConstructorTracer(mv: MethodVisitor?) : MethodVisitor(Opcodes.ASM6, 
             return
         }
 
-        super.visitFieldInsn(
-                Opcodes.GETSTATIC,
-                Monitor.internalName,
-                Monitor.instanceName,
-                Monitor.descriptor
-        )
-
-        super.visitLdcInsn("java/lang/Object")
+        super.visitVarInsn(Opcodes.ALOAD, 0)
         super.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
+                Opcodes.INVOKESTATIC,
                 Monitor.internalName,
-                "enterConstructor",
-                "(Ljava/lang/String;)V",
+                "allocateTag",
+                "(Ljava/lang/Object;)V",
                 false
         )
-        // TODO should call allocateTag instead
 
         super.visitInsn(opcode)
     }
