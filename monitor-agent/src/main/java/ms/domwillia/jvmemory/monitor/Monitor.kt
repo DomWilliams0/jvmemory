@@ -13,34 +13,6 @@ object Monitor {
     var logger = Logger(FileOutputStream("jvmemory.log"))
     private val invalidInstanceId: Long = 0
 
-    fun getHandler(type: Type, op: TypeSpecificOperation): String? {
-        val typeName = when (type.sort) {
-            Type.BOOLEAN -> "Boolean"
-            Type.CHAR -> "Char"
-            Type.BYTE -> "Byte"
-            Type.SHORT -> "Short"
-            Type.INT -> "Int"
-            Type.FLOAT -> "Float"
-            Type.LONG -> "Long"
-            Type.DOUBLE -> "Double"
-            Type.OBJECT -> "Object"
-        // TODO arrays just complicate things at this stage
-        // Type.ARRAY -> "array"
-            else -> return null
-        }
-
-        return "on$op$typeName"
-    }
-
-    enum class TypeSpecificOperation {
-        STORE {
-            override fun toString(): String = "Store"
-        },
-        PUTFIELD {
-            override fun toString(): String = "PutField"
-        }
-    }
-
     // wrappers for Tagger methods, as calls to Tagger directly result in a NoClassDefFoundError
     @JvmStatic
     fun <X> allocateTag(o: Any, expectedClass: Class<out X>) = Tagger.allocateTag(o, expectedClass)

@@ -19,7 +19,7 @@ class MethodPatcher(
     lateinit var localVarSorter: LocalVariablesSorter
 
     override fun store(index: Int, type: Type) {
-        Monitor.getHandler(type, Monitor.TypeSpecificOperation.STORE)?.let { handler ->
+        getHandler(type, TypeSpecificOperation.STORE)?.let { handler ->
             // dup value and store in a tmp var
             // TODO we can definitely reuse this tmpvar, should not make a new one for every single store!!
             // TODO caching localvarsorter
@@ -102,7 +102,7 @@ class MethodPatcher(
     override fun putfield(owner: String, name: String, desc: String) {
         if (!(methodName == "<init>" && name == "this$0")) {
             val type = Type.getType(desc)
-            Monitor.getHandler(type, Monitor.TypeSpecificOperation.PUTFIELD)?.let { handler ->
+            getHandler(type, TypeSpecificOperation.PUTFIELD)?.let { handler ->
 
                 // stack: obj value
                 // store value in tmp var
@@ -171,4 +171,37 @@ class MethodPatcher(
             else -> super.dup()
         }
     }
+
+    // helpers
+
+    enum class TypeSpecificOperation {
+        STORE {
+            override fun toString(): String = "Store"
+        },
+        PUTFIELD {
+            override fun toString(): String = "PutField"
+        }
+    }
+
+    companion object {
+        private fun getHandler(type: Type, op: TypeSpecificOperation): String? {
+            val typeName = when (type.sort) {
+                Type.BOOLEAN -> "Boolean"
+                Type.CHAR -> "Char"
+                Type.BYTE -> "Byte"
+                Type.SHORT -> "Short"
+                Type.INT -> "Int"
+                Type.FLOAT -> "Float"
+                Type.LONG -> "Long"
+                Type.DOUBLE -> "Double"
+                Type.OBJECT -> "Object"
+            // TODO arrays just complicate things at this stage
+            // Type.ARRAY -> "array"
+                else -> return null
+            }
+
+            return "on$op$typeName"
+        }
+    }
+
 }
