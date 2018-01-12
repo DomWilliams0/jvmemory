@@ -6,12 +6,22 @@ public class GarbageCollection implements Specimen {
 	public void go() {
 
 		for (int i = 0; i < 10000; i++) {
-			double[] x = new WasteOfSpace().doubles;
-
+			new WasteOfSpace(String.valueOf(i));
 		}
+		System.out.println("waste of spaces done");
 	}
 
 	private static class WasteOfSpace {
 		double[] doubles = new double[1024];
+		String s;
+		Empty e = new Empty();
+
+
+		public WasteOfSpace(String s) {
+			this.s = s;
+		}
+	}
+	private static class Empty {
+
 	}
 }

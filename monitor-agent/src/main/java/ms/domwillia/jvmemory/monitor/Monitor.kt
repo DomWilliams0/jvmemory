@@ -48,6 +48,11 @@ object Monitor {
     @JvmStatic
     fun getTag(o: Any) = Tagger.getTag(o)
 
+    fun enterConstructor(clazz: String) {
+        if (clazz != "java/lang/Object")
+            logger.logMethodEnter(clazz, "<init>")
+    }
+
     fun enterMethod(clazz: String, method: String) {
         logger.logMethodEnter(clazz, method)
     }
