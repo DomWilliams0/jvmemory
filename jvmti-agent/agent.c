@@ -227,6 +227,23 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
     printf("<<<\n");
 }
 
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onLoadLocalVar
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar(
+		JNIEnv *jnienv,
+		jclass klass,
+		jint index) {
+    printf("load %d\n", index);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStoreLocalVar
+ * Signature: (JI)V
+ */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVar(
 		JNIEnv *jnienv,
 		jclass klass,
