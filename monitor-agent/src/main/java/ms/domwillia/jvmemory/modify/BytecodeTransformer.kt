@@ -19,7 +19,7 @@ class BytecodeTransformer : ClassFileTransformer {
         NONE
     }
 
-    private fun createVisitor(className: String): Pair<PatcherType, ((ClassWriter) -> ClassVisitor)?> {
+    private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? {
         val type = when {
         // blacklist jvmemory classes
             className.startsWith("ms/domwillia/jvmemory") -> PatcherType.NONE
@@ -36,21 +36,18 @@ class BytecodeTransformer : ClassFileTransformer {
             else -> PatcherType.NONE
         }
 
-        val func = when (type) {
+        return when (type) {
             BytecodeTransformer.PatcherType.USER -> ::UserClassVisitor
             BytecodeTransformer.PatcherType.SYSTEM -> ::SystemClassVisitor
             BytecodeTransformer.PatcherType.NONE -> null
         }
-
-        return Pair(type, func)
     }
 
     override fun transform(loader: ClassLoader?, className: String,
                            classBeingRedefined: Class<*>?, protectionDomain: ProtectionDomain?,
                            classfileBuffer: ByteArray): ByteArray? {
 
-        val (type, visitor) = createVisitor(className)
-        val rewritten = visitor?.run {
+        return createVisitor(className)?.run {
 
             val reader = ClassReader(classfileBuffer)
             val writer = ClassWriter(reader, ClassWriter.COMPUTE_FRAMES)
@@ -62,21 +59,18 @@ class BytecodeTransformer : ClassFileTransformer {
                 e.printStackTrace()
             }
 
-            writer.toByteArray()
-        }
-
-        if (type == PatcherType.USER) {
+            val bytes = writer.toByteArray()
             val classDir = "/tmp/classes"
             File(classDir).mkdir()
 
             val outPath = "$classDir/mod_${className.replace('/', '.')}.class"
             File(outPath).outputStream().use { file ->
-                file.write(rewritten)
+                file.write(bytes)
             }
             println("Wrote modified class to $outPath")
-        }
 
-        return rewritten
+            bytes
+        }
     }
 
     companion object {
