@@ -1,5 +1,7 @@
 package ms.domwillia.jvmemory.modify
 
+import ms.domwillia.jvmemory.modify.visitor.SystemClassVisitor
+import ms.domwillia.jvmemory.modify.visitor.UserClassVisitor
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
