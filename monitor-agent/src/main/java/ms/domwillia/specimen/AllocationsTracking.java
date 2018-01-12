@@ -11,6 +11,7 @@ public class AllocationsTracking implements Specimen {
 		Baggage baggageB = new Baggage("quite light", 20);
 
 		TestBean bean = new TestBean(20, 5.5, baggageA);
+		Baggage tmp = bean.baggage;
 		bean.baggage = baggageB;
 
 		List<Baggage> baggages = new ArrayList<>();

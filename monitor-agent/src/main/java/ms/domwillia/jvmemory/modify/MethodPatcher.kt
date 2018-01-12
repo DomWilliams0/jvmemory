@@ -9,10 +9,8 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.commons.InstructionAdapter
 import org.objectweb.asm.commons.LocalVariablesSorter
 
-// TODO helper data class for class+method
 class MethodPatcher(
         delegate: MethodVisitor?,
-        private val methodName: String,
         private val definition: MethodDefinition
 ) : InstructionAdapter(Opcodes.ASM6, delegate) {
 
@@ -43,7 +41,7 @@ class MethodPatcher(
 
             // stack: value tag_long
         } else {
-            super.load(0, Type.LONG_TYPE)
+            super.lconst(0)
             // stack: value tag_long
         }
 
@@ -65,6 +63,7 @@ class MethodPatcher(
         // stack: value
         super.store(index, type)
     }
+
     override fun load(index: Int, type: Type) {
         // Monitor.onLoadLocalVar(index)
 
@@ -80,104 +79,124 @@ class MethodPatcher(
         super.load(index, type)
     }
 
-    /*
     override fun getfield(owner: String, name: String, desc: String) {
+
+        // stack: object
+
         // TODO uninitialisedThis causes problems again
+        // dup object
         super.dup()
 
-        super.getstatic(
+        // stack: object object
+
+        // get tag
+        super.invokestatic(
                 Monitor.internalName,
-                Monitor.instanceName,
-                Monitor.descriptor
-        )
-
-        // swap monitor and object
-        super.swap()
-
-        // get id
-        super.invokestatic(Monitor.internalName, "getTag", "(Ljava/lang/Object;)J", false)
-
-        // add other args
-        super.visitLdcInsn(owner)
-        super.visitLdcInsn(name)
-        super.visitLdcInsn(desc)
-
-        super.invokevirtual(
-                Monitor.internalName,
-                "onGetField",
-                "(JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+                "getTag",
+                "(Ljava/lang/Object;)J",
                 false
         )
 
+        // stack: object tag
+
+        // push field
+        super.visitLdcInsn(name)
+
+        // stack: object tag fieldName
+
+        // log
+        super.invokestatic(
+                Monitor.internalName,
+                "onGetField",
+                "(JLjava/lang/String;)V",
+                false
+        )
+
+        // stack: object
         super.getfield(owner, name, desc)
     }
 
     override fun putfield(owner: String, name: String, desc: String) {
-        if (!(methodName == "<init>" && name == "this$0")) {
+        // TODO there are extra onLoadLocalVars before every putfield - remove these!
+
+        // avoid uninitialisedThis
+        if (name != "this$0") {
+
+            // object:
+            // Monitor.onPutField(Monitor.getTag(obj), field, Monitor.getTag(value))
+            // others:
+            // Monitor.onPutField(Monitor.getTag(obj), field, 0)
+
+            // stack: obj value
+
+            // store value in tmp
             val type = Type.getType(desc)
-            getHandler(type, TypeSpecificOperation.PUTFIELD)?.let { handler ->
+            val tmp = localVarSorter.newLocal(type)
+            super.store(tmp, type)
 
-                // stack: obj value
-                // store value in tmp var
-                val tmp = localVarSorter.newLocal(type)
-                super.store(tmp, type)
+            // stack: obj
 
-                // stack: obj
-                super.dup()
+            // dup
+            super.dup()
 
-                // stack: obj obj
-                super.invokestatic(Monitor.internalName, "getTag", "(Ljava/lang/Object;)J", false)
+            // stack: obj obj
 
-                // stack: obj id1 id2
-                // get monitor
-                super.getstatic(
-                        Monitor.internalName,
-                        Monitor.instanceName,
-                        Monitor.descriptor
-                )
+            // get tag
+            super.invokestatic(
+                    Monitor.internalName,
+                    "getTag",
+                    "(Ljava/lang/Object;)J",
+                    false
+            )
 
-                // stack: obj id1 id2 monitor
-                super.dupX2()
-                super.pop()
+            // stack: obj obj_id
 
-                // stack: obj monitor id1 id2
-                // push other args
-                super.visitLdcInsn(owner)
-                super.visitLdcInsn(name)
-                super.visitLdcInsn(desc)
+            // push field
+            super.visitLdcInsn(name)
 
-                // stack: obj monitor id1 id2 owner name desc
+            // stack: obj obj_id field
+
+            if (type.sort == Type.OBJECT) {
                 // pop value
                 super.load(tmp, type)
 
-                // stack: obj monitor id1 id2 owner name desc value
-                val typeDescriptor = if (type.sort == Type.OBJECT) "Ljava/lang/Object;" else type.descriptor
-                super.invokevirtual(
+                // stack: obj obj_id field value
+
+                // get tag
+                super.invokestatic(
                         Monitor.internalName,
-                        handler,
-                        "(JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;$typeDescriptor)V",
+                        "getTag",
+                        "(Ljava/lang/Object;)J",
                         false
                 )
 
-                // pop value again for original call
-                super.load(tmp, type)
+                // stack: obj obj_id field value_id
+            } else {
+                super.lconst(0)
+                // stack: obj obj_id field value_id
             }
+
+            // log
+            super.invokestatic(
+                    Monitor.internalName,
+                    "onPutField",
+                    "(JLjava/lang/String;J)V",
+                    false
+            )
+            // stack: obj
+
+            // pop value
+            super.load(tmp, type)
+
+            // stack: obj value
         }
+
         super.putfield(owner, name, desc)
     }
 
-*/
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
         definition.registerLocalVariable(name, desc, index)
         super.visitLocalVariable(name, desc, signature, start, end, index)
-    }
-
-    // does this depend on architecture/implementation?
-    private fun dupTypeSpecific(type: Type) {
-        when (type.sort) {
-            Type.LONG, Type.DOUBLE -> super.dup2()
-            else -> super.dup()
-        }
     }
 }

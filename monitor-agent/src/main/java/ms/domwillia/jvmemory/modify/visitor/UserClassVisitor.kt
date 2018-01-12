@@ -26,7 +26,7 @@ class UserClassVisitor(writer: ClassWriter) : BaseClassVisitor(writer) {
 
         // instruction patching
         mv = run {
-            val instr = MethodPatcher(mv, name, currentClass.registerMethod(access, name, desc))
+            val instr = MethodPatcher(mv, currentClass.registerMethod(access, name, desc))
             val localVarSorter = LocalVariablesSorter(access, desc, instr)
             instr.localVarSorter = localVarSorter
             instr
