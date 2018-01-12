@@ -141,7 +141,8 @@ static void JNICALL free_thread_runnable(jvmtiEnv* env, JNIEnv* jnienv, void *ar
 
 static void JNICALL callback_dealloc(jvmtiEnv *jvmti_env, jlong tag) {
 	// no JVMTI or JNI functions can be called in this callback
-	array_add(&freed_objects, tag);
+    printf("deallocate %ld\n", tag);
+//	array_add(&freed_objects, tag);
 }
 
 static void JNICALL callback_vm_init(jvmtiEnv *env, JNIEnv *jnienv, jthread thread) {
