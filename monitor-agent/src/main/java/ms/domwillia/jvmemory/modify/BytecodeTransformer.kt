@@ -7,26 +7,34 @@ import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
 import java.security.ProtectionDomain
+import java.util.jar.JarFile
 
 class BytecodeTransformer : ClassFileTransformer {
 
-    private enum class PatcherType {
+    enum class PatcherType {
         USER,
         SYSTEM,
         NONE
     }
 
+    private val systemBlacklist = arrayOf("java/lang/Throwable", "java/lang/Exception", "java/nio/HeapCharBuffer")
+
     private fun createVisitor(className: String): Pair<PatcherType, ((ClassWriter) -> ClassVisitor)?> {
         val type = when {
         // blacklist jvmemory classes
             className.startsWith("ms/domwillia/jvmemory") -> PatcherType.NONE
+            className.startsWith("com/google/protobuf") -> PatcherType.NONE
 
         // user classes
         // TODO controlled by user
             className.startsWith("ms/domwillia/specimen") -> PatcherType.USER
 
-        // ide
+        // blacklist
             className.startsWith("com/intellij") -> PatcherType.NONE
+            className.startsWith("sun") -> PatcherType.NONE
+            className.startsWith("java/nio") -> PatcherType.NONE
+            className.startsWith("java/io") -> PatcherType.NONE
+            systemBlacklist.contains(className) -> PatcherType.NONE
 
         // system
             else -> PatcherType.SYSTEM
@@ -75,6 +83,8 @@ class BytecodeTransformer : ClassFileTransformer {
     companion object {
         @JvmStatic
         fun premain(agentArgs: String?, inst: Instrumentation) {
+            inst.appendToBootstrapClassLoaderSearch(JarFile("out/artifacts/bootstrap/bootstrap.jar"))
+            println("hello and off we go")
             inst.addTransformer(BytecodeTransformer(), true)
 
             inst.allLoadedClasses
