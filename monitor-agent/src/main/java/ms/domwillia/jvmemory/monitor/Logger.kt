@@ -9,26 +9,43 @@ import java.io.OutputStream
 
 class Logger(var stream: OutputStream) {
 
-    fun logClassDefinition(def: ClassDefinition) {
-        Message.Variant.newBuilder().apply {
-            type = Message.MessageType.CLASS_DEF
-            setClassDefinition(
-                    Definitions.ClassDefinition.newBuilder().apply {
-                        name = def.name
-                        classType = def.flags.type.toString()
-                        visibility = def.flags.visibility.toString()
-                        if (def.superName != null && def.superName != "java/lang/Object") superClass = def.superName
+    private var active = true
 
-                        if (def.interfaces != null) addAllInterfaces(def.interfaces.asIterable())
+    private fun checkActive(): Boolean {
+        if (!active) {
+            return false
+        }
+
+        active = false
+        return true
+    }
+
+    fun logClassDefinition(def: ClassDefinition) {
+        if (!checkActive()) return
+        try {
+            Message.Variant.newBuilder().apply {
+                type = Message.MessageType.CLASS_DEF
+                setClassDefinition(
+                        Definitions.ClassDefinition.newBuilder().apply {
+                            name = def.name
+                            classType = def.flags.type.toString()
+                            visibility = def.flags.visibility.toString()
+                            if (def.superName != null && def.superName != "java/lang/Object") superClass = def.superName
+
+                            if (def.interfaces != null) addAllInterfaces(def.interfaces.asIterable())
 
                         addAllMethods(def.methods.map { toProtoBuf(it) })
                         addAllFields(def.fields.map { toProtoBuf(it) })
-                    }
-            )
-        }.log()
+                        }
+                )
+            }.log()
+        } finally {
+            active = true
+        }
     }
 
     fun logAllocation(desc: String, instanceId: Long) {
+        if (!checkActive()) return
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.ALLOC
             setAllocation(
@@ -41,6 +58,7 @@ class Logger(var stream: OutputStream) {
     }
 
     fun logDeallocation(instanceId: Long) {
+        if (!checkActive()) return
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.DEALLOC
             setDeallocation(
@@ -52,6 +70,7 @@ class Logger(var stream: OutputStream) {
     }
 
     fun logMethodEnter(className: String, methodName: String) {
+        if (!checkActive()) return
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.METHOD_ENTER
             setMethodEnter(Flow.MethodEnter.newBuilder().apply {
@@ -62,6 +81,7 @@ class Logger(var stream: OutputStream) {
     }
 
     fun logMethodExit() {
+        if (!checkActive()) return
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.METHOD_EXIT
             methodExit = Flow.MethodExit.getDefaultInstance()
@@ -69,6 +89,7 @@ class Logger(var stream: OutputStream) {
     }
 
     fun logGetField(objId: Long, fieldName: String) {
+        if (!checkActive()) return
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.GETFIELD
             setGetField(Access.GetField.newBuilder().apply {
@@ -79,6 +100,7 @@ class Logger(var stream: OutputStream) {
     }
 
     fun logPutField(objId: Long, fieldName: String, valId: Long) {
+        if (!checkActive()) return
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.PUTFIELD
             setPutField(Access.PutField.newBuilder().apply {
@@ -90,6 +112,7 @@ class Logger(var stream: OutputStream) {
     }
 
     fun logLoad(varIndex: Int) {
+        if (!checkActive()) return
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.LOAD
             setLoad(Access.Load.newBuilder().apply {
@@ -99,6 +122,7 @@ class Logger(var stream: OutputStream) {
     }
 
     fun logStore(desc: String, varIndex: Int) {
+        if (!checkActive()) return
         Message.Variant.newBuilder().apply {
             type = Message.MessageType.STORE
             setStore(Access.Store.newBuilder().apply {
@@ -114,6 +138,7 @@ class Logger(var stream: OutputStream) {
         threadId = Thread.currentThread().id
         val msg = build()
         msg.writeDelimitedTo(stream)
+        active = true
     }
 
     private fun toProtoBuf(lv: LocalVariable): Definitions.LocalVariable =

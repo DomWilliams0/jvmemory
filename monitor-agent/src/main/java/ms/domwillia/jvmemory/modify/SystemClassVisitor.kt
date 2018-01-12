@@ -35,8 +35,20 @@ open class SystemClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
         // constructor
-        if (name == "<init>")
+        if (name == "<init>") {
             mv = ConstructorPatcher(mv, currentClass.name, currentClass.superName)
+
+            // system classes only
+            // TODO this is awful and only for testing
+            if (getClassType() == BytecodeTransformer.PatcherType.SYSTEM) {
+                // not object
+                if (currentClass.superName != null)
+                    mv = SystemConstructorTracer(currentClass.name, mv, access, desc)
+                // object
+                else
+                    mv = ObjectConstructorTracer(mv)
+            }
+        }
 
         return mv
     }
@@ -44,4 +56,7 @@ open class SystemClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, 
     override fun visitEnd() {
         Monitor.logger.logClassDefinition(currentClass)
     }
+
+    // TODO temporary
+    open protected fun getClassType(): BytecodeTransformer.PatcherType = BytecodeTransformer.PatcherType.SYSTEM
 }

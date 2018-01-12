@@ -34,4 +34,6 @@ class UserClassVisitor(writer: ClassWriter) : SystemClassVisitor(writer) {
 
         return mv
     }
+
+    override fun getClassType(): BytecodeTransformer.PatcherType = BytecodeTransformer.PatcherType.USER
 }
