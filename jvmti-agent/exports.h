@@ -2,8 +2,6 @@
 #include <jni.h>
 /* Header for class ms_domwillia_jvmemory_monitor_Monitor */
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #ifndef _Included_ms_domwillia_jvmemory_monitor_Monitor
 #define _Included_ms_domwillia_jvmemory_monitor_Monitor
 #ifdef __cplusplus
@@ -29,14 +27,6 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    enterConstructor
- * Signature: (Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterConstructor
-  (JNIEnv *, jclass, jstring);
-
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    enterMethod
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
@@ -50,6 +40,14 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod
   (JNIEnv *, jclass);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onAlloc
+ * Signature: (JLjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onAlloc
+  (JNIEnv *, jclass, jlong, jstring);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -69,11 +67,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onLoadLocalVar
- * Signature: (I)V
+ * Method:    onPutField
+ * Signature: (JLjava/lang/String;J)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar
-  (JNIEnv *, jclass, jint);
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutField
+  (JNIEnv *, jclass, jlong, jstring, jlong);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -85,15 +83,13 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onPutField
- * Signature: (JLjava/lang/String;J)V
+ * Method:    onLoadLocalVar
+ * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutField
-  (JNIEnv *, jclass, jlong, jstring, jlong);
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar
+  (JNIEnv *, jclass, jint);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-
-#pragma clang diagnostic pop

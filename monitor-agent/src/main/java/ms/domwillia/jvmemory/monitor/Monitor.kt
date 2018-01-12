@@ -7,15 +7,7 @@ object Monitor {
     @Deprecated("Monitor.INSTANCE no longer exists")
     val instanceName = "INSTANCE" // ty kotlin for `object`
 
-    val internalName: String
-    val descriptor: String
-
-    init {
-        val type = Type.getType(Monitor::class.java)
-        internalName = type.internalName
-        descriptor = type.descriptor
-    }
-
+    val internalName = Type.getType(Monitor::class.java).internalName!!
     val invalidInstanceId: Long = 0
 
     /**
@@ -40,9 +32,11 @@ object Monitor {
     @JvmStatic external fun onGetField(objId: Long, field: String)
 
     /**
-     * @param index The local variable index
+     * @param objId The tag of the object whose field is being set
+     * @param field The name of the field being set
+     * @param valueId The tag of the value, or 0 if not an object
      */
-    @JvmStatic external fun onLoadLocalVar(index: Int)
+    @JvmStatic external fun onPutField(objId: Long, field: String, valueId: Long)
 
     /**
      * @param valueId The tag of the value, or 0 if not an object
@@ -51,9 +45,7 @@ object Monitor {
     @JvmStatic external fun onStoreLocalVar(valueId: Long, index: Int)
 
     /**
-     * @param objId The tag of the object whose field is being set
-     * @param field The name of the field being set
-     * @param valueId The tag of the value, or 0 if not an object
+     * @param index The local variable index
      */
-    @JvmStatic external fun onPutField(objId: Long, field: String, valueId: Long)
+    @JvmStatic external fun onLoadLocalVar(index: Int)
 }
