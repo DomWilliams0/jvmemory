@@ -164,6 +164,11 @@ static void JNICALL callback_gc_finish(jvmtiEnv* env) {
 
 // exported functions
 
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    allocateTag
+ * Signature: (Ljava/lang/Object;)V
+ */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
 		JNIEnv *jnienv,
 		jclass klass,
@@ -188,6 +193,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
 	}
 }
 
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    getTag
+ * Signature: (Ljava/lang/Object;)J
+ */
 JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(
 		JNIEnv *jnienv,
 		jclass klass,
@@ -227,30 +237,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
     printf("<<<\n");
 }
 
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onLoadLocalVar
- * Signature: (I)V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar(
-		JNIEnv *jnienv,
-		jclass klass,
-		jint index) {
-    printf("load %d\n", index);
-}
-
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onStoreLocalVar
- * Signature: (JI)V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVar(
-		JNIEnv *jnienv,
-		jclass klass,
-		jlong value_id,
-		jint index) {
-	printf("store %ld in local var %d\n", value_id, index);
-}
+// TODO onAlloc and onDealloc
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -281,4 +268,29 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutField(
 	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
 	printf("putfield %s on %ld with value %ld\n", field_str, obj_id, value_id);
 	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStoreLocalVar
+ * Signature: (JI)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVar(
+		JNIEnv *jnienv,
+		jclass klass,
+		jlong value_id,
+		jint index) {
+	printf("store %ld in local var %d\n", value_id, index);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onLoadLocalVar
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar(
+		JNIEnv *jnienv,
+		jclass klass,
+		jint index) {
+	printf("load %d\n", index);
 }
