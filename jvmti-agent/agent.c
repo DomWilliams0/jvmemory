@@ -251,3 +251,34 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
 		jint index) {
 	printf("store %ld in local var %d\n", value_id, index);
 }
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onGetField
+ * Signature: (JLjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField(
+		JNIEnv *jnienv,
+		jclass klass,
+		jlong obj_id,
+		jstring field) {
+	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
+	printf("getfield %s on %ld\n", field_str, obj_id);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onPutField
+ * Signature: (JLjava/lang/String;J)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutField(
+		JNIEnv *jnienv,
+		jclass klass,
+		jlong obj_id,
+		jstring field,
+		jlong value_id) {
+	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
+	printf("putfield %s on %ld with value %ld\n", field_str, obj_id, value_id);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+}
