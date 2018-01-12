@@ -66,7 +66,10 @@ class BytecodeTransformer : ClassFileTransformer {
         }
 
         if (type == PatcherType.USER) {
-            val outPath = "/tmp/modified_" + className.replace('/', '.') + ".class"
+            val classDir = "/tmp/classes"
+            File(classDir).mkdir()
+
+            val outPath = "$classDir/mod_${className.replace('/', '.')}.class"
             File(outPath).outputStream().use { file ->
                 file.write(rewritten)
             }
