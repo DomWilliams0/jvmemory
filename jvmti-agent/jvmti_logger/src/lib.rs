@@ -1,17 +1,38 @@
 extern crate libc;
+extern crate protobuf;
+
+mod proto;
 
 use libc::*;
 use std::ffi::CStr;
 
-type long = isize;
-type int = i32;
-type string = *const c_char;
+type Long = isize;
+type Int = i32;
+type String = *const c_char;
+
+macro_rules! null_check {
+    ($p:ident) => (if $p.is_null() {
+        eprintln!("jni passed null to logger as '{}'", stringify!($p));
+        return;
+    })
+}
+
+macro_rules! get_string {
+    ($p:ident) => {{
+        null_check!($p);
+        match unsafe {CStr::from_ptr($p)}.to_str() {
+            Err(_) => {
+                eprintln!("jni passed bad String as '{}'", stringify!($p));
+                return;
+            },
+            Ok(cstr) => cstr,
+        }
+    }}
+}
 
 #[no_mangle]
-pub extern fn on_enter_method(class: string, method: string) {
-    let class_str = unsafe {CStr::from_ptr(class)}.to_str().unwrap();
-    let method_str = unsafe {CStr::from_ptr(method)}.to_str().unwrap();
-    println!(">>> {:?}:{:?}", class_str, method_str);
+pub extern fn on_enter_method(class: String, method: String) {
+    println!(">>> {}:{}", get_string!(class), get_string!(method));
 }
 
 #[no_mangle]
@@ -20,40 +41,49 @@ pub extern fn on_exit_method() {
 }
 
 #[no_mangle]
-pub extern fn on_get_field(obj_id: long, field: string) {
-    let field_str = unsafe {CStr::from_ptr(field)}.to_str().unwrap();
-    println!("getfield {:?} on {}", field_str, obj_id);
+pub extern fn on_get_field(obj_id: Long, field: String) {
+    println!("getfield {} on {}", get_string!(field), obj_id);
 }
 
 #[no_mangle]
-pub extern fn on_put_field(obj_id: long, field: string, value_id: long) {
-    let field_str = unsafe {CStr::from_ptr(field)}.to_str().unwrap();
-    println!("putfield {:?} on {} with value {}", field_str, obj_id, value_id);
+pub extern fn on_put_field(obj_id: Long, field: String, value_id: Long) {
+    println!("putfield {} on {} with value {}", get_string!(field), obj_id, value_id);
 }
 
 #[no_mangle]
-pub extern fn on_store(value_id: long, index: int) {
+pub extern fn on_store(value_id: Long, index: Int) {
     println!("store {} in index {}", value_id, index);
 }
 
 #[no_mangle]
-pub extern fn on_load(index: int) {
+pub extern fn on_load(index: Int) {
     println!("load index {}",index);
 }
 
 #[no_mangle]
-pub extern fn on_alloc(obj_id: long, class: string) {
-    let class_str = unsafe {CStr::from_ptr(class)}.to_str().unwrap();
-    println!("alloc {} of type {}", obj_id, class_str);
+pub extern fn on_alloc(obj_id: Long, class: String) {
+    println!("alloc {} of type {}", obj_id, get_string!(class));
 }
 
 #[no_mangle]
-pub extern fn on_dealloc(obj_id: long) {
+pub extern fn on_dealloc(obj_id: Long) {
     println!("dealloc {}", obj_id);
 }
 
 #[no_mangle]
-pub extern fn on_define_class(buffer: *const c_char, len: int) {
-    println!("class defintion: need to decode {} bytes", len);
-    // TODO decode protobuf
+pub extern fn on_define_class(buffer: *const u8, len: Int) {
+    use proto::definitions::*;
+
+    null_check!(buffer);
+    let array = unsafe{ std::slice::from_raw_parts(buffer, len as usize) };
+
+    let def: ClassDefinition = match protobuf::core::parse_from_bytes(array) {
+        Err(e) => {
+            eprintln!("failed to deserialize class definition: {:?}", e);
+            return;
+        }
+        Ok(def) => def
+    };
+
+    println!("class defIntion: {:?}", def);
 }
