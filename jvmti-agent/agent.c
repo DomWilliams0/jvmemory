@@ -4,6 +4,7 @@
 
 #include "array.h"
 #include "util.h"
+#include "logger.h"
 
 // TODO are any of these globals thread safe?
 //		i dont think so
@@ -74,7 +75,7 @@ JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm) {
 static void flush_queued_frees(JNIEnv *jnienv) {
 
 	for (size_t i = 0; i < freed_objects.count; i++) {
-        printf("deallocating %ld\n", freed_objects.data[i]);
+        on_dealloc(freed_objects.data[i]);
 	}
 
 	array_clear(&freed_objects);
