@@ -6,13 +6,14 @@ use std::ffi::CStr;
 
 #[repr(C)]
 pub struct Logger {
-    writer: io::BufWriter<fs::File>
+    // TODO it seems that using a BufWriter here causes a panic during allocation event logging
+    writer: fs::File
 }
 
 impl Logger {
     fn new(path: &str) -> io::Result<Self> {
         Ok(Self {
-            writer: io::BufWriter::new(fs::File::create(path)?)
+            writer: fs::File::create(path)?
         })
     }
 
