@@ -8,12 +8,17 @@ CFLAGS = -Wall -Wextra -Wpedantic -Wno-unused-parameter -fPIC -O1 $(JVM_INCS)
 CC = gcc
 TARGET = libagent.so
 
+RUST_COMPILE_DIR = release
+LOGGER_DIR = jvmti_logger/target/$(RUST_COMPILE_DIR)
+LOGGER_LIB = $(LOGGER_DIR)/libjvmti_logger.so
+
 RELEASE ?= 0
 ifeq ($(RELEASE), 0)
+	RUST_COMPILE_DIR = debug
 	CFLAGS += -DDEBUG -O0 -g
 endif
 
-SRCS := agent.c
+SRCS := $(wildcard *.c)
 OBJS := $(notdir $(SRCS:%.c=%.o))
 
 .PHONY: default
@@ -21,11 +26,15 @@ default: $(TARGET)
 
 .PHONY: clean
 clean:
-	@rm -rf $(TARGET) $(OBJS)
+	@rm -rf $(TARGET) $(OBJS) $(LOGGER_LIB)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -shared -o $@
+$(TARGET): $(OBJS) $(LOGGER_LIB)
+	$(CC) $(CFLAGS) $(OBJS) -shared -L$(LOGGER_DIR) -ljvmti_logger -o $@
 
 # src -> obj
 $(OBJS): %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+.PHONY: $(LOGGER_LIB)
+$(LOGGER_LIB):
+	@(cd $(LOGGER_DIR) && cargo build)

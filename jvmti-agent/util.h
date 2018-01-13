@@ -40,6 +40,12 @@
 	}\
 } while (0)
 
+#define DEBUG_PRINT_STRING(jnienv, str, what) do {\
+    const char *chars = (*jnienv)->GetStringUTFChars(jnienv, str, NULL);\
+    printf("DEBUG: %s: '%s'\n", what, chars);\
+    (*jnienv)->ReleaseStringUTFChars(jnienv, str, chars);\
+} while (0)
+
 
 
 #endif
