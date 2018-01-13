@@ -2,6 +2,7 @@
 #include <jvmti.h>
 #include "agent.h"
 #include "exports.h"
+#include "logger.h"
 
 static jlong next_id = 1;
 
@@ -63,6 +64,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod(
     const char *cls = (*jnienv)->GetStringUTFChars(jnienv, class_name, NULL);
     const char *mthd = (*jnienv)->GetStringUTFChars(jnienv, method_name, NULL);
     printf(">>> %s:%s\n", cls, mthd);
+    on_enter_method(cls, mthd);
     (*jnienv)->ReleaseStringUTFChars(jnienv, class_name, cls);
     (*jnienv)->ReleaseStringUTFChars(jnienv, method_name, mthd);
 }
