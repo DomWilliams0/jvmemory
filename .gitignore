@@ -3,6 +3,8 @@ out
 target
 preprocessor/proto
 *.so
+cmake-build-debug
+CMakeLists.txt
 
 ## Java
 
