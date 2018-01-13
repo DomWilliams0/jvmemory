@@ -1,0 +1,10 @@
+[package]
+name = "jvmti_logger"
+version = "0.1.0"
+authors = ["Dom Williams <dxw405@cs.bham.ac.uk>"]
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+libc = "0.2.36"
