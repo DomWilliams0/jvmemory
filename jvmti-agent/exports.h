@@ -87,6 +87,14 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar
   (JNIEnv *, jclass, jint);
 
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onDefineClass
+ * Signature: ([B)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onDefineClass
+  (JNIEnv *, jclass, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif
