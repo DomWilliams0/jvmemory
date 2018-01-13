@@ -20,5 +20,5 @@ message Load {
 
 message Store {
     int32 index = 1;
-    string type = 2;
+    int64 value_id = 2;
 }
