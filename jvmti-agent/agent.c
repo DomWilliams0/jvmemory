@@ -76,14 +76,8 @@ JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm) {
 
 static void flush_queued_frees(JNIEnv *jnienv) {
 
-	// TODO get from cache
-	jclass cls = (*jnienv)->FindClass(jnienv, "ms/domwillia/jvmemory/monitor/Monitor");
-	jfieldID instanceID = (*jnienv)->GetStaticFieldID(jnienv, cls, "INSTANCE", "Lms/domwillia/jvmemory/monitor/Monitor;");
-	jobject instance = (*jnienv)->GetStaticObjectField(jnienv, cls, instanceID);
-	jmethodID method = (*jnienv)->GetMethodID(jnienv, cls, "onDealloc", "(J)V");
-
 	for (size_t i = 0; i < freed_objects.count; i++) {
-		(*jnienv)->CallVoidMethod(jnienv, instance, method, freed_objects.data[i]);
+        printf("deallocating %ld\n", freed_objects.data[i]);
 	}
 
 	array_clear(&freed_objects);
@@ -141,8 +135,7 @@ static void JNICALL free_thread_runnable(jvmtiEnv* env, JNIEnv* jnienv, void *ar
 
 static void JNICALL callback_dealloc(jvmtiEnv *jvmti_env, jlong tag) {
 	// no JVMTI or JNI functions can be called in this callback
-    printf("deallocate %ld\n", tag);
-//	array_add(&freed_objects, tag);
+	array_add(&freed_objects, tag);
 }
 
 static void JNICALL callback_vm_init(jvmtiEnv *env, JNIEnv *jnienv, jthread thread) {
