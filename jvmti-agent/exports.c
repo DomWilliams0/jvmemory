@@ -24,7 +24,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
         char *name = NULL;
         jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
         if ((err = (*env)->GetClassSignature(env, cls, &name, NULL)) == JVMTI_ERROR_NONE) {
-            printf("allocated tag %ld to object of class '%s'\n", new_tag, name);
+            on_alloc(new_tag, name);
             (*env)->Deallocate(env, (unsigned char *)name);
             name = NULL;
         } else {
@@ -63,7 +63,6 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod(
 
     const char *cls = (*jnienv)->GetStringUTFChars(jnienv, class_name, NULL);
     const char *mthd = (*jnienv)->GetStringUTFChars(jnienv, method_name, NULL);
-    printf(">>> %s:%s\n", cls, mthd);
     on_enter_method(cls, mthd);
     (*jnienv)->ReleaseStringUTFChars(jnienv, class_name, cls);
     (*jnienv)->ReleaseStringUTFChars(jnienv, method_name, mthd);
@@ -77,10 +76,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod(
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
         JNIEnv *jnienv,
         jclass klass) {
-    printf("<<<\n");
+    on_exit_method();
 }
-
-// TODO onAlloc and onDealloc
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -93,7 +90,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField(
         jlong obj_id,
         jstring field) {
     const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
-    printf("getfield %s on %ld\n", field_str, obj_id);
+    on_get_field(obj_id, field_str);
     (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
 }
 
@@ -109,7 +106,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutField(
         jstring field,
         jlong value_id) {
     const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
-    printf("putfield %s on %ld with value %ld\n", field_str, obj_id, value_id);
+    on_put_field(obj_id, field_str, value_id);
     (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
 }
 
@@ -123,7 +120,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
         jclass klass,
         jlong value_id,
         jint index) {
-    printf("store %ld in local var %d\n", value_id, index);
+    on_store(value_id, index);
 }
 
 /*
@@ -135,5 +132,5 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar
         JNIEnv *jnienv,
         jclass klass,
         jint index) {
-    printf("load %d\n", index);
+    on_load(index);
 }
