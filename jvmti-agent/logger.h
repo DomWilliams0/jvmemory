@@ -13,4 +13,6 @@ extern void on_load(int index);
 extern void on_alloc(long obj_id, const char *class);
 extern void on_dealloc(long obj_id);
 
+extern void on_define_class(const char *buffer, int len);
+
 #endif

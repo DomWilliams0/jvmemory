@@ -45,10 +45,15 @@ pub extern fn on_load(index: int) {
 pub extern fn on_alloc(obj_id: long, class: string) {
     let class_str = unsafe {CStr::from_ptr(class)}.to_str().unwrap();
     println!("alloc {} of type {}", obj_id, class_str);
-
 }
 
 #[no_mangle]
 pub extern fn on_dealloc(obj_id: long) {
     println!("dealloc {}", obj_id);
+}
+
+#[no_mangle]
+pub extern fn on_define_class(buffer: *const c_char, len: int) {
+    println!("class defintion: need to decode {} bytes", len);
+    // TODO decode protobuf
 }

@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.monitor.definition
 
+import ms.domwillia.jvmemory.protobuf.Definitions
 import java.util.*
 
 class ClassDefinition(
@@ -43,6 +44,44 @@ class ClassDefinition(
             println("\t----------")
         }
         println("==========")
+    }
+
+    fun toProtoBuf(): Definitions.ClassDefinition {
+        fun toProtoBuf(lv: LocalVariable): Definitions.LocalVariable =
+                Definitions.LocalVariable.newBuilder().apply {
+                    index = lv.index
+                    name = lv.name
+                    type = lv.type
+                }.build()
+
+        fun toProtoBuf(m: MethodDefinition): Definitions.MethodDefinition =
+                Definitions.MethodDefinition.newBuilder().apply {
+                    name = m.name
+                    signature = m.desc
+                    visibility = m.flags.visibility.toString()
+                    addAllLocalVars(m.localVars.map { toProtoBuf(it) })
+                }.build()
+
+        fun toProtoBuf(f: Field): Definitions.FieldDefinition =
+                Definitions.FieldDefinition.newBuilder().apply {
+                    name = f.name
+                    type = f.type
+                    visibility = f.flags.visibility.toString()
+                    static = f.flags.isStatic
+                }.build()
+
+        val def = this
+        return Definitions.ClassDefinition.newBuilder().apply {
+            name = def.name
+            classType = def.flags.type.toString()
+            visibility = def.flags.visibility.toString()
+            if (def.superName != "java/lang/Object") superClass = def.superName
+
+            if (def.interfaces != null) addAllInterfaces(def.interfaces.asIterable())
+
+            addAllMethods(def.methods.map(::toProtoBuf))
+            addAllFields(def.fields.map(::toProtoBuf))
+        }.build()
     }
 }
 

@@ -134,3 +134,22 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar
         jint index) {
     on_load(index);
 }
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onDefineClass
+ * Signature: ([B)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onDefineClass(
+        JNIEnv *jnienv,
+        jclass klass,
+        jbyteArray def) {
+
+    // TODO avoid possible copy
+    jbyte *array = (*jnienv)->GetByteArrayElements(jnienv, def, NULL);
+    jint len = (*jnienv)->GetArrayLength(jnienv, def);
+
+    on_define_class((const char *) array, len);
+
+    (*jnienv)->ReleaseByteArrayElements(jnienv, def, array, JNI_ABORT);
+}

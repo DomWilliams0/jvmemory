@@ -44,4 +44,6 @@ object Monitor {
      * @param index The local variable index
      */
     @JvmStatic external fun onLoadLocalVar(index: Int)
+
+    @JvmStatic external fun onDefineClass(def: ByteArray)
 }
