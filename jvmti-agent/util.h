@@ -47,5 +47,10 @@
 } while (0)
 
 
+#define GET_THREAD_ID\
+    long thread_id = get_thread_id(jnienv)
+
+long get_thread_id(JNIEnv *jnienv);
+
 
 #endif
