@@ -13,7 +13,7 @@ ifeq ($(RELEASE), 0)
 	CFLAGS += -DDEBUG -O0 -g
 endif
 
-SRCS := agent.c
+SRCS := $(wildcard *.c)
 OBJS := $(notdir $(SRCS:%.c=%.o))
 
 .PHONY: default
