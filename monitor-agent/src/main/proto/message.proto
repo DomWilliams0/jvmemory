@@ -26,18 +26,18 @@ enum MessageType {
 
 message Variant {
     MessageType type = 1;
-    int64 threadId = 2;
+    int64 thread_id = 2;
     oneof payload {
-        ClassDefinition classDefinition = 3;
+        ClassDefinition class_def = 3;
 
-        Allocation allocation = 4;
-        Deallocation deallocation = 5;
+        Allocation alloc = 4;
+        Deallocation dealloc = 5;
 
-        MethodEnter methodEnter = 6;
-        MethodExit methodExit = 7;
+        MethodEnter method_enter = 6;
+        MethodExit method_exit = 7;
 
-        GetField getField = 8;
-        PutField putField = 9;
+        GetField get_field = 8;
+        PutField put_field = 9;
 
         Store store = 10;
         Load load = 11;

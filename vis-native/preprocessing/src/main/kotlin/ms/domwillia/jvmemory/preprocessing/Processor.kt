@@ -7,9 +7,9 @@ open class Processor(val threadId: Long) {
     fun handle(msg: Message.Variant) = when (msg.type) {
         Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter)
         Message.MessageType.METHOD_EXIT -> exitMethod(msg.methodExit)
-        Message.MessageType.CLASS_DEF -> defineClass(msg.classDefinition)
-        Message.MessageType.ALLOC -> allocate(msg.allocation)
-        Message.MessageType.DEALLOC -> deallocate(msg.deallocation)
+        Message.MessageType.CLASS_DEF -> defineClass(msg.classDef)
+        Message.MessageType.ALLOC -> allocate(msg.alloc)
+        Message.MessageType.DEALLOC -> deallocate(msg.dealloc)
         Message.MessageType.GETFIELD -> getField(msg.getField)
         Message.MessageType.PUTFIELD -> putField(msg.putField)
         Message.MessageType.STORE -> store(msg.store)
