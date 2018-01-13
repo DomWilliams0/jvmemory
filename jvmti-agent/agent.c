@@ -11,6 +11,7 @@
 //		does it matter?
 static JavaVM *jvm = NULL;
 jvmtiEnv *env = NULL;
+logger_p logger = NULL;
 
 static struct array freed_objects;
 static jrawMonitorID free_lock;
@@ -65,52 +66,26 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm, char *options, void *reserve
 	// create free thread lock
 	DO_SAFE((*env)->CreateRawMonitor(env, "free_lock", &free_lock), "creating raw monitor");
 
+	// init logger
+	DO_SAFE_COND((logger = logger_init("jvmemory.log")) != NULL, "logger initialisation");
+
 	return JNI_OK;
 }
 
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm) {
 	array_free(&freed_objects);
+    logger_free(logger);
+    logger = NULL;
 }
 
 static void flush_queued_frees(JNIEnv *jnienv) {
 
 	for (size_t i = 0; i < freed_objects.count; i++) {
-        on_dealloc(freed_objects.data[i]);
+        on_dealloc(logger, freed_objects.data[i]);
 	}
 
 	array_clear(&freed_objects);
 
-}
-static void log_allocation(JNIEnv *jnienv, jlong tag, jclass klass) {
-	jstring class_name;
-
-	// TODO cache these field and method IDs
-	// TODO exception checks
-
-	// get internal name
-	{
-		jclass cls = (*jnienv)->FindClass(jnienv, "org/objectweb/asm/Type");
-		EXCEPTION_CHECK(jnienv);
-		jmethodID method = (*jnienv)->GetStaticMethodID(jnienv, cls, "getInternalName", "(Ljava/lang/Class;)Ljava/lang/String;");
-		EXCEPTION_CHECK(jnienv);
-		jstring result = (*jnienv)->CallStaticObjectMethod(jnienv, cls, method, klass);
-		EXCEPTION_CHECK(jnienv);
-
-		class_name = result;
-	}
-
-	// call onAlloc
-	{
-		jclass cls = (*jnienv)->FindClass(jnienv, "ms/domwillia/jvmemory/monitor/Monitor");
-		EXCEPTION_CHECK(jnienv);
-		jfieldID instanceID = (*jnienv)->GetStaticFieldID(jnienv, cls, "INSTANCE", "Lms/domwillia/jvmemory/monitor/Monitor;");
-		EXCEPTION_CHECK(jnienv);
-		jobject instance = (*jnienv)->GetStaticObjectField(jnienv, cls, instanceID);
-		EXCEPTION_CHECK(jnienv);
-		jmethodID method = (*jnienv)->GetMethodID(jnienv, cls, "onAlloc", "(JLjava/lang/String;)V");
-		EXCEPTION_CHECK(jnienv);
-		(*jnienv)->CallVoidMethod(jnienv, instance, method, tag, class_name);
-	}
 }
 
 static void JNICALL free_thread_runnable(jvmtiEnv *env, JNIEnv *jnienv, void *arg) {
