@@ -6,6 +6,7 @@ preprocessor/proto
 jvmti-agent/cmake-build-debug
 jvmti-agent/CMakeLists.txt
 jvmti-agent/jvmti_logger/Cargo.lock
+jvmti-agent/jvmti_logger/src/proto
 
 ## Java
 
