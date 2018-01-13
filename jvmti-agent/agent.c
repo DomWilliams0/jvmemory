@@ -127,3 +127,21 @@ static void JNICALL callback_gc_finish(jvmtiEnv *env) {
     DO_SAFE((*env)->RawMonitorNotify(env, free_lock), "notifying free monitor");
     DO_SAFE((*env)->RawMonitorExit(env, free_lock), "exiting free monitor");
 }
+
+long get_thread_id(JNIEnv *jnienv)
+{
+	jthread thread;
+	long id = 0;
+	if ((*env)->GetCurrentThread(env, &thread) == JVMTI_ERROR_NONE)
+	{
+		// TODO cache
+		jclass cls = (*jnienv)->GetObjectClass(jnienv, thread);
+		EXCEPTION_CHECK(jnienv);
+		jmethodID method = (*jnienv)->GetMethodID(jnienv, cls, "getId", "()J");
+		EXCEPTION_CHECK(jnienv);
+		id = (*jnienv)->CallLongMethod(jnienv, thread, method);
+		EXCEPTION_CHECK(jnienv);
+	}
+
+	return id;
+}
