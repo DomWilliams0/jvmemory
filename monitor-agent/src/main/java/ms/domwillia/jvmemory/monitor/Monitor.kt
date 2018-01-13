@@ -4,11 +4,7 @@ import org.objectweb.asm.Type
 
 @Suppress("unused")
 object Monitor {
-    @Deprecated("Monitor.INSTANCE no longer exists")
-    val instanceName = "INSTANCE" // ty kotlin for `object`
-
     val internalName = Type.getType(Monitor::class.java).internalName!!
-    val invalidInstanceId: Long = 0
 
     /**
      * To be called from within java/lang/Object's constructor only

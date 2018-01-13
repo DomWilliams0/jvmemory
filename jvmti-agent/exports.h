@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef ms_domwillia_jvmemory_monitor_Monitor_invalidInstanceId
-#define ms_domwillia_jvmemory_monitor_Monitor_invalidInstanceId 0LL
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    allocateTag
