@@ -26,7 +26,8 @@ default: $(TARGET)
 
 .PHONY: clean
 clean:
-	@rm -rf $(TARGET) $(OBJS) $(LOGGER_LIB)
+	@rm -rf $(TARGET) $(OBJS)
+	@(cd $(LOGGER_DIR) && cargo clean -p jvmti_logger)
 
 $(TARGET): $(OBJS) $(LOGGER_LIB)
 	$(CC) $(CFLAGS) $(OBJS) -shared -L$(LOGGER_DIR) -ljvmti_logger -o $@
