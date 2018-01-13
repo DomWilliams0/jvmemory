@@ -1,5 +1,7 @@
 package ms.domwillia.jvmemory.modify
 
+import ms.domwillia.jvmemory.modify.visitor.SystemClassVisitor
+import ms.domwillia.jvmemory.modify.visitor.UserClassVisitor
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -17,9 +19,7 @@ class BytecodeTransformer : ClassFileTransformer {
         NONE
     }
 
-    private val systemBlacklist = arrayOf("java/lang/Throwable", "java/lang/Exception", "java/nio/HeapCharBuffer")
-
-    private fun createVisitor(className: String): Pair<PatcherType, ((ClassWriter) -> ClassVisitor)?> {
+    private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? {
         val type = when {
         // blacklist jvmemory classes
             className.startsWith("ms/domwillia/jvmemory") -> PatcherType.NONE
@@ -29,32 +29,25 @@ class BytecodeTransformer : ClassFileTransformer {
         // TODO controlled by user
             className.startsWith("ms/domwillia/specimen") -> PatcherType.USER
 
-        // blacklist
-            className.startsWith("com/intellij") -> PatcherType.NONE
-            className.startsWith("sun") -> PatcherType.NONE
-            className.startsWith("java/nio") -> PatcherType.NONE
-            className.startsWith("java/io") -> PatcherType.NONE
-            systemBlacklist.contains(className) -> PatcherType.NONE
-
         // system
-            else -> PatcherType.SYSTEM
+            className == "java/lang/Object" -> PatcherType.SYSTEM
+
+        // no need to instrument any other classes
+            else -> PatcherType.NONE
         }
 
-        val func = when (type) {
+        return when (type) {
             BytecodeTransformer.PatcherType.USER -> ::UserClassVisitor
             BytecodeTransformer.PatcherType.SYSTEM -> ::SystemClassVisitor
             BytecodeTransformer.PatcherType.NONE -> null
         }
-
-        return Pair(type, func)
     }
 
     override fun transform(loader: ClassLoader?, className: String,
                            classBeingRedefined: Class<*>?, protectionDomain: ProtectionDomain?,
                            classfileBuffer: ByteArray): ByteArray? {
 
-        val (type, visitor) = createVisitor(className)
-        val rewritten = visitor?.run {
+        return createVisitor(className)?.run {
 
             val reader = ClassReader(classfileBuffer)
             val writer = ClassWriter(reader, ClassWriter.COMPUTE_FRAMES)
@@ -66,36 +59,26 @@ class BytecodeTransformer : ClassFileTransformer {
                 e.printStackTrace()
             }
 
-            writer.toByteArray()
-        }
+            val bytes = writer.toByteArray()
+            val classDir = "/tmp/classes"
+            File(classDir).mkdir()
 
-        if (type == PatcherType.USER) {
-            val outPath = "/tmp/modified_" + className.replace('/', '.') + ".class"
+            val outPath = "$classDir/mod_${className.replace('/', '.')}.class"
             File(outPath).outputStream().use { file ->
-                file.write(rewritten)
+                file.write(bytes)
             }
             println("Wrote modified class to $outPath")
-        }
 
-        return rewritten
+            bytes
+        }
     }
 
     companion object {
         @JvmStatic
         fun premain(agentArgs: String?, inst: Instrumentation) {
             inst.appendToBootstrapClassLoaderSearch(JarFile("out/artifacts/bootstrap/bootstrap.jar"))
-            println("hello and off we go")
             inst.addTransformer(BytecodeTransformer(), true)
-
-            inst.allLoadedClasses
-                    .filter(inst::isModifiableClass)
-                    .forEach {
-                        try {
-                            inst.retransformClasses(it)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
+            inst.retransformClasses(java.lang.Object::class.java)
         }
     }
 }
