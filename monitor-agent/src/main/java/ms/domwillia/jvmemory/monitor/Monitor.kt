@@ -6,6 +6,10 @@ import org.objectweb.asm.Type
 object Monitor {
     val internalName = Type.getType(Monitor::class.java).internalName!!
 
+    @JvmStatic external fun setProgramInProgress(running: Boolean)
+
+    @JvmStatic external fun onClassLoad(starting: Boolean)
+
     /**
      * To be called from within java/lang/Object's constructor only
      */
