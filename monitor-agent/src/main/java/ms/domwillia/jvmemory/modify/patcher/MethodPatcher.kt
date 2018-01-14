@@ -1,4 +1,4 @@
-package ms.domwillia.jvmemory.modify
+package ms.domwillia.jvmemory.modify.patcher
 
 import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.MethodDefinition

@@ -1,6 +1,6 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.modify.visitor.SystemClassVisitor
+import ms.domwillia.jvmemory.modify.visitor.ObjectClassVisitor
 import ms.domwillia.jvmemory.modify.visitor.UserClassVisitor
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
@@ -19,28 +19,16 @@ class BytecodeTransformer : ClassFileTransformer {
         NONE
     }
 
-    private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? {
-        val type = when {
-        // blacklist jvmemory classes
-            className.startsWith("ms/domwillia/jvmemory") -> PatcherType.NONE
-            className.startsWith("com/google/protobuf") -> PatcherType.NONE
+    private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? = when {
+    // user classes
+    // TODO controlled by user
+        className.startsWith("ms/domwillia/specimen") -> ::UserClassVisitor
 
-        // user classes
-        // TODO controlled by user
-            className.startsWith("ms/domwillia/specimen") -> PatcherType.USER
+    // system
+        className == "java/lang/Object" -> ::ObjectClassVisitor
 
-        // system
-            className == "java/lang/Object" -> PatcherType.SYSTEM
-
-        // no need to instrument any other classes
-            else -> PatcherType.NONE
-        }
-
-        return when (type) {
-            BytecodeTransformer.PatcherType.USER -> ::UserClassVisitor
-            BytecodeTransformer.PatcherType.SYSTEM -> ::SystemClassVisitor
-            BytecodeTransformer.PatcherType.NONE -> null
-        }
+    // no need to instrument any other classes
+        else -> null
     }
 
     override fun transform(loader: ClassLoader?, className: String,
