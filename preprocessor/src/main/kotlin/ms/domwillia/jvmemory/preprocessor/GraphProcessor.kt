@@ -1,7 +1,6 @@
-package ms.domwillia.jvmemory.preprocessing
+package ms.domwillia.jvmemory.preprocessor
 
 import edu.uci.ics.jung.graph.DirectedSparseGraph
-import edu.uci.ics.jung.graph.ObservableGraph
 import edu.uci.ics.jung.graph.util.EdgeType
 import edu.uci.ics.jung.visualization.BasicVisualizationServer
 import ms.domwillia.jvmemory.protobuf.Access
@@ -9,7 +8,6 @@ import ms.domwillia.jvmemory.protobuf.Allocations
 import java.awt.Color
 import java.awt.Dimension
 import javax.swing.JFrame
-import javax.swing.SwingUtilities
 
 class GraphProcessor(threadId: Long) : Processor(threadId) {
 
