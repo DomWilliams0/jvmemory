@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.modify
 
+import ms.domwillia.jvmemory.modify.visitor.ClassLoaderClassVisitor
 import ms.domwillia.jvmemory.modify.visitor.ObjectClassVisitor
 import ms.domwillia.jvmemory.modify.visitor.UserClassVisitor
 import org.objectweb.asm.ClassReader
@@ -20,6 +21,7 @@ class BytecodeTransformer : ClassFileTransformer {
 
     // system
         className == "java/lang/Object" -> ::ObjectClassVisitor
+        className == "java/lang/ClassLoader" -> ::ClassLoaderClassVisitor
 
     // no need to instrument any other classes
         else -> null
@@ -50,6 +52,7 @@ class BytecodeTransformer : ClassFileTransformer {
                 file.write(bytes)
             }
             println("Wrote modified class to $outPath")
+            System.out.flush()
 
             bytes
         }
@@ -61,6 +64,7 @@ class BytecodeTransformer : ClassFileTransformer {
             inst.appendToBootstrapClassLoaderSearch(JarFile("out/artifacts/bootstrap/bootstrap.jar"))
             inst.addTransformer(BytecodeTransformer(), true)
             inst.retransformClasses(java.lang.Object::class.java)
+            inst.retransformClasses(java.lang.ClassLoader::class.java)
         }
     }
 }

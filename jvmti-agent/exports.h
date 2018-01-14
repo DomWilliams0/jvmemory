@@ -9,6 +9,22 @@ extern "C" {
 #endif
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    setProgramInProgress
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramInProgress
+  (JNIEnv *, jclass, jboolean);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onClassLoad
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad
+  (JNIEnv *, jclass, jboolean);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    allocateTag
  * Signature: (Ljava/lang/Object;)V
  */

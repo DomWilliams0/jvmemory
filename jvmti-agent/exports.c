@@ -6,6 +6,34 @@
 #include "util.h"
 
 static jlong next_id = 1;
+static unsigned int classes_loading = 0;
+static jboolean program_running = 0;
+
+#define SHOULD_LOG_ALLOCATION (program_running == 1 && classes_loading == 0)
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    setProgramInProgress
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramInProgress(
+    JNIEnv *jnienv,
+    jclass klass,
+    jboolean value) {
+    program_running = value;
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onClassLoad
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad(
+        JNIEnv *jnienv,
+        jclass klass,
+        jboolean starting) {
+    classes_loading += starting == JNI_TRUE ? 1 : -1;
+}
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -22,15 +50,18 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
 
     jvmtiError err;
     if ((err = (*env)->SetTag(env, obj, new_tag)) == JVMTI_ERROR_NONE) {
-        // debug log
-        char *name = NULL;
-        jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
-        if ((err = (*env)->GetClassSignature(env, cls, &name, NULL)) == JVMTI_ERROR_NONE) {
-            on_alloc(logger, thread_id, new_tag, name);
-            (*env)->Deallocate(env, (unsigned char *)name);
-            name = NULL;
-        } else {
-            fprintf(stderr, "could not get class name: %d\n", err);
+        if (SHOULD_LOG_ALLOCATION) {
+            char *name = NULL;
+            jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
+            if ((err = (*env)->GetClassSignature(env, cls, &name, NULL)) == JVMTI_ERROR_NONE)
+            {
+                on_alloc(logger, thread_id, new_tag, name);
+                (*env)->Deallocate(env, (unsigned char *) name);
+                name = NULL;
+            } else
+            {
+                fprintf(stderr, "could not get class name: %d\n", err);
+            }
         }
     } else {
         fprintf(stderr, "could not allocate tag: %d\n", err);
