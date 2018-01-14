@@ -13,12 +13,6 @@ import java.util.jar.JarFile
 
 class BytecodeTransformer : ClassFileTransformer {
 
-    enum class PatcherType {
-        USER,
-        SYSTEM,
-        NONE
-    }
-
     private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? = when {
     // user classes
     // TODO controlled by user
