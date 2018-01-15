@@ -1,36 +1,51 @@
 package ms.domwillia.jvmemory.preprocessor
 
+import ms.domwillia.jvmemory.preprocessor.protobuf.Event
 import ms.domwillia.jvmemory.protobuf.*
 
 class RawMessageHandler {
-    fun handle(msg: Message.Variant) = when (msg.type) {
-        Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter)
-        Message.MessageType.METHOD_EXIT -> exitMethod(msg.methodExit)
-        Message.MessageType.CLASS_DEF -> defineClass(msg.classDef)
-        Message.MessageType.ALLOC -> allocate(msg.alloc)
-        Message.MessageType.DEALLOC -> deallocate(msg.dealloc)
-        Message.MessageType.GETFIELD -> getField(msg.getField)
-        Message.MessageType.PUTFIELD -> putField(msg.putField)
-        Message.MessageType.STORE -> store(msg.store)
-        Message.MessageType.LOAD -> load(msg.load)
-        else -> {
+    private var methodCall = Event.MethodCall.newBuilder()
+    private var classDefinitions = mutableMapOf<String, Definitions.ClassDefinition>()
+
+    fun handle(msg: Message.Variant): Event.MethodCall? {
+        when (msg.type) {
+            Message.MessageType.ALLOC -> allocate(msg.alloc)
+            Message.MessageType.DEALLOC -> deallocate(msg.dealloc)
+            Message.MessageType.GETFIELD -> getField(msg.getField)
+            Message.MessageType.PUTFIELD -> putField(msg.putField)
+            Message.MessageType.STORE -> store(msg.store)
+            Message.MessageType.LOAD -> load(msg.load)
+            Message.MessageType.CLASS_DEF -> defineClass(msg.classDef)
+            Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter)
+
+            Message.MessageType.METHOD_EXIT -> {
+                return methodCall.build()
+            }
+
+            else -> throw IllegalStateException("bad message type: $msg")
         }
-    }
 
-    private fun enterMethod(enter: Flow.MethodEnter) {
-        println(">>> ${enter.class_}:${enter.method}")
-    }
-
-    private fun exitMethod(@Suppress("UNUSED_PARAMETER") exit: Flow.MethodExit) {
-        println("<<<")
+        return null
     }
 
     private fun defineClass(classDef: Definitions.ClassDefinition) {
-        val fields = classDef.fieldsList
-                .dropLast(1)
-                .fold("", { acc, def -> acc + def.name + ", " })
-                .dropLast(2)
-        println("DEFINE ${classDef.name} with fields: $fields")
+        classDefinitions[classDef.name] = classDef
+        println("registered ${classDef.name}")
+    }
+
+    private fun enterMethod(msg: Flow.MethodEnter) {
+        val type = msg.class_
+        val name = msg.method
+
+        println(">>> $type:$name")
+
+        val classDef = classDefinitions[type]
+                ?: throw IllegalStateException("undefined class $type")
+        val methodDef = classDef.methodsList.find { it.name == name }
+                ?: throw IllegalStateException("undefined method $type:$name")
+
+        methodCall.clear()
+        methodCall.definition = methodDef
     }
 
     private fun allocate(alloc: Allocations.Allocation) {

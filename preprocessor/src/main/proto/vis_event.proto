@@ -1,0 +1,54 @@
+syntax = "proto3";
+package vis;
+
+option java_package = "ms.domwillia.jvmemory.preprocessor.protobuf";
+option java_outer_classname = "Event";
+
+import "definitions.proto";
+
+message MethodCall {
+    MethodDefinition definition = 1;
+}
+
+enum MessageType {
+    ADD_HEAP_OBJECT = 0;
+    DEL_HEAP_OBJECT = 1;
+
+    ADD_LINK = 2;
+    DEL_LINK = 3;
+
+    // TODO domain specific access events
+}
+
+message Variant {
+    MessageType type = 1;
+    oneof payload {
+        AddHeapObject add_heap_object = 2;
+        DelHeapObject del_heap_object = 3;
+
+        AddLink add_link = 4;
+        DelLink del_link = 5;
+    }
+}
+
+message AddHeapObject {
+    int64 id = 1;
+    string class = 2;
+}
+
+message DelHeapObject {
+    int64 id = 1;
+}
+
+message AddLink {
+    int64 src_id = 1;
+    int64 dst_id = 2;
+    string name = 3;
+}
+
+// dirty repetition
+message DelLink {
+    int64 src_id = 1;
+    int64 dst_id = 2;
+    string name = 3;
+}
