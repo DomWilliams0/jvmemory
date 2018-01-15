@@ -15,21 +15,16 @@ class Preprocessor(
 
     private fun getOutputStream(threadId: Long): BufferedOutputStream {
         val path = Paths.get(outputDirPath.path, "jvmemory-thread-$threadId.log")
-        return threadOutputs.getOrElse(threadId, { BufferedOutputStream(path.toFile().outputStream()) })
+        return threadOutputs.computeIfAbsent(threadId, { path.toFile().outputStream().buffered() })
     }
 
     private fun handle(msg: Message.Variant) {
-        handler.handle(msg)
-
-        // TODO if handler returns a new processed vis event, write to thread stream
-//        val stream = getOutputStream(msg.threadId)
+        handler.handle(msg)?.writeTo(getOutputStream(msg.threadId))
     }
-
 
     private fun finish() {
         threadOutputs.values.forEach(BufferedOutputStream::close)
     }
-
 
     companion object {
 
@@ -45,7 +40,7 @@ class Preprocessor(
                 if (!outputDirPath.isDirectory) throw IllegalArgumentException("Bad output directory: it is not a directory!")
                 outputDirPath.listFiles().forEach { it.delete() }
             } else {
-                Files.createDirectories(outputDirPath.toPath().parent)
+                Files.createDirectories(outputDirPath.toPath())
             }
 
             val proc = Preprocessor(outputDirPath)

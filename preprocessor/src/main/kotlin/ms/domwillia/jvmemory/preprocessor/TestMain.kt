@@ -7,7 +7,7 @@ object TestMain {
     @JvmStatic
     fun main(arg: Array<String>) {
         val inputPath = "../monitor-agent/jvmemory.log"
-        val outputDir = "target/vis-events"
+        val outputDir = "out/vis-events"
 
         Preprocessor.runPreprocessor(File(inputPath), File(outputDir))
     }

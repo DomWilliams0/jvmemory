@@ -3,7 +3,6 @@ buildscript {
         kotlin_version = '1.2.10'
         protobufGradlePlugin = "0.8.3"
         protobufVersion = "3.2.0"
-        protoDir = "$projectDir/../monitor-agent/src/main/proto"
         mainClass = "ms.domwillia.jvmemory.preprocessor.TestMain"
     }
 
@@ -42,7 +41,8 @@ protobuf.protoc {
 
 sourceSets.main {
     proto {
-        srcDir "$protoDir"
+        srcDir "$projectDir/../monitor-agent/src/main/proto"
+        srcDir "src/main/proto"
     }
 
     java {
