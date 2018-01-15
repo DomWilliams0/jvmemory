@@ -6,20 +6,25 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
+typealias ThreadID = Long
+typealias ObjectID = Long
+
 class Preprocessor(
         private val outputDirPath: File
 ) {
 
     private val handler = RawMessageHandler()
-    private val threadOutputs = mutableMapOf<Long, BufferedOutputStream>()
+    private val threadOutputs = mutableMapOf<ThreadID, BufferedOutputStream>()
 
-    private fun getOutputStream(threadId: Long): BufferedOutputStream {
+    private fun getOutputStream(threadId: ThreadID): BufferedOutputStream {
         val path = Paths.get(outputDirPath.path, "jvmemory-thread-$threadId.log")
         return threadOutputs.computeIfAbsent(threadId, { path.toFile().outputStream().buffered() })
     }
 
     private fun handle(msg: Message.Variant) {
-        handler.handle(msg)?.writeTo(getOutputStream(msg.threadId))
+        handler.handle(msg)?.let { (threadId, event) ->
+            event.writeTo(getOutputStream(threadId))
+        }
     }
 
     private fun finish() {

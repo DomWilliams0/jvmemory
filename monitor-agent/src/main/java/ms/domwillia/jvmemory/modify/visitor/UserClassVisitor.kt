@@ -21,7 +21,8 @@ class UserClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer)
             superName: String?,
             interfaces: Array<String>?
     ) {
-        currentClass = ClassDefinition(name, access, superName, interfaces)
+        fun tidyClassName(name: String?): String? = name?.replace('/', '.')
+        currentClass = ClassDefinition(tidyClassName(name)!!, access, tidyClassName(superName), interfaces)
         super.visit(version, access, name, signature, superName, interfaces)
     }
 
