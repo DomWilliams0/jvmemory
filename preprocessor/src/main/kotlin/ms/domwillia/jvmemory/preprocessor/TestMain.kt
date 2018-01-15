@@ -1,9 +1,14 @@
 package ms.domwillia.jvmemory.preprocessor
 
+import java.io.File
+
 
 object TestMain {
     @JvmStatic
     fun main(arg: Array<String>) {
-        parseLog("../monitor-agent/jvmemory.log", ::DebugProcessor)
+        val inputPath = "../monitor-agent/jvmemory.log"
+        val outputDir = "target/vis-events"
+
+        Preprocessor.runPreprocessor(File(inputPath), File(outputDir))
     }
 }
