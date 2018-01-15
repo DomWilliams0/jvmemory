@@ -2,12 +2,13 @@ syntax = "proto3";
 package vis;
 
 option java_package = "ms.domwillia.jvmemory.preprocessor.protobuf";
-option java_outer_classname = "Event";
+option java_outer_classname = "Visualisation";
 
 import "definitions.proto";
 
-message MethodCall {
+message MethodFrame {
     MethodDefinition definition = 1;
+    repeated EventVariant events = 2;
 }
 
 enum MessageType {
@@ -20,7 +21,7 @@ enum MessageType {
     // TODO domain specific access events
 }
 
-message Variant {
+message EventVariant {
     MessageType type = 1;
     oneof payload {
         AddHeapObject add_heap_object = 2;
