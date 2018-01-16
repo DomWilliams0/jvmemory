@@ -100,7 +100,19 @@ class RawMessageHandler {
     }
 
     private fun putField(putField: Access.PutField, threadId: ThreadID) {
-//        println("PUTFIELD ${putField.id}'s ${putField.field} set to ${putField.valueId}")
+        // TODO set link only if object type
+        val isFieldAnObject = true
+
+        if (isFieldAnObject) {
+            emitEvent(threadId, MessageType.SET_LINK, {
+                it.setLink = SetLink.newBuilder().apply {
+                    srcId = putField.id
+                    dstId = putField.valueId // may be 0/null
+                    name = putField.field
+                }.build()
+            })
+        }
+
     }
 
     private fun store(store: Access.Store, threadId: ThreadID) {
