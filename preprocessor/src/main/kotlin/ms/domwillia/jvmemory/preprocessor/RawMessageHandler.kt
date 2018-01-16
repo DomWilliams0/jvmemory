@@ -29,8 +29,24 @@ class RawMessageHandler {
         return null
     }
 
+
     private fun getCurrentFrame(threadId: ThreadID): MethodFrame.Builder =
             activeFrames.computeIfAbsent(threadId, { MethodFrame.newBuilder() })
+
+    /**
+     * Helper
+     */
+    private fun emitEvent(
+            threadId: ThreadID,
+            messageType: MessageType,
+            initialiser: (EventVariant.Builder) -> Unit) {
+
+        getCurrentFrame(threadId).addEvents(
+                EventVariant.newBuilder().apply {
+                    type = messageType
+                    initialiser(this)
+                })
+    }
 
     private fun defineClass(classDef: Definitions.ClassDefinition) {
         classDefinitions[classDef.name] = classDef
@@ -54,16 +70,14 @@ class RawMessageHandler {
     }
 
     private fun allocate(alloc: Allocations.Allocation, threadId: ThreadID) {
-        val msg = AddHeapObject.newBuilder().apply {
-            id = alloc.id
-            class_ = alloc.type.tidyClassName()
-        }.build()
 
         println("allocate ${alloc.id} in thread $threadId")
 
-        getCurrentFrame(threadId).addEvents(EventVariant.newBuilder().apply {
-            type = MessageType.ADD_HEAP_OBJECT
-            addHeapObject = msg
+        emitEvent(threadId, MessageType.ADD_HEAP_OBJECT, {
+            it.addHeapObject = AddHeapObject.newBuilder().apply {
+                id = alloc.id
+                class_ = alloc.type.tidyClassName()
+            }.build()
         })
 
         allocationThread[alloc.id] = threadId
@@ -72,15 +86,12 @@ class RawMessageHandler {
     private fun deallocate(dealloc: Allocations.Deallocation) {
         val threadId = allocationThread[dealloc.id] ?: return
 
-        val msg = DelHeapObject.newBuilder().apply {
-            id = dealloc.id
-        }.build()
-
         println("deallocate ${dealloc.id} from thread $threadId")
 
-        getCurrentFrame(threadId).addEvents(EventVariant.newBuilder().apply {
-            type = MessageType.DEL_HEAP_OBJECT
-            delHeapObject = msg
+        emitEvent(threadId, MessageType.DEL_HEAP_OBJECT, {
+            it.delHeapObject = DelHeapObject.newBuilder().apply {
+                id = dealloc.id
+            }.build()
         })
     }
 
