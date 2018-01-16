@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#define ARRAY_STARTING_SIZE 16
+#define ARRAY_STARTING_SIZE 65535
 #define ARRAY_TYPE long
 
 struct array {
