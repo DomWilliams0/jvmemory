@@ -19,9 +19,11 @@ class MethodPatcher(
     override fun store(index: Int, type: Type) {
 
         // object:
-        // Monitor.onStoreLocalVar(Monitor.getTag(value), index)
+        // Monitor.onStoreLocalVarObject(Monitor.getTag(value), index)
         // others:
-        // Monitor.onStoreLocalVar(0, index)
+        // Monitor.onStoreLocalVarPrimitive(index)
+        val functionName: String
+        val functionDesc: String
 
         // stack: value
 
@@ -40,23 +42,26 @@ class MethodPatcher(
             )
 
             // stack: value tag_long
+            functionName = "onStoreLocalVarObject"
+            functionDesc ="(JI)V"
         } else {
-            super.lconst(0)
-            // stack: value tag_long
+            // stack: value
+            functionName = "onStoreLocalVarPrimitive"
+            functionDesc ="(I)V"
         }
 
-        // stack: value tag_long
+        // stack: value (tag_long)
 
         // push index
         super.iconst(index)
 
-        // stack: value tag_long index
+        // stack: value (tag_long) index
 
         // log
         super.invokestatic(
                 Monitor.internalName,
-                "onStoreLocalVar",
-                "(JI)V",
+                functionName,
+                functionDesc,
                 false
         )
 
@@ -118,19 +123,21 @@ class MethodPatcher(
 
     override fun putfield(owner: String, name: String, desc: String) {
         // TODO there are extra onLoadLocalVars before every putfield - remove these!
+        val type = Type.getType(desc)
 
         // avoid uninitialisedThis
         if (name != "this$0") {
 
             // object:
-            // Monitor.onPutField(Monitor.getTag(obj), field, Monitor.getTag(value))
+            // Monitor.onPutFieldObject(Monitor.getTag(obj), field, Monitor.getTag(value))
             // others:
-            // Monitor.onPutField(Monitor.getTag(obj), field, 0)
+            // Monitor.onPutFieldPrimitive(Monitor.getTag(obj), field)
+            val functionName: String
+            val functionDesc: String
 
             // stack: obj value
 
             // store value in tmp
-            val type = Type.getType(desc)
             val tmp = localVarSorter.newLocal(type)
             super.store(tmp, type)
 
@@ -171,16 +178,19 @@ class MethodPatcher(
                 )
 
                 // stack: obj obj_id field value_id
+                functionName = "onPutFieldObject"
+                functionDesc = "(JLjava/lang/String;J)V"
             } else {
-                super.lconst(0)
-                // stack: obj obj_id field value_id
+                // stack: obj obj_id field
+                functionName = "onPutFieldPrimitive"
+                functionDesc = "(JLjava/lang/String;)V"
             }
 
             // log
             super.invokestatic(
                     Monitor.internalName,
-                    "onPutField",
-                    "(JLjava/lang/String;J)V",
+                    functionName,
+                    functionDesc,
                     false
             )
             // stack: obj

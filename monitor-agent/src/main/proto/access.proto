@@ -8,17 +8,26 @@ message GetField {
     string field = 2;
 }
 
-message PutField {
+message PutFieldObject {
     int64 id = 1;
     string field = 2;
     int64 value_id = 3;
+}
+
+message PutFieldPrimitive {
+    int64 id = 1;
+    string field = 2;
 }
 
 message Load {
     int32 index = 1;
 }
 
-message Store {
+message StoreObject {
     int32 index = 1;
     int64 value_id = 2;
+}
+
+message StorePrimitive {
+    int32 index = 1;
 }

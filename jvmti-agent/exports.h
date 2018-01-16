@@ -81,19 +81,35 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onPutField
+ * Method:    onPutFieldObject
  * Signature: (JLjava/lang/String;J)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutField
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObject
   (JNIEnv *, jclass, jlong, jstring, jlong);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onStoreLocalVar
+ * Method:    onPutFieldPrimitive
+ * Signature: (JLjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrimitive
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStoreLocalVarObject
  * Signature: (JI)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVar
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarObject
   (JNIEnv *, jclass, jlong, jint);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStoreLocalVarPrimitive
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarPrimitive
+  (JNIEnv *, jclass, jint);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor

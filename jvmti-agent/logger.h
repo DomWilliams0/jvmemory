@@ -10,9 +10,11 @@ extern void on_enter_method(logger_p logger, long thread_id, const char *clazz, 
 extern void on_exit_method(logger_p logger, long thread_id);
 
 extern void on_get_field(logger_p logger, long thread_id, long obj_id, const char *method);
-extern void on_put_field(logger_p logger, long thread_id, long obj_id, const char *field, long value_id);
+extern void on_put_field_object(logger_p logger, long thread_id, long obj_id, const char *field, long value_id);
+extern void on_put_field_primitive(logger_p logger, long thread_id, long obj_id, const char *field);
 
-extern void on_store(logger_p logger, long thread_id, long value_id, int index);
+extern void on_store_object(logger_p logger, long thread_id, long value_id, int index);
+extern void on_store_primitive(logger_p logger, long thread_id, int index);
 extern void on_load(logger_p logger, long thread_id, int index);
 
 extern void on_alloc(logger_p logger, long thread_id, long obj_id, const char *class);

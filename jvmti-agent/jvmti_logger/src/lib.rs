@@ -58,29 +58,54 @@ pub extern fn on_get_field(logger: *mut Logger, thread_id: Long, obj_id: Long, f
 }
 
 #[no_mangle]
-pub extern fn on_put_field(logger: *mut Logger, thread_id: Long, obj_id: Long, field: String, value_id: Long) {
-    let mut payload = access::PutField::new();
+pub extern fn on_put_field_object(logger: *mut Logger, thread_id: Long, obj_id: Long, field: String, value_id: Long) {
+    let mut payload = access::PutFieldObject::new();
     payload.id = obj_id;
     payload.field = get_string!(field);
     payload.value_id = value_id;
 
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);
-    msg.set_put_field(payload);
-    msg.set_field_type(MessageType::PUTFIELD);
+    msg.set_put_field_object(payload);
+    msg.set_field_type(MessageType::PUTFIELD_OBJECT);
     io::log_message(logger, msg);
 }
 
 #[no_mangle]
-pub extern fn on_store(logger: *mut Logger, thread_id: Long, value_id: Long, index: Int) {
-    let mut payload = access::Store::new();
+pub extern fn on_put_field_primitive(logger: *mut Logger, thread_id: Long, obj_id: Long, field: String) {
+    let mut payload = access::PutFieldPrimitive::new();
+    payload.id = obj_id;
+    payload.field = get_string!(field);
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_put_field_primitive(payload);
+    msg.set_field_type(MessageType::PUTFIELD_PRIMITIVE);
+    io::log_message(logger, msg);
+}
+
+#[no_mangle]
+pub extern fn on_store_object(logger: *mut Logger, thread_id: Long, value_id: Long, index: Int) {
+    let mut payload = access::StoreObject::new();
     payload.value_id = value_id;
     payload.index = index;
 
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);
-    msg.set_store(payload);
-    msg.set_field_type(MessageType::STORE);
+    msg.set_store_object(payload);
+    msg.set_field_type(MessageType::STORE_OBJECT);
+    io::log_message(logger, msg);
+}
+
+#[no_mangle]
+pub extern fn on_store_primitive(logger: *mut Logger, thread_id: Long, index: Int) {
+    let mut payload = access::StorePrimitive::new();
+    payload.index = index;
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_store_primitive(payload);
+    msg.set_field_type(MessageType::STORE_PRIMITIVE);
     io::log_message(logger, msg);
 }
 

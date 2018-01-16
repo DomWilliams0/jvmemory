@@ -34,15 +34,26 @@ object Monitor {
     /**
      * @param objId The tag of the object whose field is being set
      * @param field The name of the field being set
-     * @param valueId The tag of the value, or 0 if not an object
+     * @param valueId The tag of the value, 0 if null
      */
-    @JvmStatic external fun onPutField(objId: Long, field: String, valueId: Long)
+    @JvmStatic external fun onPutFieldObject(objId: Long, field: String, valueId: Long)
 
     /**
-     * @param valueId The tag of the value, or 0 if not an object
+     * @param objId The tag of the object whose field is being set
+     * @param field The name of the field being set
+     */
+    @JvmStatic external fun onPutFieldPrimitive(objId: Long, field: String)
+
+    /**
+     * @param valueId The tag of the value, 0 if null
      * @param index The local variable index
      */
-    @JvmStatic external fun onStoreLocalVar(valueId: Long, index: Int)
+    @JvmStatic external fun onStoreLocalVarObject(valueId: Long, index: Int)
+
+    /**
+     * @param index The local variable index
+     */
+    @JvmStatic external fun onStoreLocalVarPrimitive(index: Int)
 
     /**
      * @param index The local variable index
