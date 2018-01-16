@@ -131,10 +131,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField(
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onPutField
+ * Method:    onPutFieldObject
  * Signature: (JLjava/lang/String;J)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutField(
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObject(
         JNIEnv *jnienv,
         jclass klass,
         jlong obj_id,
@@ -142,22 +142,51 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutField(
         jlong value_id) {
     GET_THREAD_ID;
     const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
-    on_put_field(logger, thread_id, obj_id, field_str, value_id);
+    on_put_field_object(logger, thread_id, obj_id, field_str, value_id);
     (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
 }
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onStoreLocalVar
+ * Method:    onPutFieldPrimitive
+ * Signature: (JLjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrimitive(
+        JNIEnv *jnienv,
+        jclass klass,
+        jlong obj_id,
+        jstring field) {
+    GET_THREAD_ID;
+    const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
+    on_put_field_primitive(logger, thread_id, obj_id, field_str);
+    (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStoreLocalVarObject
  * Signature: (JI)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVar(
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarObject(
         JNIEnv *jnienv,
         jclass klass,
         jlong value_id,
         jint index) {
     GET_THREAD_ID;
-    on_store(logger, thread_id, value_id, index);
+    on_store_object(logger, thread_id, value_id, index);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStoreLocalVarPrimitive
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarPrimitive(
+        JNIEnv *jnienv,
+        jclass klass,
+        jint index) {
+    GET_THREAD_ID;
+    on_store_primitive(logger, thread_id, index);
 }
 
 /*

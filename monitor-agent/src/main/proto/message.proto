@@ -18,10 +18,12 @@ enum MessageType {
     METHOD_EXIT = 4;
 
     GETFIELD = 5;
-    PUTFIELD = 6;
+    PUTFIELD_OBJECT = 6;
+    PUTFIELD_PRIMITIVE = 7;
 
-    STORE = 7;
-    LOAD = 8;
+    STORE_OBJECT = 8;
+    STORE_PRIMITIVE = 9;
+    LOAD = 10;
 }
 
 message Variant {
@@ -37,10 +39,12 @@ message Variant {
         MethodExit method_exit = 7;
 
         GetField get_field = 8;
-        PutField put_field = 9;
+        PutFieldObject put_field_object = 9;
+        PutFieldPrimitive put_field_primitive = 10;
 
-        Store store = 10;
-        Load load = 11;
+        StoreObject store_object = 11;
+        StorePrimitive store_primitive = 12;
+        Load load = 13;
     }
 
 }
