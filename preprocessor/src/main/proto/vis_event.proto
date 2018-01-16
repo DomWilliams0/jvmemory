@@ -15,7 +15,8 @@ enum MessageType {
     ADD_HEAP_OBJECT = 0;
     DEL_HEAP_OBJECT = 1;
 
-    SET_LINK = 2;
+    SET_INTER_HEAP_LINK = 2;
+    SET_LOCAL_VAR_LINK = 3;
 
     // TODO domain specific access events
 }
@@ -26,7 +27,8 @@ message EventVariant {
         AddHeapObject add_heap_object = 2;
         DelHeapObject del_heap_object = 3;
 
-        SetLink set_link = 4;
+        SetInterHeapLink set_inter_heap_link = 4;
+        SetLocalVarLink set_local_var_link = 5;
     }
 }
 
@@ -39,8 +41,14 @@ message DelHeapObject {
     int64 id = 1;
 }
 
-message SetLink {
+message SetInterHeapLink {
     int64 src_id = 1;
+    int64 dst_id = 2;
+    string name = 3;
+}
+
+message SetLocalVarLink {
+    int32 var_index = 1;
     int64 dst_id = 2;
     string name = 3;
 }
