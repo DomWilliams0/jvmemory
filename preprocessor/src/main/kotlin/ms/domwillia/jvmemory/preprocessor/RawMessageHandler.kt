@@ -98,8 +98,8 @@ class RawMessageHandler {
     }
 
     private fun putFieldObject(putFieldObject: Access.PutFieldObject, threadId: ThreadID) {
-        emitEvent(threadId, MessageType.SET_LINK, {
-            it.setLink = SetLink.newBuilder().apply {
+        emitEvent(threadId, MessageType.SET_INTER_HEAP_LINK, {
+            it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
                 srcId = putFieldObject.id
                 dstId = putFieldObject.valueId // may be 0/null
                 name = putFieldObject.field
@@ -111,7 +111,20 @@ class RawMessageHandler {
     }
 
     private fun storeObject(storeObject: Access.StoreObject, threadId: ThreadID) {
+        val localVarName = try {
+            val methodDef = getCurrentFrame(threadId).definition
+            methodDef.getLocalVars(storeObject.index).name
+        } catch (e: IndexOutOfBoundsException) {
+            "var${storeObject.index}"
+        }
 
+        emitEvent(threadId, MessageType.SET_LOCAL_VAR_LINK, {
+            it.setLocalVarLink = SetLocalVarLink.newBuilder().apply {
+                varIndex = storeObject.index
+                dstId = storeObject.valueId
+                name = localVarName
+            }.build()
+        })
     }
 
     private fun storePrimitive(storePrimitive: Access.StorePrimitive, threadId: ThreadID) {
