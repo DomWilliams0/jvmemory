@@ -52,6 +52,14 @@ class RawMessageHandler {
         getCurrentFrame(threadId).addEvents(event)
     }
 
+    private fun getFieldEdgeName(field: String, obj: ObjectID) = "$field.$obj"
+    private fun getLocalVarEdgeName(threadId: ThreadID, index: Int) = try {
+        val methodDef = getCurrentFrame(threadId).definition
+        methodDef.getLocalVars(index).name
+    } catch (e: IndexOutOfBoundsException) {
+        "var$index"
+    }
+
     private fun defineClass(classDef: Definitions.ClassDefinition) {
         classDefinitions[classDef.name] = classDef
         println("registered ${classDef.name}")
@@ -94,7 +102,12 @@ class RawMessageHandler {
     }
 
     private fun getField(getField: Access.GetField, threadId: ThreadID) {
-//        println("GETFIELD ${getField.field}")
+        emitEvent(threadId, MessageType.SHOW_HEAP_OBJECT_ACCESS, {
+            it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
+                objId = getField.id
+                edgeName = getFieldEdgeName(getField.field, getField.id)
+            }.build()
+        })
     }
 
     private fun putFieldObject(putFieldObject: Access.PutFieldObject, threadId: ThreadID) {
@@ -108,31 +121,38 @@ class RawMessageHandler {
     }
 
     private fun putFieldPrimitive(putFieldPrimitive: Access.PutFieldPrimitive, threadId: ThreadID) {
+        emitEvent(threadId, MessageType.SHOW_HEAP_OBJECT_ACCESS, {
+            it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
+                objId = putFieldPrimitive.id
+            }.build()
+        })
     }
 
     private fun storeObject(storeObject: Access.StoreObject, threadId: ThreadID) {
-        val localVarName = try {
-            val methodDef = getCurrentFrame(threadId).definition
-            methodDef.getLocalVars(storeObject.index).name
-        } catch (e: IndexOutOfBoundsException) {
-            "var${storeObject.index}"
-        }
-
         emitEvent(threadId, MessageType.SET_LOCAL_VAR_LINK, {
             it.setLocalVarLink = SetLocalVarLink.newBuilder().apply {
                 varIndex = storeObject.index
                 dstId = storeObject.valueId
-                name = localVarName
+                name = getLocalVarEdgeName(threadId, storeObject.index)
             }.build()
         })
     }
 
     private fun storePrimitive(storePrimitive: Access.StorePrimitive, threadId: ThreadID) {
-
+        emitEvent(threadId, MessageType.SHOW_LOCAL_VAR_ACCESS, {
+            it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
+                varIndex = storePrimitive.index
+            }.build()
+        })
     }
 
     private fun load(load: Access.Load, threadId: ThreadID) {
-//        println("LOAD ${load.index}")
+        emitEvent(threadId, MessageType.SHOW_LOCAL_VAR_ACCESS, {
+            it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
+                varIndex = load.index
+                edgeName = getLocalVarEdgeName(threadId, load.index)
+            }.build()
+        })
     }
 
     /**
