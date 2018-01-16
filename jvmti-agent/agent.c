@@ -73,9 +73,11 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm, char *options, void *reserve
 }
 
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm) {
-	array_free(&freed_objects);
+    DO_SAFE((*env)->RawMonitorEnter(env, free_lock), "entering free monitor");
+    array_free(&freed_objects);
     logger_free(logger);
     logger = NULL;
+    DO_SAFE((*env)->RawMonitorExit(env, free_lock), "exiting free monitor");
 }
 
 static void flush_queued_frees(JNIEnv *jnienv) {
