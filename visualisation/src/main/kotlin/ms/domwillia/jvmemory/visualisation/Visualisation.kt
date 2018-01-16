@@ -1,9 +1,14 @@
 package ms.domwillia.jvmemory.visualisation
 
-object Visualisation {
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val size = Pair(600, 600)
-        SwingTest(size).go()
+import ms.domwillia.jvmemory.preprocessor.EventsLoader
+
+class Visualisation(size: Pair<Int, Int>, private val events: EventsLoader) {
+
+    init {
+        println("threads available: ${events.threads}")
+    }
+
+    fun go() {
+
     }
 }

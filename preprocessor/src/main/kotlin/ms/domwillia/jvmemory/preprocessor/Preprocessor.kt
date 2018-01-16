@@ -4,21 +4,19 @@ import ms.domwillia.jvmemory.protobuf.Message
 import java.io.BufferedOutputStream
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.Paths
 
 typealias ThreadID = Long
 typealias ObjectID = Long
 
-class Preprocessor(
-        private val outputDirPath: File
-) {
+class Preprocessor(outputDirPath: File) {
 
     private val handler = RawMessageHandler()
     private val threadOutputs = mutableMapOf<ThreadID, BufferedOutputStream>()
+    private val events = EventsLoader(outputDirPath)
 
     private fun getOutputStream(threadId: ThreadID): BufferedOutputStream {
-        val path = Paths.get(outputDirPath.path, "jvmemory-thread-$threadId.log")
-        return threadOutputs.computeIfAbsent(threadId, { path.toFile().outputStream().buffered() })
+        val file = events.getFileForThread(threadId)
+        return threadOutputs.computeIfAbsent(threadId, { file.outputStream().buffered() })
     }
 
     private fun handle(msg: Message.Variant) {
@@ -38,14 +36,18 @@ class Preprocessor(
          * @param outputDirPath Directory to write out processed visualisation events
          *                      A file will be created for each thread
          */
-        fun runPreprocessor(inputLogPath: File, outputDirPath: File) {
+        fun runPreprocessor(
+                inputLogPath: File,
+                outputDirPath: File
+        ): EventsLoader {
+            val outDirPath = outputDirPath.toPath()
             if (!inputLogPath.isFile)
                 throw IllegalArgumentException("Bad log file path given")
             if (outputDirPath.exists()) {
                 if (!outputDirPath.isDirectory) throw IllegalArgumentException("Bad output directory: it is not a directory!")
                 outputDirPath.listFiles().forEach { it.delete() }
             } else {
-                Files.createDirectories(outputDirPath.toPath())
+                Files.createDirectories(outDirPath)
             }
 
             val proc = Preprocessor(outputDirPath)
@@ -60,6 +62,8 @@ class Preprocessor(
             }
 
             proc.finish()
+
+            return proc.events
         }
     }
 }
