@@ -12,13 +12,16 @@ message MethodFrame {
 }
 
 enum MessageType {
-    ADD_HEAP_OBJECT = 0;
-    DEL_HEAP_OBJECT = 1;
+    MESSAGE_TYPE_PADDING = 0; // grumble grumble
 
-    SET_INTER_HEAP_LINK = 2;
-    SET_LOCAL_VAR_LINK = 3;
+    ADD_HEAP_OBJECT = 1;
+    DEL_HEAP_OBJECT = 2;
 
-    // TODO domain specific access events
+    SET_INTER_HEAP_LINK = 3;
+    SET_LOCAL_VAR_LINK = 4;
+
+    SHOW_LOCAL_VAR_ACCESS = 5;
+    SHOW_HEAP_OBJECT_ACCESS = 6;
 }
 
 message EventVariant {
@@ -29,6 +32,9 @@ message EventVariant {
 
         SetInterHeapLink set_inter_heap_link = 4;
         SetLocalVarLink set_local_var_link = 5;
+
+        ShowLocalVarAccess show_local_var_access = 6;
+        ShowHeapObjectAccess show_heap_object_access = 7;
     }
 }
 
@@ -51,4 +57,15 @@ message SetLocalVarLink {
     int32 var_index = 1;
     int64 dst_id = 2;
     string name = 3;
+}
+
+message ShowLocalVarAccess {
+    int32 var_index = 1;
+    string edge_name = 2;
+}
+
+message ShowHeapObjectAccess {
+    int64 obj_id = 1;
+    string edge_name = 2;
+
 }
