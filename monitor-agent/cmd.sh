@@ -4,14 +4,11 @@ JAVA=/usr/lib/jvm/java-8-openjdk
 QUE=${1:-ms.domwillia.specimen.SpecimenRunner}
 CP=$2
 
-export LD_LIBRARY_PATH=../jvmti-agent/jvmti_logger/target/debug
-
 echo Running $QUE
 cd $ROOT
 
 $JAVA/bin/java \
 -javaagent:out/artifacts/jvmemory_jar/jvmemory.jar \
--Djava.library.path=../jvmti-agent/jvmti_logger/target/debug \
 -agentpath:../jvmti-agent/libagent.so \
 -classpath \
 target/classes:\
