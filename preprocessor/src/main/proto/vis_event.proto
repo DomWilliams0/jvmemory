@@ -15,8 +15,7 @@ enum MessageType {
     ADD_HEAP_OBJECT = 0;
     DEL_HEAP_OBJECT = 1;
 
-    ADD_LINK = 2;
-    DEL_LINK = 3;
+    SET_LINK = 2;
 
     // TODO domain specific access events
 }
@@ -27,8 +26,7 @@ message EventVariant {
         AddHeapObject add_heap_object = 2;
         DelHeapObject del_heap_object = 3;
 
-        AddLink add_link = 4;
-        DelLink del_link = 5;
+        SetLink set_link = 4;
     }
 }
 
@@ -41,14 +39,7 @@ message DelHeapObject {
     int64 id = 1;
 }
 
-message AddLink {
-    int64 src_id = 1;
-    int64 dst_id = 2;
-    string name = 3;
-}
-
-// dirty repetition
-message DelLink {
+message SetLink {
     int64 src_id = 1;
     int64 dst_id = 2;
     string name = 3;
