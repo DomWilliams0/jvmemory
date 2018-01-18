@@ -19,5 +19,6 @@ $MVN/org/jetbrains/kotlin/kotlin-stdlib-jre8/1.2.10/kotlin-stdlib-jre8-1.2.10.ja
 $MVN/org/jetbrains/kotlin/kotlin-stdlib/1.2.10/kotlin-stdlib-1.2.10.jar:\
 $MVN/org/jetbrains/annotations/13.0/annotations-13.0.jar:\
 $MVN/org/jetbrains/kotlin/kotlin-stdlib-jre7/1.2.10/kotlin-stdlib-jre7-1.2.10.jar:\
-$MVN/com/google/protobuf/protobuf-java/3.4.0/protobuf-java-3.4.0.jar \
+$MVN/com/google/protobuf/protobuf-java/3.4.0/protobuf-java-3.4.0.jar:\
+$CP \
 $QUE
