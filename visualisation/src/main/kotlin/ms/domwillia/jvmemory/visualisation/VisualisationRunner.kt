@@ -11,6 +11,6 @@ object VisualisationRunner {
                 File("target/vis-events")
         )
         val size = Pair(600, 600)
-        Visualisation(size, events).go()
+        Visualisation(size, events)
     }
 }
