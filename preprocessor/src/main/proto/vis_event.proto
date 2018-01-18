@@ -6,11 +6,6 @@ option java_outer_classname = "Event";
 
 import "definitions.proto";
 
-message MethodFrame {
-    MethodDefinition definition = 1;
-    repeated EventVariant events = 2;
-}
-
 enum EventType {
     MESSAGE_TYPE_PADDING = 0; // grumble grumble
 
@@ -22,6 +17,9 @@ enum EventType {
 
     SHOW_LOCAL_VAR_ACCESS = 5;
     SHOW_HEAP_OBJECT_ACCESS = 6;
+
+    PUSH_METHOD_FRAME = 7;
+    POP_METHOD_FRAME = 8;
 }
 
 message EventVariant {
@@ -35,7 +33,15 @@ message EventVariant {
 
         ShowLocalVarAccess show_local_var_access = 6;
         ShowHeapObjectAccess show_heap_object_access = 7;
+
+        PushMethodFrame push_method_frame = 8;
+        // no pop variant needed
     }
+}
+
+message PushMethodFrame {
+    ClassDefinition owning_class = 1;
+    MethodDefinition definition = 2;
 }
 
 message AddHeapObject {
@@ -67,5 +73,4 @@ message ShowLocalVarAccess {
 message ShowHeapObjectAccess {
     int64 obj_id = 1;
     string edge_name = 2;
-
 }
