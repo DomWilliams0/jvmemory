@@ -176,4 +176,7 @@ class RawMessageHandler {
         name.forEachIndexed { i, c -> if (c == '/') name.setCharAt(i, '.') }
         return name.toString()
     }
+
+    internal val loadedClassDefinitions: Collection<Definitions.ClassDefinition>
+        get() = this.classDefinitions.values
 }
