@@ -1,19 +1,18 @@
 package ms.domwillia.jvmemory.visualisation
 
 import edu.uci.ics.jung.algorithms.layout.AbstractLayout
-import edu.uci.ics.jung.algorithms.layout.FRLayout2
+import edu.uci.ics.jung.algorithms.layout.SpringLayout
 import edu.uci.ics.jung.graph.DirectedSparseGraph
 import edu.uci.ics.jung.graph.Graph
+import edu.uci.ics.jung.graph.util.EdgeType
 import edu.uci.ics.jung.graph.util.Graphs
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane
 import edu.uci.ics.jung.visualization.VisualizationViewer
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse
 import ms.domwillia.jvmemory.preprocessor.ObjectID
-import java.awt.Dimension
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
-import java.util.*
 import javax.swing.JComponent
 import javax.swing.ToolTipManager
 import kotlin.system.exitProcess
@@ -32,14 +31,11 @@ class HeapGraph : GUIPanel {
 
     private val visContainer: JComponent
 
-    private val timer = Timer()
-
     init {
         graph = Graphs.synchronizedDirectedGraph(
                 DirectedSparseGraph())
-//        (graph as ObservableGraph).addGraphEventListener { println("hiya $it") }
 
-        layout = FRLayout2(graph)
+        layout = SpringLayout(graph) { 100 }
 
         vis = VisualizationViewer(layout)
         vis.renderContext.setVertexLabelTransformer { nodeTypes[it] }
@@ -59,32 +55,43 @@ class HeapGraph : GUIPanel {
                     exitProcess(2)
             }
         })
+        vis.model.relaxer.setSleepTime(50)
 
         visContainer = GraphZoomScrollPane(vis)
-        timer.schedule(TickerTask(), 300, 300)
     }
 
     override fun getGUIPanel(): JComponent = visContainer
 
-    inner class TickerTask : TimerTask() {
+    private fun modifyGraph(func: () -> Unit) {
+//        layout.lock(true)
+        val relaxer = vis.model.relaxer
+        relaxer.pause()
 
-        private var i = 400L
-        override fun run() {
-            layout.lock(true)
-            val relaxer = vis.model.relaxer
-            relaxer.pause()
+        func()
 
-            val v = i++
-            graph.addVertex(v)
-            if (v > 400)
-                graph.addEdge(Edge("hiya-$v", v - 1), v - 1, v)
-            if (v > 401)
-                graph.addEdge(Edge("hiya-$v-2", v - 2), v - 2, v)
-
-            layout.initialize()
-            relaxer.resume()
-            layout.lock(false)
-        }
+        layout.initialize()
+        relaxer.resume()
+//        layout.lock(false)
     }
 
+    fun addVertex(id: ObjectID, type: String) = modifyGraph {
+        graph.addVertex(id)
+        nodeTypes[id] = type
+    }
+
+    fun deleteVertex(id: ObjectID) = modifyGraph {
+        graph.removeVertex(id)
+        nodeTypes.remove(id)
+    }
+
+    fun setLink(src: ObjectID, dst: ObjectID, name: String) {
+        val edge = Edge(name, src)
+        graph.removeEdge(edge)
+
+        if (dst > 0L) {
+            modifyGraph {
+                graph.addEdge(edge, src, dst, EdgeType.DIRECTED)
+            }
+        }
+    }
 }
