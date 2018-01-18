@@ -27,6 +27,12 @@ class Preprocessor(outputDirPath: File) {
 
     private fun finish() {
         threadOutputs.values.forEach(BufferedOutputStream::close)
+
+        with(events.definitionFile.outputStream()) {
+            for (classDef in handler.loadedClassDefinitions) {
+                classDef.writeDelimitedTo(this)
+            }
+        }
     }
 
     companion object {
