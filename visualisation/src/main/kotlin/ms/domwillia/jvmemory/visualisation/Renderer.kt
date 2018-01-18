@@ -16,7 +16,7 @@ class Renderer(windowSize: Pair<Int, Int>, heapGraph: HeapGraph, callStack: Call
 
         val panel = JPanel(BorderLayout())
         panel.add(heapGraph.getGUIPanel(), BorderLayout.CENTER)
-        panel.add(callStack.getGUIPanel(), BorderLayout.WEST)
+//        panel.add(callStack.getGUIPanel(), BorderLayout.WEST)
         frame.contentPane = panel
     }
 
@@ -26,9 +26,9 @@ class Renderer(windowSize: Pair<Int, Int>, heapGraph: HeapGraph, callStack: Call
     }
 
     fun closeWindow() {
+        println("killing window in 3 seconds")
+        Thread.sleep(3000)
         SwingUtilities.invokeLater {
-            println("killing window")
-            Thread.sleep(1000)
             frame.dispatchEvent(WindowEvent(frame, WindowEvent.WINDOW_CLOSING))
         }
     }
