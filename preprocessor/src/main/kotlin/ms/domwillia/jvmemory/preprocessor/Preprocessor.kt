@@ -21,7 +21,7 @@ class Preprocessor(outputDirPath: File) {
 
     private fun handle(msg: Message.Variant) {
         handler.handle(msg)?.let { (threadId, event) ->
-            event.writeTo(getOutputStream(threadId))
+            event.writeDelimitedTo(getOutputStream(threadId))
         }
     }
 
