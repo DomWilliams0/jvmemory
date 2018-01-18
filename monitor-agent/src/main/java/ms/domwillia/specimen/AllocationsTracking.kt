@@ -2,32 +2,29 @@ package ms.domwillia.specimen
 
 class AllocationsTracking : Specimen {
 
+    lateinit var a: IntLink
+    lateinit var b: StrLink
+
     override fun go() {
-        var last = Link(0)
+        var last = IntLink(0, null)
         for (i in 1..5) {
-            val l = Link(i)
+            val l = IntLink(i, null)
             last.next = l
             last = l
         }
 
-        var strLast = Link("first")
+        var strLast = StrLink("first", null)
         for (i in 1..5) {
-            val l = Link(i.toString())
+            val l = StrLink(i.toString(), null)
             strLast.next = l
             strLast = l
         }
 
-        //		LinkHolder holder = new LinkHolder();
-        //		holder.a = last;
-        //		holder.b = strLast;
+        a = last
+        b = strLast
+
     }
 
-    private inner class LinkHolder {
-        internal var a: Link<*>? = null
-        internal var b: Link<*>? = null
-    }
-
-    private inner class Link<T> internal constructor(internal var value: T) {
-        internal var next: Link<*>? = null
-    }
+    data class IntLink(val value: Int, var next: IntLink?)
+    data class StrLink(val value: String, var next: StrLink?)
 }
