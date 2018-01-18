@@ -16,14 +16,14 @@ import java.awt.event.KeyEvent
 import java.util.*
 import javax.swing.JComponent
 import javax.swing.ToolTipManager
+import kotlin.system.exitProcess
 
 typealias Vertex = Long
 typealias Edge = HeapEdge
 
 data class HeapEdge(val field: String, val from: ObjectID)
 
-class HeapGraph {
-
+class HeapGraph : GUIPanel {
     private val graph: Graph<Vertex, Edge>
     private val nodeTypes = mutableMapOf<ObjectID, String>()
 
@@ -56,7 +56,7 @@ class HeapGraph {
         vis.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode == KeyEvent.VK_Q)
-                    System.exit(2)
+                    exitProcess(2)
             }
         })
 
@@ -64,8 +64,7 @@ class HeapGraph {
         timer.schedule(TickerTask(), 300, 300)
     }
 
-    val guiPanel: JComponent
-        get() = visContainer
+    override fun getGUIPanel(): JComponent = visContainer
 
     inner class TickerTask : TimerTask() {
 
