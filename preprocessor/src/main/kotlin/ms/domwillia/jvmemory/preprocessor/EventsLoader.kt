@@ -11,13 +11,13 @@ class EventsLoader(private val outputDir: File) {
                 .map(this::getThreadIDFromPath)
                 .mapNotNull { it!! }
 
-    fun getEventsForThread(threadId: ThreadID): Sequence<Event.EventVariant> {
+    fun getMethodFramesForThread(threadId: ThreadID): Sequence<Event.MethodFrame> {
         val path = getFileForThread(threadId)
         return if (!path.isFile)
             emptySequence()
         else {
             val stream = path.inputStream()
-            generateSequence { Event.EventVariant.parseFrom(stream) }
+            generateSequence { Event.MethodFrame.parseDelimitedFrom(stream) }
         }
     }
 

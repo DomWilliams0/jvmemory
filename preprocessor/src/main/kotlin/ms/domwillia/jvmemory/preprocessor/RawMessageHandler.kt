@@ -48,7 +48,6 @@ class RawMessageHandler {
             initialiser(this)
         }
 
-        println("event: $event\n====")
         getCurrentFrame(threadId).addEvents(event)
     }
 
