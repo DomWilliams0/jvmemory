@@ -15,7 +15,7 @@ class Visualisation(size: Pair<Int, Int>, events: EventsLoader) {
             exitProcess(1)
         }
 
-        val heap = HeapGraph()
+        val heap = HeapGraph(events.getDefinitions())
         val callstack = CallStack()
         val renderer = Renderer(size, heap, callstack)
 
@@ -48,6 +48,6 @@ class Visualisation(size: Pair<Int, Int>, events: EventsLoader) {
         }
 
         // TODO just pause visualisation instead of closing
-        renderer.closeWindow()
+//        renderer.closeWindow()
     }
 }
