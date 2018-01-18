@@ -1,6 +1,6 @@
 package ms.domwillia.jvmemory.preprocessor
 
-import ms.domwillia.jvmemory.preprocessor.protobuf.Visualisation
+import ms.domwillia.jvmemory.preprocessor.protobuf.Event
 import java.io.File
 
 
@@ -11,13 +11,13 @@ class EventsLoader(private val outputDir: File) {
                 .map(this::getThreadIDFromPath)
                 .mapNotNull { it!! }
 
-    fun getEventsForThread(threadId: ThreadID): Sequence<Visualisation.EventVariant> {
+    fun getEventsForThread(threadId: ThreadID): Sequence<Event.EventVariant> {
         val path = getFileForThread(threadId)
         return if (!path.isFile)
             emptySequence()
         else {
             val stream = path.inputStream()
-            generateSequence { Visualisation.EventVariant.parseFrom(stream) }
+            generateSequence { Event.EventVariant.parseFrom(stream) }
         }
     }
 
