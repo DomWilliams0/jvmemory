@@ -36,15 +36,15 @@ message Variant {
         Deallocation dealloc = 5;
 
         MethodEnter method_enter = 6;
-        MethodExit method_exit = 7;
+//        MethodExit method_exit = 7;
 
-        GetField get_field = 8;
-        PutFieldObject put_field_object = 9;
-        PutFieldPrimitive put_field_primitive = 10;
+        GetField get_field = 9;
+        PutFieldObject put_field_object = 10;
+        PutFieldPrimitive put_field_primitive = 11;
 
-        StoreObject store_object = 11;
-        StorePrimitive store_primitive = 12;
-        Load load = 13;
+        StoreObject store_object = 12;
+        StorePrimitive store_primitive = 13;
+        Load load = 14;
     }
 
 }

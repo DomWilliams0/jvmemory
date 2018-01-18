@@ -35,11 +35,8 @@ pub extern fn on_enter_method(logger: *mut Logger, thread_id: Long, class: Strin
 
 #[no_mangle]
 pub extern fn on_exit_method(logger: *mut Logger, thread_id: Long) {
-    let payload = flow::MethodExit::new();
-
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);
-    msg.set_method_exit(payload);
     msg.set_field_type(MessageType::METHOD_EXIT);
     io::log_message(logger, msg);
 }

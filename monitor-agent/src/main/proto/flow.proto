@@ -8,5 +8,4 @@ message MethodEnter {
     string method = 2;
 }
 
-message MethodExit {
-}
+// message MethodExit {}
