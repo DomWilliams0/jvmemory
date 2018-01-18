@@ -56,7 +56,7 @@ sourceSets.main {
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
-    dependsOn(":generateProto")
+    dependsOn("generateProto")
 }
 
 compileTestKotlin {

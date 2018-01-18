@@ -1,6 +1,6 @@
 package ms.domwillia.jvmemory.preprocessor
 
-import ms.domwillia.jvmemory.preprocessor.protobuf.Visualisation.*
+import ms.domwillia.jvmemory.preprocessor.protobuf.Event.*
 import ms.domwillia.jvmemory.protobuf.*
 
 class RawMessageHandler {
@@ -40,7 +40,7 @@ class RawMessageHandler {
      */
     private fun emitEvent(
             threadId: ThreadID,
-            messageType: MessageType,
+            messageType: EventType,
             initialiser: (EventVariant.Builder) -> Unit) {
 
         val event = EventVariant.newBuilder().apply {
@@ -81,7 +81,7 @@ class RawMessageHandler {
 
     private fun allocate(alloc: Allocations.Allocation, threadId: ThreadID) {
 
-        emitEvent(threadId, MessageType.ADD_HEAP_OBJECT, {
+        emitEvent(threadId, EventType.ADD_HEAP_OBJECT, {
             it.addHeapObject = AddHeapObject.newBuilder().apply {
                 id = alloc.id
                 class_ = alloc.type.tidyClassName()
@@ -94,7 +94,7 @@ class RawMessageHandler {
     private fun deallocate(dealloc: Allocations.Deallocation) {
         val threadId = allocationThread[dealloc.id] ?: return
 
-        emitEvent(threadId, MessageType.DEL_HEAP_OBJECT, {
+        emitEvent(threadId, EventType.DEL_HEAP_OBJECT, {
             it.delHeapObject = DelHeapObject.newBuilder().apply {
                 id = dealloc.id
             }.build()
@@ -102,7 +102,7 @@ class RawMessageHandler {
     }
 
     private fun getField(getField: Access.GetField, threadId: ThreadID) {
-        emitEvent(threadId, MessageType.SHOW_HEAP_OBJECT_ACCESS, {
+        emitEvent(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = getField.id
                 edgeName = getFieldEdgeName(getField.field, getField.id)
@@ -111,7 +111,7 @@ class RawMessageHandler {
     }
 
     private fun putFieldObject(putFieldObject: Access.PutFieldObject, threadId: ThreadID) {
-        emitEvent(threadId, MessageType.SET_INTER_HEAP_LINK, {
+        emitEvent(threadId, EventType.SET_INTER_HEAP_LINK, {
             it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
                 srcId = putFieldObject.id
                 dstId = putFieldObject.valueId // may be 0/null
@@ -121,7 +121,7 @@ class RawMessageHandler {
     }
 
     private fun putFieldPrimitive(putFieldPrimitive: Access.PutFieldPrimitive, threadId: ThreadID) {
-        emitEvent(threadId, MessageType.SHOW_HEAP_OBJECT_ACCESS, {
+        emitEvent(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = putFieldPrimitive.id
             }.build()
@@ -129,7 +129,7 @@ class RawMessageHandler {
     }
 
     private fun storeObject(storeObject: Access.StoreObject, threadId: ThreadID) {
-        emitEvent(threadId, MessageType.SET_LOCAL_VAR_LINK, {
+        emitEvent(threadId, EventType.SET_LOCAL_VAR_LINK, {
             it.setLocalVarLink = SetLocalVarLink.newBuilder().apply {
                 varIndex = storeObject.index
                 dstId = storeObject.valueId
@@ -139,7 +139,7 @@ class RawMessageHandler {
     }
 
     private fun storePrimitive(storePrimitive: Access.StorePrimitive, threadId: ThreadID) {
-        emitEvent(threadId, MessageType.SHOW_LOCAL_VAR_ACCESS, {
+        emitEvent(threadId, EventType.SHOW_LOCAL_VAR_ACCESS, {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = storePrimitive.index
             }.build()
@@ -147,7 +147,7 @@ class RawMessageHandler {
     }
 
     private fun load(load: Access.Load, threadId: ThreadID) {
-        emitEvent(threadId, MessageType.SHOW_LOCAL_VAR_ACCESS, {
+        emitEvent(threadId, EventType.SHOW_LOCAL_VAR_ACCESS, {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = load.index
                 edgeName = getLocalVarEdgeName(threadId, load.index)
