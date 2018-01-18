@@ -11,8 +11,11 @@ import edu.uci.ics.jung.visualization.VisualizationViewer
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse
 import ms.domwillia.jvmemory.preprocessor.ObjectID
+import ms.domwillia.jvmemory.protobuf.Definitions
+import java.awt.Color
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
+import java.util.*
 import javax.swing.JComponent
 import javax.swing.ToolTipManager
 import kotlin.system.exitProcess
@@ -22,7 +25,7 @@ typealias Edge = HeapEdge
 
 data class HeapEdge(val field: String, val from: ObjectID)
 
-class HeapGraph : GUIPanel {
+class HeapGraph(classDefinitions: ArrayList<Definitions.ClassDefinition>) : GUIPanel {
     private val graph: Graph<Vertex, Edge>
     private val nodeTypes = mutableMapOf<ObjectID, String>()
 
@@ -31,6 +34,9 @@ class HeapGraph : GUIPanel {
 
     private val visContainer: JComponent
 
+    private val classColours: Map<String, Color> =
+            classDefinitions.associate { it.name to generatePersistentRandomColour(it) }
+
     init {
         graph = Graphs.synchronizedDirectedGraph(
                 DirectedSparseGraph())
@@ -38,11 +44,15 @@ class HeapGraph : GUIPanel {
         layout = SpringLayout(graph) { 100 }
 
         vis = VisualizationViewer(layout)
-        vis.renderContext.setVertexLabelTransformer { nodeTypes[it] }
+
+//        vis.renderContext.setVertexLabelTransformer { nodeTypes[it] }
         vis.renderContext.setEdgeLabelTransformer { it?.field }
-        vis.setVertexToolTipTransformer { v -> v?.toString() }
+        vis.setVertexToolTipTransformer { nodeTypes[it] }
         ToolTipManager.sharedInstance().initialDelay = 200
 
+        vis.renderContext.setVertexFillPaintTransformer {
+            classColours[nodeTypes[it]] ?: Color.GRAY
+        }
 
         vis.graphMouse = DefaultModalGraphMouse<Vertex, Edge>().apply {
             setZoomAtMouse(true)
@@ -92,6 +102,17 @@ class HeapGraph : GUIPanel {
             modifyGraph {
                 graph.addEdge(edge, src, dst, EdgeType.DIRECTED)
             }
+        }
+    }
+
+    companion object {
+        private val random = Random()
+        private fun generatePersistentRandomColour(clazz: Definitions.ClassDefinition): Color {
+            println("clazz: $clazz")
+            val hash = Objects.hash(clazz.name)
+            random.setSeed(hash.toLong())
+            val hue = random.nextFloat()
+            return Color.getHSBColor(hue, 0.7f, 0.7f)
         }
     }
 }
