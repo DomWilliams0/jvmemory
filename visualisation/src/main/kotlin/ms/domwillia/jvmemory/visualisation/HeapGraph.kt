@@ -70,7 +70,8 @@ class HeapGraph(classDefinitions: ArrayList<Definitions.ClassDefinition>) : GUIP
         visContainer = GraphZoomScrollPane(vis)
     }
 
-    override fun getGUIPanel(): JComponent = visContainer
+    override val guiPanel: JComponent
+        get() = visContainer
 
     private fun modifyGraph(func: () -> Unit) {
 //        layout.lock(true)
