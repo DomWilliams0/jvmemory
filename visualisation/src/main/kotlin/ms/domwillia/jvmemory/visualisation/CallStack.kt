@@ -1,7 +1,6 @@
 package ms.domwillia.jvmemory.visualisation
 
 import ms.domwillia.jvmemory.preprocessor.protobuf.Event
-import ms.domwillia.jvmemory.protobuf.Definitions
 import java.awt.Color
 import java.util.*
 import javax.swing.JComponent
@@ -44,5 +43,6 @@ class CallStack : GUIPanel {
         println("popped")
     }
 
-    override fun getGUIPanel(): JComponent = container
+    override val guiPanel: JComponent
+        get() = container
 }

@@ -20,13 +20,14 @@ class EventsLoader(private val outputDir: File) {
         }
     }
 
-    fun getDefinitions(): ArrayList<Definitions.ClassDefinition> {
-        val out = ArrayList<Definitions.ClassDefinition>()
-        with(definitionFile.inputStream().buffered()) {
-            return generateSequence { Definitions.ClassDefinition.parseDelimitedFrom(this) }
-                    .toCollection(out)
+    val definitions: ArrayList<Definitions.ClassDefinition>
+        get() {
+            val out = ArrayList<Definitions.ClassDefinition>()
+            with(definitionFile.inputStream().buffered()) {
+                return generateSequence { Definitions.ClassDefinition.parseDelimitedFrom(this) }
+                        .toCollection(out)
+            }
         }
-    }
 
     internal val definitionFile: File
         get() = File(outputDir, "jvmemory-definitions.log")
