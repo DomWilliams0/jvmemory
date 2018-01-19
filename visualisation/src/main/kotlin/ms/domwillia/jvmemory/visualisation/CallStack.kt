@@ -1,22 +1,22 @@
 package ms.domwillia.jvmemory.visualisation
 
+import javafx.geometry.Insets
+import javafx.scene.Node
+import javafx.scene.control.Label
+import javafx.scene.layout.Background
+import javafx.scene.layout.BackgroundFill
+import javafx.scene.layout.CornerRadii
 import ms.domwillia.jvmemory.preprocessor.protobuf.Event
-import java.awt.Color
 import java.util.*
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
 
 class CallStack : GUIPanel {
 
-    private val container = JPanel()
-    private val label = JLabel()
+    private val label = Label()
     private val stack = Stack<Event.PushMethodFrame>()
 
     init {
         label.text = "<empty callstack>"
-        container.background = Color.GREEN
-        container.add(label)
+        label.background = Background(BackgroundFill(javafx.scene.paint.Color.LAWNGREEN, CornerRadii.EMPTY, Insets.EMPTY))
     }
 
     private fun updateLabel() {
@@ -43,6 +43,6 @@ class CallStack : GUIPanel {
         println("popped")
     }
 
-    override val guiPanel: JComponent
-        get() = container
+    override val guiPanel: Node
+        get() = label
 }

@@ -1,7 +1,7 @@
 package ms.domwillia.jvmemory.visualisation
 
-import javax.swing.JComponent
+import javafx.scene.Node
 
 interface GUIPanel {
-    val guiPanel: JComponent
+    val guiPanel: Node
 }

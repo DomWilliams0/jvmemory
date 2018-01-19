@@ -1,9 +1,10 @@
 package ms.domwillia.jvmemory.visualisation
 
 import javafx.application.Application
-import javafx.embed.swing.SwingNode
+import javafx.application.Platform
 import javafx.scene.Scene
-import javafx.scene.layout.StackPane
+import javafx.scene.layout.BorderPane
+import javafx.scene.layout.VBox
 import javafx.stage.Stage
 import ms.domwillia.jvmemory.preprocessor.EventsLoader
 import ms.domwillia.jvmemory.preprocessor.Preprocessor
@@ -30,19 +31,24 @@ class Visualisation : Application() {
     }
 
     override fun start(primaryStage: Stage) {
-        val root = StackPane()
 
-        val heap = HeapGraph(events.definitions)
+        val width = 600.0
+        val height = 400.0
+        val fraction = 0.2
+
+
+        val heap = HeapGraph(events.definitions, width*(1.0-fraction), height)
         val callstack = CallStack()
 
-        val heapNode = SwingNode().apply {
-            content = heap.guiPanel
+        val root = BorderPane().apply {
+            center = heap.guiPanel
+            left = VBox(callstack.guiPanel).apply {
+                maxWidth = width * fraction
+            }
         }
 
-        root.children.add(heapNode)
-
         primaryStage.title = "JVMemory"
-        primaryStage.scene = Scene(root, 600.0, 600.0)
+        primaryStage.scene = Scene(root, width, height)
         primaryStage.show()
 
         thread {
@@ -71,50 +77,8 @@ class Visualisation : Application() {
                     }
                 }
 
-                root.requestLayout()
                 Thread.sleep(sleep)
             }
         }
-    }
-
-
-
-    init {
-/*
-val heap = HeapGraph(events.getDefinitions())
-val callstack = CallStack()
-val renderer = Renderer(size, heap, callstack)
-
-renderer.openWindow()
-for (event in events.getEventsForThread(threadToRun)) {
-    var sleep: Long = 200
-    when (event.type) {
-        Event.EventType.PUSH_METHOD_FRAME -> callstack.pushNewFrame(event.pushMethodFrame)
-        Event.EventType.POP_METHOD_FRAME -> callstack.popFrame()
-
-        Event.EventType.ADD_HEAP_OBJECT -> {
-            val e = event.addHeapObject
-            heap.addVertex(e.id, e.class_)
-        }
-        Event.EventType.DEL_HEAP_OBJECT -> heap.deleteVertex(event.delHeapObject.id)
-
-        Event.EventType.SET_INTER_HEAP_LINK -> {
-            val e = event.setInterHeapLink
-            heap.setLink(e.srcId, e.dstId, e.name)
-        }
-//                Event.EventType.SHOW_HEAP_OBJECT_ACCESS -> heap.showAccess(event.showHeapObjectAccess)
-
-        else -> {
-            // TODO use other events
-            sleep = 0
-        }
-    }
-
-    Thread.sleep(sleep)
-}
-
-// TODO just pause visualisation instead of closing
-//        renderer.closeWindow()
-*/
     }
 }
