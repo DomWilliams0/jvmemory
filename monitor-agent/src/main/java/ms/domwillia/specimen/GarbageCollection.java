@@ -11,7 +11,7 @@ public class GarbageCollection implements Specimen {
 		System.out.println("waste of spaces done");
 	}
 
-	private static class WasteOfSpace {
+	public static class WasteOfSpace {
 		double[] doubles = new double[1024];
 		String s;
 		Empty e = new Empty();
