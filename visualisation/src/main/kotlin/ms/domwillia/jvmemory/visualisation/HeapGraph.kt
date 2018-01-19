@@ -6,18 +6,20 @@ import edu.uci.ics.jung.graph.DirectedSparseGraph
 import edu.uci.ics.jung.graph.Graph
 import edu.uci.ics.jung.graph.util.EdgeType
 import edu.uci.ics.jung.graph.util.Graphs
-import edu.uci.ics.jung.visualization.GraphZoomScrollPane
 import edu.uci.ics.jung.visualization.VisualizationViewer
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse
+import javafx.embed.swing.SwingNode
+import javafx.scene.Node
 import ms.domwillia.jvmemory.preprocessor.ObjectID
 import ms.domwillia.jvmemory.protobuf.Definitions
 import java.awt.Color
+import java.awt.Dimension
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.util.*
-import javax.swing.JComponent
 import javax.swing.ToolTipManager
+import kotlin.collections.ArrayList
 import kotlin.system.exitProcess
 
 typealias Vertex = Long
@@ -25,14 +27,18 @@ typealias Edge = HeapEdge
 
 data class HeapEdge(val field: String, val from: ObjectID)
 
-class HeapGraph(classDefinitions: ArrayList<Definitions.ClassDefinition>) : GUIPanel {
+class HeapGraph(
+        classDefinitions: ArrayList<Definitions.ClassDefinition>,
+        width: Double,
+        height: Double
+) : GUIPanel {
     private val graph: Graph<Vertex, Edge>
     private val nodeTypes = mutableMapOf<ObjectID, String>()
 
     private var layout: AbstractLayout<Vertex, Edge>
     private val vis: VisualizationViewer<Vertex, Edge>
 
-    private val visContainer: JComponent
+    private val visNode: SwingNode
 
     private val classColours: Map<String, Color> =
             classDefinitions.associate { it.name to generatePersistentRandomColour(it) }
@@ -43,7 +49,7 @@ class HeapGraph(classDefinitions: ArrayList<Definitions.ClassDefinition>) : GUIP
 
         layout = SpringLayout(graph) { 100 }
 
-        vis = VisualizationViewer(layout)
+        vis = VisualizationViewer(layout, Dimension(width.toInt(), height.toInt()))
 
 //        vis.renderContext.setVertexLabelTransformer { nodeTypes[it] }
         vis.renderContext.setEdgeLabelTransformer { it?.field }
@@ -67,11 +73,14 @@ class HeapGraph(classDefinitions: ArrayList<Definitions.ClassDefinition>) : GUIP
         })
         vis.model.relaxer.setSleepTime(50)
 
-        visContainer = GraphZoomScrollPane(vis)
+        visNode = SwingNode().apply {
+//            content = GraphZoomScrollPane(vis)
+            content = vis
+        }
     }
 
-    override val guiPanel: JComponent
-        get() = visContainer
+    override val guiPanel: Node
+        get() = visNode
 
     private fun modifyGraph(func: () -> Unit) {
 //        layout.lock(true)
