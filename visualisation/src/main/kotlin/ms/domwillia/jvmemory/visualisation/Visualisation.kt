@@ -56,8 +56,8 @@ class Visualisation : Application() {
             for (event in events.getEventsForThread(threadToRun)) {
                 var sleep: Long = 200
                 when (event.type) {
-                    Event.EventType.PUSH_METHOD_FRAME -> callstack.pushNewFrame(event.pushMethodFrame)
-                    Event.EventType.POP_METHOD_FRAME -> callstack.popFrame()
+                    Event.EventType.PUSH_METHOD_FRAME -> Platform.runLater { callstack.pushNewFrame(event.pushMethodFrame) }
+                    Event.EventType.POP_METHOD_FRAME -> Platform.runLater { callstack.popFrame() }
 
                     Event.EventType.ADD_HEAP_OBJECT -> {
                         val e = event.addHeapObject
