@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.visualisation
 
+import javafx.application.Application
 import java.awt.BorderLayout
 import java.awt.event.WindowEvent
 import javax.swing.JFrame
@@ -15,7 +16,7 @@ class Renderer(windowSize: Pair<Int, Int>, heapGraph: HeapGraph, callStack: Call
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
         val panel = JPanel(BorderLayout())
-        panel.add(heapGraph.getGUIPanel(), BorderLayout.CENTER)
+        panel.add(heapGraph.guiPanel, BorderLayout.CENTER)
 //        panel.add(callStack.getGUIPanel(), BorderLayout.WEST)
         frame.contentPane = panel
     }
