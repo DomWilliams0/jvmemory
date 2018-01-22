@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>JVMemory</title>
+    <style>
+        #container {
+            display: flex;
+        }
+
+        #stack {
+            background-color: aqua;
+            flex: 0 0 18%;
+        }
+
+        #heap {
+            background-color: orange;
+            flex: 1;
+        }
+
+        body, html {
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .node {
+            fill: #e12;
+            stroke: black;
+        }
+        .node_stack {
+            fill: #46c3e1;
+            stroke: black;
+        }
+
+        .link {
+            stroke: #111;
+            stroke-width: 2px;
+        }
+
+        .link_label {
+            font-size: 10pt;
+            fill: #666
+        }
+
+        .link_arrow {
+            fill: #111
+        }
+
+    </style>
+</head>
+<body>
+<div id="container">
+    <div id="stack"></div>
+    <div id="heap"></div>
+</div>
+<script src='http://d3js.org/d3.v4.min.js'></script>
+<script src="vis.js"></script>
+</body>
+</html>
