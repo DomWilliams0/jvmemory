@@ -1,6 +1,0 @@
-rootProject.name = 'visualisation'
-
-include ":preprocessor"
-project(":preprocessor").projectDir = file("../preprocessor")
-
-
