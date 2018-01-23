@@ -33,6 +33,8 @@ dependencies {
 
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
     compile 'io.javalin:javalin:1.2.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.3'
+    compile group: 'com.hubspot.jackson', name: 'jackson-datatype-protobuf', version: '0.9.7-preJackson2.7-proto2'
 }
 
 compileKotlin {
