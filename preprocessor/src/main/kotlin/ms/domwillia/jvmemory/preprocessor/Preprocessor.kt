@@ -36,6 +36,8 @@ class Preprocessor(outputDirPath: File) {
     }
 
     companion object {
+        val defaultInputLogPath = "../monitor-agent/jvmemory.log"
+        val defaultOutputDirPath = "out/vis-events"
 
         /**
          * @param inputLogPath Raw event log from monitor agent
@@ -43,8 +45,8 @@ class Preprocessor(outputDirPath: File) {
          *                      A file will be created for each thread
          */
         fun runPreprocessor(
-                inputLogPath: File,
-                outputDirPath: File
+                inputLogPath: File = File(defaultInputLogPath),
+                outputDirPath: File = File(defaultOutputDirPath)
         ): EventsLoader {
             val outDirPath = outputDirPath.toPath()
             if (!inputLogPath.isFile)
@@ -71,5 +73,11 @@ class Preprocessor(outputDirPath: File) {
 
             return proc.events
         }
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            runPreprocessor()
+        }
     }
+
 }
