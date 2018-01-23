@@ -43,6 +43,17 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+task buildJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'JVMemory Visualisation Server',
+                'Implementation-Version': version,
+                'Main-Class': "$mainClass"
+    }
+    baseName = project.name
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
 task run(type: JavaExec) {
     dependsOn(":build")
     main = "$mainClass"
