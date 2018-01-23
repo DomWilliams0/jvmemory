@@ -1,7 +1,7 @@
 package ms.domwillia.jvmemory.preprocessor
 
 import ms.domwillia.jvmemory.preprocessor.protobuf.Event
-import ms.domwillia.jvmemory.protobuf.Definitions
+import java.io.BufferedInputStream
 import java.io.File
 
 
@@ -10,24 +10,25 @@ class EventsLoader(private val outputDir: File) {
     val threads: Collection<ThreadID>
         get() = outputDir.listFiles().mapNotNull(this::getThreadIDFromPath)
 
-    fun getEventsForThread(threadId: ThreadID): Sequence<Event.EventVariant> {
+    fun getRawEventsForThread(threadId: ThreadID): BufferedInputStream? {
         val path = getFileForThread(threadId)
-        return if (!path.isFile)
-            emptySequence()
+        return if (path.isFile)
+            path.inputStream().buffered()
         else {
-            val stream = path.inputStream().buffered()
-            generateSequence { Event.EventVariant.parseDelimitedFrom(stream) }
+            null
         }
     }
 
-    val definitions: ArrayList<Definitions.ClassDefinition>
-        get() {
-            val out = ArrayList<Definitions.ClassDefinition>()
-            with(definitionFile.inputStream().buffered()) {
-                return generateSequence { Definitions.ClassDefinition.parseDelimitedFrom(this) }
-                        .toCollection(out)
-            }
-        }
+    fun getEventsForThread(threadId: ThreadID): Sequence<Event.EventVariant> =
+            getRawEventsForThread(threadId)?.let { stream ->
+                generateSequence { Event.EventVariant.parseDelimitedFrom(stream) }
+            } ?: emptySequence()
+
+    val rawDefinitions: BufferedInputStream?
+        get() = if (definitionFile.isFile) definitionFile.inputStream().buffered() else null
+
+
+//    val definitions: ArrayList<Definitions.ClassDefinition>
 
     internal val definitionFile: File
         get() = File(outputDir, "jvmemory-definitions.log")
