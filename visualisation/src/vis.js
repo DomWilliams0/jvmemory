@@ -1,60 +1,10 @@
 // data
-// TODO add class to heap nodes
-let heap_data = [
-    {id: 1000},
-    {id: 2000},
-    {id: 3033},
-];
-let heap_links = [
-    {source: 1000, target: 2000, name: "a"},
-    {source: 1000, target: 3033, name: "b"},
-];
-
-// TODO use real data
-const events = [
-    {
-        type: "enter_method", payload: {
-            clazz: "com.test.Hiya", method: {
-                name: "<init>",
-                locals: []
-            }
-        }
-    },
-    {
-        type: "enter_method", payload: {
-            clazz: "com.test.Hiya", method: {
-                name: "go",
-                locals: [
-                    {name: "anInt", clazz: "java.lang.Integer", index: 0},
-                    {name: "aString", clazz: "java.lang.String", index: 1},
-                    {name: "anObj", clazz: "java.lang.Object", index: 2},
-                ]
-            }
-        }
-    },
-    {type: "add_obj", payload: {id: 4000, type: "com.test.Muffin"}},
-    {type: "set_link", payload: {src: 1000, dst: 4000, name: "c"}},
-    {type: "exit_method", payload: {}},
-    {
-        type: "enter_method", payload: {
-            clazz: "com.test.Hiya", method: {
-                name: "go",
-                locals: [
-                    {name: "anInt", clazz: "java.lang.Integer", index: 0},
-                    {name: "aString", clazz: "java.lang.String", index: 1},
-                    {name: "anObj", clazz: "java.lang.Object", index: 2},
-                ]
-            }
-        }
-    },
-    {type: "set_stack_link", payload: {index: 1, dst: 2000}},
-    {type: "del_obj", payload: {id: 3033}},
-    {type: "exit_method", payload: {}},
-];
-
+let heap_data = [];
+let heap_links = [];
 const callstack = [];
 
 // constants
+const server = "http://localhost:52933"
 const width = window.innerWidth;
 const height = window.innerHeight;
 const stack_fraction = 0.18;
