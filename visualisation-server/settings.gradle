@@ -1,0 +1,4 @@
+rootProject.name = 'visualisation-server'
+
+include ":preprocessor"
+project(":preprocessor").projectDir = file("../preprocessor")
