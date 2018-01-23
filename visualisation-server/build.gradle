@@ -16,6 +16,12 @@ group 'ms.domwillia.jvmemory'
 version '0.1'
 
 apply plugin: 'kotlin'
+apply plugin: 'idea'
+
+idea.module {
+    downloadJavadoc = true
+    downloadSources = true
+}
 
 repositories {
     mavenCentral()
@@ -24,6 +30,9 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile project(":preprocessor")
+
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+    compile 'io.javalin:javalin:1.2.1'
 }
 
 compileKotlin {
