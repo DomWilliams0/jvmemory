@@ -7,12 +7,12 @@ const callstack = [];
 const server = "http://localhost:52933"
 const width = window.innerWidth;
 const height = window.innerHeight;
-const stack_fraction = 0.18;
+const stack_fraction = 0.38;
 const heap_fraction = 1.0 - stack_fraction;
 const center_pull = 0.010;
-const link_length = 200;
-const link_strength = 0.04;
-const tick_speed = 1000;
+const link_length = 100;
+const link_strength = 0.54;
+const tick_speed = 50;
 
 const heap_node_radius = 10;
 const stack_node_radius = 4;
@@ -29,20 +29,14 @@ const heap_center = [
 ];
 
 const sim = d3.forceSimulation(heap_data)
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(heap_center[0], heap_center[1]))
+    .force("link", d3.forceLink().id(d => d.id)
+        .distance(link_length).strength(link_strength))
     .force("x", d3.forceX(heap_center[0]).strength(center_pull))
     .force("y", d3.forceY(heap_center[1]).strength(center_pull))
+    .on("tick", tick_sim)
     .alphaTarget(1);
-
-const link_force = d3.forceLink(heap_links)
-    .id(d => d.id)
-    .distance(() => link_length)
-    .strength(() => link_strength);
-
-sim.force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(heap_center[0], heap_center[1]))
-    .force("links", link_force)
-    .on("tick", tick_sim);
-
 
 let node = heap_svg.select("#nodes").selectAll(".node");
 let link = heap_svg.select("#links").selectAll(".link");
@@ -112,8 +106,10 @@ function tick_sim() {
 
 function restart() {
     // sim.stop(); // necessary?
+    sim.nodes(heap_data);
+    sim.force("link").links(heap_links);
 
-    node = node.data(heap_data, d => d.id);
+    node = node.data(heap_data);
     node.exit().remove();
 
     let node_enter = node.enter().append("g");
@@ -121,10 +117,10 @@ function restart() {
         .attr("class", d => d.stack ? "node_stack" : "node")
         .attr("r", d => d.stack ? stack_node_radius : heap_node_radius);
     node_enter.append("title") // hover
-        .text(d => "hovering: " + d.id);
+        .text(d => d.id + " - " + d.clazz);
     node = node.merge(node_enter);
 
-    link = link.data(heap_links, d => d.id + "." + d.name);
+    link = link.data(heap_links);
     link.exit().remove();
     let link_enter = link.enter().append("line")
         .attr("class", "link")
@@ -132,24 +128,23 @@ function restart() {
 
     link = link.merge(link_enter);
 
-    link_path = link_path.data(heap_links);
+    link_path = link_path.data(heap_links, d => d.name);
     link_path.exit().remove();
     let link_path_enter = link_path.enter().append("path")
         .attr("class", "link_path")
-        .attr("id", (d, i) => "link_path_" + i)
+        .attr("id", d => "link_path_" + d.source.id + "" + d.target.id)
         .style("pointer-events", "none")
         .style("text-anchor", "middle");
     link_path = link_path.merge(link_path_enter);
 
-    link_label = link_label.data(heap_links);
+    link_label = link_label.data(heap_links, d => d.name);
     link_label.exit().remove();
     let label_text = link_label.enter().append("text")
         .style("pointer-events", "none")
         .attr("class", "link_label")
-        .attr("dy", "-3")
-        .attr("id", (d, i) => "link_label_" + i);
+        .attr("dy", "-3");
     label_text.append("textPath")
-        .attr("xlink:href", (d, i) => "#link_path_" + i)
+        .attr("xlink:href", d => "#link_path_" + d.source.id + "" + d.target.id)
         .style("pointer-events", "none")
         .attr("startOffset", "20%")
         .text(d => d.name);
@@ -175,7 +170,7 @@ function restart() {
         .attr("x", "50%")
         .attr("y", 10)
         .attr("fill", "white")
-        .text((d) => d.clazz);
+        .text((d) => d.clazz.name);
     stack_frame_enter.append("text")
         .attr("text-anchor", "middle")
         .attr("x", "50%")
@@ -189,12 +184,12 @@ function restart() {
         d.spanking_new = false;
 
         let self = d3.select(this);
-        d.method.locals.forEach((local, j) => {
+        d.method.localVars.forEach((local, j) => {
             self.append("text")
                 .attr("text-anchor", "middle")
                 .attr("x", "50%")
                 .attr("y", () => frame_base_size + local_var_pre_pad + (local_var_height * j))
-                .text(() => local.index + ": " + local.name + " : " + local.clazz);
+                .text(() => (local.index || 0) + ": " + local.name + " : " + local.type);
         })
     })
 }
@@ -227,9 +222,12 @@ function build_svgs() {
 
 // event handling
 
-function addObj({id, type}) {
-    console.log("add obj %s %s", id, type);
-    heap_data.push({id: id, x: width / 2, y: height / 2});
+function addObj(payload) {
+    let {id} = payload,
+        clazz = payload["class"];
+
+    console.log("add obj %s %s", id, clazz);
+    heap_data.push({id, x: width / 2, y: height / 2, clazz});
     restart();
 }
 
@@ -244,26 +242,30 @@ function delObj({id}) {
     restart()
 }
 
-function setLink({src, dst, name}) {
-    console.log("set link %s from %s to %s", name, src, dst);
-    let existing = heap_links.find((x) => x.source.id === src && x.name === name);
-    if (existing) {
-        const target_obj = heap_data.find((x) => x.id === dst);
-        if (target_obj === undefined)
-            throw "cant find target heap object " + dst;
-        existing.target = target_obj;
-    } else {
-        heap_links.push({source: src, target: dst, name: name});
-    }
+function setLink(payload) {
+    let {srcId, dstId, name} = payload;
+    const rm = dstId === undefined;
+
+    console.log("set link %s from %s to %s", name, srcId, dstId || "null");
+
+    let existingIndex = heap_links.find((x) => x.source === srcId && x.name === name);
+    if (existingIndex >= 0) {
+        if (rm) {
+            heap_links.splice(existingIndex, 1)
+        } else {
+            heap_links[existingIndex].target = dstId;
+        }
+    } else if (!rm)
+        heap_links.push({source: srcId, target: dstId, name});
 
     restart();
 }
 
-function enterMethod({clazz, method}) {
-    console.log("entering method %s:%s", clazz, method.name);
+function enterMethod({owningClass, definition}) {
+    console.log("entering method %s:%s", owningClass.name, definition.name);
     let frame = {
-        clazz: clazz, method: method,
-        locals_height: local_var_height * method.locals.length,
+        clazz: owningClass, method: definition,
+        locals_height: local_var_height * definition.localVars.length,
         spanking_new: true,
         uuid: next_unique_frame_id++,
         y: 0
@@ -283,39 +285,48 @@ function exitMethod() {
     restart();
 }
 
-function setStackLink({index, dst}) {
-    console.log("setting stack link from var %d to %d", index, dst);
+function setStackLink(payload) {
+    let varIndex = payload.varIndex || 0,
+        {dstId} = payload;
+    // TODO remove name from proto message, not needed
     const current_frame = callstack[callstack.length - 1];
-    const name = current_frame.method.locals[index].name;
-    const id = "stack_" + current_frame.uuid + "_" + index;
+    // TODO local vars is not sorted by index?!
+    const name = current_frame.method.localVars.find(l => l.index === varIndex).name;
+    const id = "stack_" + current_frame.uuid + "_" + varIndex;
     const stack_data = {
         frame_uuid: current_frame.uuid,
-        index: index
+        index: varIndex
     };
+    console.log("setting stack link from var %d to %d (%s)", varIndex, dstId, name);
+
+    const rm = dstId === undefined;
 
     // add stack node if not already there
-    if (heap_data.find(x => x.stack && x.id === id) === undefined) {
-        heap_data.push({
-            id: id,
-            stack: stack_data,
-        });
+    if (!rm) {
+        if (heap_data.find(x => x.stack && x.id === id) === undefined) {
+            heap_data.push({
+                id: id,
+                stack: stack_data,
+            });
+        }
     }
 
-    // add edge
-    let existing_link = heap_links.find((x) =>
+    let existing_link_index = heap_links.findIndex((x) =>
         x.stack &&
         x.stack.frame_uuid === current_frame.uuid &&
-        x.stack.index === index);
+        x.stack.index === varIndex);
 
-    if (existing_link) {
-        existing_link.target = dst;
-    } else {
-        const target_obj = heap_data.find((x) => x.id === dst);
-        if (target_obj === undefined)
-            throw "cant find target heap object " + dst;
+    // existing link
+    if (existing_link_index >= 0) {
+        if (rm) {
+            heap_links.splice(existing_link_index, 1)
+        } else {
+            heap_links[existing_link_index].target = dstId
+        }
+    } else if (!rm) {
         heap_links.push({
             source: id,
-            target: target_obj,
+            target: dstId,
             name: name,
             stack: stack_data,
         });
@@ -323,23 +334,53 @@ function setStackLink({index, dst}) {
     restart()
 }
 
+function showStackAccess(payload) {
+    let varIndex = payload.varIndex || 0,
+        {edgeName} = payload;
+    // TODO is name needed?
+    console.log("show stack access %d", varIndex)
+}
+
+function showHeapAccess(payload) {
+    let {objId, edgeName} = payload;
+    console.log("showing heap access from id %d field %s", objId, edgeName)
+}
+
 const event_handlers = {
-    "add_obj": addObj,
-    "del_obj": delObj,
-    "set_link": setLink,
-    "enter_method": enterMethod,
-    "exit_method": exitMethod,
-    "set_stack_link": setStackLink,
+    "ADD_HEAP_OBJECT": [addObj, "addHeapObject"],
+    "DEL_HEAP_OBJECT": [delObj, "delHeapObject"],
+    "SET_INTER_HEAP_LINK": [setLink, "setInterHeapLink"],
+    "SET_LOCAL_VAR_LINK": [setStackLink, "setLocalVarLink"],
+    "SHOW_LOCAL_VAR_ACCESS": [showStackAccess, "showLocalVarAccess"],
+    "SHOW_HEAP_OBJECT_ACCESS": [showHeapAccess, "showHeapObjectAccess"],
+    "PUSH_METHOD_FRAME": [enterMethod, "pushMethodFrame"],
+    "POP_METHOD_FRAME": [exitMethod, "pushMethodFrame"], // null placeholder
 };
 
-const event_ticker = setInterval(() => {
-    let evt = events.shift();
-    if (evt === undefined) {
-        console.log("all done");
-        clearInterval(event_ticker);
-        sim.stop();
-        return;
-    }
-    let {type, payload} = evt;
-    event_handlers[type](payload)
-}, tick_speed);
+fetch(server + "/thread").then(resp => resp.json()).then(threads => {
+    console.log("%d thread(s) available: %s", threads.length, threads);
+    if (threads.length === 0) throw "no events";
+    return threads[0]
+}).then(thread_id => {
+    fetch(server + "/thread/" + thread_id).then(resp => resp.json())
+        .then(evts => {
+            let i = 0;
+            const ticker = setInterval(() => {
+                if (i >= evts.length) {
+                    console.log("all done");
+                    clearInterval(ticker);
+                    setTimeout(sim.stop, 5000);
+                    return;
+                }
+                let evt = evts[i];
+                let handler_tup = event_handlers[evt.type];
+                if (handler_tup) {
+                    let [handler, payload_name] = event_handlers[evt.type];
+                    let payload = evt[payload_name];
+                    handler(payload);
+                }
+
+                i += 1;
+            }, tick_speed);
+        })
+});
