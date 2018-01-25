@@ -1,5 +1,7 @@
 package ms.domwillia.jvmemory.monitor.definition
 
+import org.objectweb.asm.Type
+
 class MethodDefinition internal constructor(
         access: Int,
         val name: String,
@@ -13,7 +15,7 @@ class MethodDefinition internal constructor(
         }
 
     fun registerLocalVariable(name: String, desc: String, index: Int) {
-        localVars.add(LocalVariable(index, name, desc))
+        localVars.add(LocalVariable(index, name, Type.getType(desc).className))
     }
 }
 
