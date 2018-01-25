@@ -119,7 +119,7 @@ function restart() {
     sim.force("link").links(heapLinks);
 
     // nodes
-    node = node.data(heapObjects);
+    node = node.data(heapObjects, d => d.id);
     node.exit().remove();
 
     let nodeEnter = node.enter().append("g");
@@ -132,7 +132,7 @@ function restart() {
     node = node.merge(nodeEnter);
 
     // links
-    link = link.data(heapLinks);
+    link = link.data(heapLinks, d => d.name);
     link.exit().remove();
     let linkEnter = link.enter().append("line")
         .attr("class", "link")
