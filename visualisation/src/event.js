@@ -110,7 +110,8 @@ function pushMethodFrame({owningClass, name, signature}) {
 
     let frame = {
         methodDefinition: {
-            clazz: owningClass,
+            clazzShort: shortenClassName(owningClass),
+            clazzLong: owningClass,
             name: name,
             signature: signature,
             localVars: methodDef.localVars,
