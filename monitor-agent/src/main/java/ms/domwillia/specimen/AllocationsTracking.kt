@@ -23,6 +23,7 @@ class AllocationsTracking : Specimen {
         a = last
         b = strLast
 
+        val getFieldTest = a
     }
 
     data class IntLink(val value: Int, var next: IntLink?)

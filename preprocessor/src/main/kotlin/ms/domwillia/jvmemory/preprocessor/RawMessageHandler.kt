@@ -45,16 +45,6 @@ class RawMessageHandler {
         return Pair(threadId, event)
     }
 
-    private fun getCurrentFrame(threadId: ThreadID): PushMethodFrame = callstacks[threadId]!!.peek()
-
-    private fun getFieldEdgeName(field: String, obj: ObjectID) = "$field.$obj"
-    private fun getLocalVarEdgeName(threadId: ThreadID, index: Int) = try {
-        val methodDef = getCurrentFrame(threadId).definition
-        methodDef.getLocalVars(index).name
-    } catch (e: IndexOutOfBoundsException) {
-        "var$index"
-    }
-
     private fun defineClass(classDef: Definitions.ClassDefinition) {
         classDefinitions[classDef.name] = classDef
         println("registered ${classDef.name}")
@@ -113,7 +103,7 @@ class RawMessageHandler {
         return createEvent(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = getField.id
-                edgeName = getFieldEdgeName(getField.field, getField.id)
+                fieldName = getField.field
             }.build()
         })
     }
@@ -123,7 +113,7 @@ class RawMessageHandler {
             it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
                 srcId = putFieldObject.id
                 dstId = putFieldObject.valueId // may be 0/null
-                name = putFieldObject.field
+                fieldName = putFieldObject.field
             }.build()
         })
     }
@@ -141,7 +131,6 @@ class RawMessageHandler {
             it.setLocalVarLink = SetLocalVarLink.newBuilder().apply {
                 varIndex = storeObject.index
                 dstId = storeObject.valueId
-                name = getLocalVarEdgeName(threadId, storeObject.index)
             }.build()
         })
     }
@@ -158,7 +147,6 @@ class RawMessageHandler {
         return createEvent(threadId, EventType.SHOW_LOCAL_VAR_ACCESS, {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = load.index
-                edgeName = getLocalVarEdgeName(threadId, load.index)
             }.build()
         })
     }

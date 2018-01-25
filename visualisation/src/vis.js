@@ -243,12 +243,12 @@ function delObj({id}) {
 }
 
 function setLink(payload) {
-    let {srcId, dstId, name} = payload;
+    let {srcId, dstId, fieldName} = payload;
     const rm = dstId === undefined;
 
-    console.log("set link %s from %s to %s", name, srcId, dstId || "null");
+    console.log("set link %s from %s to %s", fieldName, srcId, dstId || "null");
 
-    let existingIndex = heap_links.find((x) => x.source === srcId && x.name === name);
+    let existingIndex = heap_links.find((x) => x.source === srcId && x.name === fieldName);
     if (existingIndex >= 0) {
         if (rm) {
             heap_links.splice(existingIndex, 1)
@@ -256,7 +256,7 @@ function setLink(payload) {
             heap_links[existingIndex].target = dstId;
         }
     } else if (!rm)
-        heap_links.push({source: srcId, target: dstId, name});
+        heap_links.push({source: srcId, target: dstId, name: fieldName});
 
     restart();
 }
@@ -288,7 +288,6 @@ function exitMethod() {
 function setStackLink(payload) {
     let varIndex = payload.varIndex || 0,
         {dstId} = payload;
-    // TODO remove name from proto message, not needed
     const current_frame = callstack[callstack.length - 1];
     // TODO local vars is not sorted by index?!
     const name = current_frame.method.localVars.find(l => l.index === varIndex).name;
@@ -342,8 +341,8 @@ function showStackAccess(payload) {
 }
 
 function showHeapAccess(payload) {
-    let {objId, edgeName} = payload;
-    console.log("showing heap access from id %d field %s", objId, edgeName)
+    let {objId, fieldName} = payload;
+    console.log("showing heap access from id %d field %s", objId, fieldName)
 }
 
 const event_handlers = {
