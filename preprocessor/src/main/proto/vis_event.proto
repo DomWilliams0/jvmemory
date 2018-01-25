@@ -56,21 +56,19 @@ message DelHeapObject {
 message SetInterHeapLink {
     int64 src_id = 1;
     int64 dst_id = 2;
-    string name = 3;
+    string field_name = 3;
 }
 
 message SetLocalVarLink {
     int32 var_index = 1;
     int64 dst_id = 2;
-    string name = 3;
 }
 
 message ShowLocalVarAccess {
     int32 var_index = 1;
-    string edge_name = 2;
 }
 
 message ShowHeapObjectAccess {
     int64 obj_id = 1;
-    string edge_name = 2;
+    string field_name = 2;
 }
