@@ -11,13 +11,17 @@ import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
 import java.security.ProtectionDomain
 import java.util.jar.JarFile
+import kotlin.system.exitProcess
 
-class BytecodeTransformer : ClassFileTransformer {
+class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFileTransformer {
+
+    private fun isUserClass(className: String): Boolean {
+        return userClassPrefixes.find { className.startsWith(it) } != null
+    }
 
     private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? = when {
     // user classes
-    // TODO controlled by user
-        className.startsWith("ms/domwillia/specimen") -> ::UserClassVisitor
+        isUserClass(className) -> ::UserClassVisitor
 
     // system
         className == "java/lang/Object" -> ::ObjectClassVisitor
@@ -59,10 +63,30 @@ class BytecodeTransformer : ClassFileTransformer {
     }
 
     companion object {
+        private fun bail(msg: String = ""): Nothing {
+            if (msg.isNotEmpty())
+                System.err.println("ERROR: $msg")
+
+            System.err.println("Usage: <bootstrap.jar>,<user packages...>")
+            exitProcess(1)
+        }
+
         @JvmStatic
         fun premain(agentArgs: String?, inst: Instrumentation) {
-            inst.appendToBootstrapClassLoaderSearch(JarFile("out/artifacts/bootstrap/bootstrap.jar"))
-            inst.addTransformer(BytecodeTransformer(), true)
+            val args = agentArgs ?: bail("No args provided")
+            val split = args.splitToSequence(',').iterator()
+
+            if (!split.hasNext())
+                bail()
+
+            val bootstrapPath = split.next()
+            val classes = split.asSequence().map { it.replace('.', '/') }.toList()
+
+            if (!File(bootstrapPath).isFile)
+                bail("Bad bootstrap.jar argument '$bootstrapPath'")
+
+            inst.appendToBootstrapClassLoaderSearch(JarFile(bootstrapPath))
+            inst.addTransformer(BytecodeTransformer(classes), true)
             inst.retransformClasses(java.lang.Object::class.java)
             inst.retransformClasses(java.lang.ClassLoader::class.java)
         }
