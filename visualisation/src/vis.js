@@ -1,99 +1,98 @@
 // data
-let heap_data = [];
-let heap_links = [];
+let heapObjects = [];
+let heapLinks = [];
 const callstack = [];
 
 // constants
-const server = "http://localhost:52933"
-const width = window.innerWidth;
-const height = window.innerHeight;
-const stack_fraction = 0.38;
-const heap_fraction = 1.0 - stack_fraction;
-const center_pull = 0.010;
-const link_length = 100;
-const link_strength = 0.54;
-const tick_speed = 50;
+const SERVER = "http://localhost:52933";
+const WINDOW_WIDTH = window.innerWidth;
+const WINDOW_HEIGHT = window.innerHeight;
+const STACK_FRACTION = 0.38;
+const HEAP_FRACTION = 1.0 - STACK_FRACTION;
+const CENTRE_PULL = 0.010;
+const LINK_LENGTH = 100;
+const LINK_STRENGTH = 0.54;
+const TICK_SPEED = 50;
 
-const heap_node_radius = 10;
-const stack_node_radius = 4;
-const local_var_height = 18;
-const frame_base_size = 30;
-const local_var_pre_pad = 10;
-const frame_padding = 15;
-const local_var_link_x = 0;
-
-const [heap_svg, stack_svg] = build_svgs();
-const heap_center = [
-    (width * heap_fraction) / 2,
-    height / 2,
+const HEAP_NODE_RADIUS = 10;
+const STACK_NODE_RADIUS = 4;
+const LOCAL_VAR_SLOT_HEIGHT = 18;
+const FRAME_BASE_SIZE = 30;
+const LOCAL_VAR_SLOT_PRE_PAD = 10;
+const FRAME_PADDING = 15;
+const LOCAL_VAR_LINK_X = 0;
+const HEAP_CENTRE = [
+    (WINDOW_WIDTH * HEAP_FRACTION) / 2,
+    WINDOW_HEIGHT / 2,
 ];
 
-const sim = d3.forceSimulation(heap_data)
+const [heapSvg, stackSvg] = buildSvgs();
+const sim = d3.forceSimulation(heapObjects)
     .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(heap_center[0], heap_center[1]))
+    .force("center", d3.forceCenter(HEAP_CENTRE[0], HEAP_CENTRE[1]))
     .force("link", d3.forceLink().id(d => d.id)
-        .distance(link_length).strength(link_strength))
-    .force("x", d3.forceX(heap_center[0]).strength(center_pull))
-    .force("y", d3.forceY(heap_center[1]).strength(center_pull))
-    .on("tick", tick_sim)
+        .distance(LINK_LENGTH).strength(LINK_STRENGTH))
+    .force("x", d3.forceX(HEAP_CENTRE[0]).strength(CENTRE_PULL))
+    .force("y", d3.forceY(HEAP_CENTRE[1]).strength(CENTRE_PULL))
+    .on("tick", tickSim)
     .alphaTarget(1);
 
-let node = heap_svg.select("#nodes").selectAll(".node");
-let link = heap_svg.select("#links").selectAll(".link");
-let link_path = heap_svg.selectAll(".link_path");
-let link_label = heap_svg.selectAll(".link_label");
-let stack_frame = stack_svg.selectAll(".stack_frame");
+let node = heapSvg.select("#nodes").selectAll(".node");
+let link = heapSvg.select("#links").selectAll(".link");
+let linkPath = heapSvg.selectAll(".linkPath");
+let linkLabel = heapSvg.selectAll(".linkLabel");
+let stackFrame = stackSvg.selectAll(".stackFrame");
 
 // frame uuid -> frame
-const stack_frames = {};
-let next_unique_frame_id = 1000;
+const stackFrames = {};
+let nextUniqueFrameId = 1000;
 
 restart();
-startTicking(server, tick_speed);
+startTicking(SERVER, TICK_SPEED);
 
-function tick_sim() {
+function tickSim() {
 
-    let callstack_current_height = 0;
-    stack_frame
+    let callstackCurrentHeight = 0;
+    stackFrame
         .attr("transform", (d, i) => {
-            let this_y = frame_padding + (i * (frame_base_size + frame_padding)) + callstack_current_height;
-            let y_inverse = height - frame_padding - d.locals_height - this_y;
+            let thisY = FRAME_PADDING + (i * (FRAME_BASE_SIZE + FRAME_PADDING)) + callstackCurrentHeight;
+            let yInverse = WINDOW_HEIGHT - FRAME_PADDING - d.localsHeight - thisY;
 
-            stack_frames[d.uuid].y = y_inverse;
-            callstack_current_height += d.locals_height;
+            stackFrames[d.uuid].y = yInverse;
+            callstackCurrentHeight += d.localsHeight;
 
-            return "translate(0, " + y_inverse + ")";
+            return "translate(0, " + yInverse + ")";
         });
 
-    function get_stack_link_pos(stack_data) {
-        let y = stack_frames[stack_data.frame_uuid].y;
-        y += (frame_base_size + local_var_pre_pad + (stack_data.index * local_var_height));
-        y -= stack_node_radius;
+    function getStackLinkPos(stackData) {
+        let y = stackFrames[stackData.frameUuid].y;
+        y += (FRAME_BASE_SIZE + LOCAL_VAR_SLOT_PRE_PAD + (stackData.index * LOCAL_VAR_SLOT_HEIGHT));
+        y -= STACK_NODE_RADIUS;
         return y;
     }
 
-    let real_source_x = d => d.stack ? local_var_link_x : d.source.x;
-    let real_source_y = d => d.stack ? get_stack_link_pos(d.stack) : d.source.y;
+    let realSourceX = d => d.stack ? LOCAL_VAR_LINK_X : d.source.x;
+    let realSourceY = d => d.stack ? getStackLinkPos(d.stack) : d.source.y;
 
     node
         .attr("transform", d => {
             if (d.stack) {
-                return "translate(" + local_var_link_x + ", " + get_stack_link_pos(d.stack) + ")";
+                return "translate(" + LOCAL_VAR_LINK_X + ", " + getStackLinkPos(d.stack) + ")";
             }
             return "translate(" + d.x + ", " + d.y + ")";
         });
     link
-        .attr("x1", real_source_x)
-        .attr("y1", real_source_y)
+        .attr("x1", realSourceX)
+        .attr("y1", realSourceY)
         .attr("x2", d => d.target.x)
         .attr("y2", d => d.target.y);
 
-    link_path
-        .attr("d", d => "M " + real_source_x(d) + " " + real_source_y(d) + " L " + d.target.x + " " + d.target.y);
+    linkPath
+        .attr("d", d => "M " + realSourceX(d) + " " + realSourceY(d) + " L " + d.target.x + " " + d.target.y);
 
-    link_label
+    linkLabel
         .attr("transform", function (d) { // for some reason this cannot be a lambda
-            if (d.target.x < real_source_x(d)) {
+            if (d.target.x < realSourceX(d)) {
                 const bbox = this.getBBox();
                 const rx = bbox.x + bbox.width / 2;
                 const ry = bbox.y + bbox.height / 2;
@@ -107,107 +106,110 @@ function tick_sim() {
 
 function restart() {
     // sim.stop(); // necessary?
-    sim.nodes(heap_data);
-    sim.force("link").links(heap_links);
+    sim.nodes(heapObjects);
+    sim.force("link").links(heapLinks);
 
-    node = node.data(heap_data);
+    // nodes
+    node = node.data(heapObjects);
     node.exit().remove();
 
-    let node_enter = node.enter().append("g");
-    node_enter.append("circle")
-        .attr("class", d => d.stack ? "node_stack" : "node")
-        .attr("r", d => d.stack ? stack_node_radius : heap_node_radius);
-    node_enter.append("title") // hover
+    let nodeEnter = node.enter().append("g");
+    nodeEnter.append("circle")
+        .attr("class", d => d.stack ? "nodeStack" : "node")
+        .attr("r", d => d.stack ? STACK_NODE_RADIUS : HEAP_NODE_RADIUS);
+    nodeEnter.append("title") // hover
         .text(d => d.id + " - " + d.clazz);
-    node = node.merge(node_enter);
+    node = node.merge(nodeEnter);
 
-    link = link.data(heap_links);
+    // links
+    link = link.data(heapLinks);
     link.exit().remove();
-    let link_enter = link.enter().append("line")
+    let linkEnter = link.enter().append("line")
         .attr("class", "link")
         .attr("marker-end", "url(#arrowhead)");
+    link = link.merge(linkEnter);
 
-    link = link.merge(link_enter);
-
-    link_path = link_path.data(heap_links, d => d.name);
-    link_path.exit().remove();
-    let link_path_enter = link_path.enter().append("path")
-        .attr("class", "link_path")
+    // link paths
+    linkPath = linkPath.data(heapLinks, d => d.name);
+    linkPath.exit().remove();
+    let linkPathEnter = linkPath.enter().append("path")
+        .attr("class", "linkPath")
         .attr("id", d => "link_path_" + d.source.id + "" + d.target.id)
         .style("pointer-events", "none")
         .style("text-anchor", "middle");
-    link_path = link_path.merge(link_path_enter);
+    linkPath = linkPath.merge(linkPathEnter);
 
-    link_label = link_label.data(heap_links, d => d.name);
-    link_label.exit().remove();
-    let label_text = link_label.enter().append("text")
+    // link labels
+    linkLabel = linkLabel.data(heapLinks, d => d.name);
+    linkLabel.exit().remove();
+    let labelText = linkLabel.enter().append("text")
         .style("pointer-events", "none")
-        .attr("class", "link_label")
+        .attr("class", "linkLabel")
         .attr("dy", "-3");
-    label_text.append("textPath")
+    labelText.append("textPath")
         .attr("xlink:href", d => "#link_path_" + d.source.id + "" + d.target.id)
         .style("pointer-events", "none")
         .attr("startOffset", "20%")
         .text(d => d.name);
-    link_label = link_label.merge(label_text);
+    linkLabel = linkLabel.merge(labelText);
 
-    sim.nodes(heap_data);
+    sim.nodes(heapObjects);
     // sim.restart()
     // link_force.links(heap_links);
     // sim.alpha(1).restart();
 
     // stack
-    stack_frame = stack_frame.data(callstack);
-    stack_frame.exit().remove();
+    stackFrame = stackFrame.data(callstack);
+    stackFrame.exit().remove();
 
-    let stack_frame_enter = stack_frame.enter().append("g")
+    let stackFrameEnter = stackFrame.enter().append("g")
         .attr("width", "100%");
-    stack_frame_enter.append("rect")
+    stackFrameEnter.append("rect")
         .attr("width", "100%")
-        .attr("height", (d) => d.locals_height + frame_base_size)
+        .attr("height", (d) => d.localsHeight + FRAME_BASE_SIZE)
         .attr("fill", () => "steelblue");
-    stack_frame_enter.append("text")
+    stackFrameEnter.append("text")
         .attr("text-anchor", "middle")
         .attr("x", "50%")
         .attr("y", 10)
         .attr("fill", "white")
         .text((d) => d.clazz.name);
-    stack_frame_enter.append("text")
+    stackFrameEnter.append("text")
         .attr("text-anchor", "middle")
         .attr("x", "50%")
         .attr("y", 25)
         .attr("fill", "white")
         .text((d) => d.method.name);
-    stack_frame = stack_frame.merge(stack_frame_enter);
+    stackFrame = stackFrame.merge(stackFrameEnter);
 
-    stack_frame = stack_frame.each(function (d) {
-        if (!d.spanking_new) return;
-        d.spanking_new = false;
+    stackFrame = stackFrame.each(function (d) {
+        if (!d.spankingNew) return;
+        d.spankingNew = false;
 
         let self = d3.select(this);
         d.method.localVars.forEach((local, j) => {
             self.append("text")
                 .attr("text-anchor", "middle")
                 .attr("x", "50%")
-                .attr("y", () => frame_base_size + local_var_pre_pad + (local_var_height * j))
+                .attr("y", () => FRAME_BASE_SIZE + LOCAL_VAR_SLOT_PRE_PAD + (LOCAL_VAR_SLOT_HEIGHT * j))
                 .text(() => (local.index || 0) + ": " + local.name + " : " + local.type);
         })
     })
 }
 
-function build_svgs() {
+function buildSvgs() {
     const stack = d3.select("#stack").append("svg")
-        .attr("width", width * stack_fraction)
-        .attr("height", height);
+        .attr("width", WINDOW_WIDTH * STACK_FRACTION)
+        .attr("height", WINDOW_HEIGHT);
 
     const heap = d3.select("#heap").append("svg")
-        .attr("width", width * heap_fraction)
-        .attr("height", height);
+        .attr("width", WINDOW_WIDTH * HEAP_FRACTION)
+        .attr("height", WINDOW_HEIGHT);
     heap.append("g").attr("id", "links");
     heap.append("g").attr("id", "nodes");
     heap.append("marker")
         .attr("id", "arrowhead")
-        .attr("class", "link_arrow")
+        .attr("class", "linkArrow")
         .attr("viewBox", "-0 -5 10 10")
         .attr("refX", 19)
         .attr("orient", "auto")

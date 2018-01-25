@@ -3,18 +3,19 @@ function addHeapObject(payload) {
         clazz = payload["class"];
 
     console.log("add obj %s %s", id, clazz);
-    heap_data.push({id, x: width / 2, y: height / 2, clazz});
+    heapObjects.push({id, x: WINDOW_WIDTH / 2, y: WINDOW_HEIGHT / 2, clazz});
     restart();
 }
 
 function delHeapObject({id}) {
     console.log("delete obj %s", id);
-    const index = heap_data.findIndex((x) => x.id === id);
+
+    const index = heapObjects.findIndex((x) => x.id === id);
     if (index < 0)
         throw "cant dealloc missing heap object " + id;
-    heap_data.splice(index, 1);
+    heapObjects.splice(index, 1);
+    heapLinks = heapLinks.filter((x) => x.source.id !== id && x.target.id !== id);
 
-    heap_links = heap_links.filter((x) => x.source.id !== id && x.target.id !== id);
     restart()
 }
 
@@ -24,15 +25,15 @@ function setInterHeapLink(payload) {
 
     console.log("set link %s from %s to %s", fieldName, srcId, dstId || "null");
 
-    let existingIndex = heap_links.find((x) => x.source === srcId && x.name === fieldName);
+    let existingIndex = heapLinks.find((x) => x.source === srcId && x.name === fieldName);
     if (existingIndex >= 0) {
         if (rm) {
-            heap_links.splice(existingIndex, 1)
+            heapLinks.splice(existingIndex, 1)
         } else {
-            heap_links[existingIndex].target = dstId;
+            heapLinks[existingIndex].target = dstId;
         }
     } else if (!rm)
-        heap_links.push({source: srcId, target: dstId, name: fieldName});
+        heapLinks.push({source: srcId, target: dstId, name: fieldName});
 
     restart();
 }
@@ -40,55 +41,54 @@ function setInterHeapLink(payload) {
 function setLocalVarLink(payload) {
     let varIndex = payload.varIndex || 0,
         {dstId} = payload;
-    const current_frame = callstack[callstack.length - 1];
+    const rm = dstId === undefined;
+    const currentFrame = callstack[callstack.length - 1];
+
     // TODO local vars is not sorted by index?!
-    const name = current_frame.method.localVars.find(l => l.index === varIndex).name;
-    const id = "stack_" + current_frame.uuid + "_" + varIndex;
-    const stack_data = {
-        frame_uuid: current_frame.uuid,
+    const name = currentFrame.method.localVars.find(l => l.index === varIndex).name;
+    const id = "stack_" + currentFrame.uuid + "_" + varIndex;
+    const stackData = {
+        frameUuid: currentFrame.uuid,
         index: varIndex
     };
     console.log("setting stack link from var %d to %d (%s)", varIndex, dstId, name);
 
-    const rm = dstId === undefined;
 
     // add stack node if not already there
     if (!rm) {
-        if (heap_data.find(x => x.stack && x.id === id) === undefined) {
-            heap_data.push({
+        if (heapObjects.find(x => x.stack && x.id === id) === undefined) {
+            heapObjects.push({
                 id: id,
-                stack: stack_data,
+                stack: stackData,
             });
         }
     }
 
-    let existing_link_index = heap_links.findIndex((x) =>
+    let existingLinkIndex = heapLinks.findIndex((x) =>
         x.stack &&
-        x.stack.frame_uuid === current_frame.uuid &&
+        x.stack.frameUuid === currentFrame.uuid &&
         x.stack.index === varIndex);
 
     // existing link
-    if (existing_link_index >= 0) {
+    if (existingLinkIndex >= 0) {
         if (rm) {
-            heap_links.splice(existing_link_index, 1)
+            heapLinks.splice(existingLinkIndex, 1)
         } else {
-            heap_links[existing_link_index].target = dstId
+            heapLinks[existingLinkIndex].target = dstId
         }
     } else if (!rm) {
-        heap_links.push({
+        heapLinks.push({
             source: id,
             target: dstId,
             name: name,
-            stack: stack_data,
+            stack: stackData,
         });
     }
     restart()
 }
 
 function showLocalVarAccess(payload) {
-    let varIndex = payload.varIndex || 0,
-        {edgeName} = payload;
-    // TODO is name needed?
+    let varIndex = payload.varIndex || 0;
     console.log("show stack access %d", varIndex)
 }
 
@@ -101,12 +101,12 @@ function pushMethodFrame({owningClass, definition}) {
     console.log("entering method %s:%s", owningClass.name, definition.name);
     let frame = {
         clazz: owningClass, method: definition,
-        locals_height: local_var_height * definition.localVars.length,
-        spanking_new: true,
-        uuid: next_unique_frame_id++,
+        localsHeight: LOCAL_VAR_SLOT_HEIGHT * definition.localVars.length,
+        spankingNew: true,
+        uuid: nextUniqueFrameId++,
         y: 0
     };
-    stack_frames[frame.uuid] = frame;
+    stackFrames[frame.uuid] = frame;
     callstack.push(frame);
     restart(); // TODO only stack
 }
@@ -115,8 +115,8 @@ function popMethodFrame() {
     console.log("exiting method");
     const old_frame = callstack.pop();
 
-    heap_links = heap_links.filter(d => !d.stack || d.stack.frame_uuid !== old_frame.uuid);
-    heap_data = heap_data.filter(d => !d.stack || d.stack.frame_uuid !== old_frame.uuid);
+    heapLinks = heapLinks.filter(d => !d.stack || d.stack.frameUuid !== old_frame.uuid);
+    heapObjects = heapObjects.filter(d => !d.stack || d.stack.frameUuid !== old_frame.uuid);
 
     restart();
 }
@@ -149,8 +149,8 @@ function startTicking(server, tickSpeed) {
                         return;
                     }
                     let evt = evts[i];
-                    let handler_tup = event_handlers[evt.type];
-                    if (handler_tup) {
+                    let handlerTuple = event_handlers[evt.type];
+                    if (handlerTuple) {
                         let [handler, payload_name] = event_handlers[evt.type];
                         let payload = evt[payload_name];
                         handler(payload);
