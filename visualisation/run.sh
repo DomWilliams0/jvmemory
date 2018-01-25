@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 #echo Running preprocessor...
 #(cd ../preprocessor && ./gradlew run)
