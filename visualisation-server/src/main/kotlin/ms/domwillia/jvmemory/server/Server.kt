@@ -60,8 +60,7 @@ object Server {
         }
 
         app.get("/definitions") { ctx ->
-            val map = events.definitions.associateBy { it.name }
-            ctx.json(map)
+            ctx.json(events.definitions)
         }
     }
 }

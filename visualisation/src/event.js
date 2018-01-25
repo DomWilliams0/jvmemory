@@ -1,11 +1,27 @@
-let definitions;
+function generateRandomPersistentColour(className) {
+    let rand = new Math.seedrandom(className)() * 360;
+    return "hsl(" + rand + ", 70%, 70%)";
+}
 
 function addHeapObject(payload) {
     let {id} = payload,
         clazz = payload["class"];
 
+    let classDef = definitions[clazz];
+    let colour;
+    if (!classDef)
+        colour = "gray";
+    else
+        colour = classDef.colour;
+
     console.log("add obj %s %s", id, clazz);
-    heapObjects.push({id, x: WINDOW_WIDTH / 2, y: WINDOW_HEIGHT / 2, clazz});
+    heapObjects.push({
+        id,
+        clazz,
+        fill: colour,
+        x: WINDOW_WIDTH / 2,
+        y: WINDOW_HEIGHT / 2,
+    });
     restart();
 }
 
@@ -149,7 +165,11 @@ const event_handlers = {
 
 function startTicking(server, tickSpeed) {
     fetch(server + "/definitions").then(resp => resp.json()).then(defs => {
-        definitions = defs;
+        for (let cls of defs) {
+            cls.colour = generateRandomPersistentColour(cls);
+            definitions[cls.name] = cls
+        }
+
         fetch(server + "/thread").then(resp => resp.json()).then(threads => {
             console.log("%d thread(s) available: %s", threads.length, threads);
             if (threads.length === 0) throw "no events";

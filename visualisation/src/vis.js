@@ -2,6 +2,7 @@
 let heapObjects = [];
 let heapLinks = [];
 const callstack = [];
+const definitions = {};
 
 // constants
 const SERVER = "http://localhost:52933";
@@ -124,7 +125,8 @@ function restart() {
     let nodeEnter = node.enter().append("g");
     nodeEnter.append("circle")
         .attr("class", d => d.stack ? "nodeStack" : "node")
-        .attr("r", d => d.stack ? STACK_NODE_RADIUS : HEAP_NODE_RADIUS);
+        .attr("r", d => d.stack ? STACK_NODE_RADIUS : HEAP_NODE_RADIUS)
+        .attr("fill", d => d.fill ? d.fill : "none");
     nodeEnter.append("title") // hover
         .text(d => d.id + " - " + d.clazz);
     node = node.merge(nodeEnter);
