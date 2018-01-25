@@ -17,7 +17,7 @@ const TICK_SPEED = 50;
 const HEAP_NODE_RADIUS = 10;
 const STACK_NODE_RADIUS = 4;
 const LOCAL_VAR_SLOT_HEIGHT = 18;
-const FRAME_BASE_SIZE = 30;
+const FRAME_BASE_SIZE = 15;
 const LOCAL_VAR_SLOT_PRE_PAD = 10;
 const FRAME_PADDING = 15;
 const LOCAL_VAR_LINK_X = 0;
@@ -104,6 +104,14 @@ function tickSim() {
 
 }
 
+function shortenClassName(className) {
+    const index = className.lastIndexOf('.');
+    if (index >= 0) {
+        return className.substring(index+1)
+    }
+    return className
+}
+
 function restart() {
     // sim.stop(); // necessary?
     sim.nodes(heapObjects);
@@ -173,13 +181,9 @@ function restart() {
         .attr("x", "50%")
         .attr("y", 10)
         .attr("fill", "white")
-        .text((d) => d.methodDefinition.clazz);
-    stackFrameEnter.append("text")
-        .attr("text-anchor", "middle")
-        .attr("x", "50%")
-        .attr("y", 25)
-        .attr("fill", "white")
-        .text((d) => d.methodDefinition.name);
+        .text(d => d.methodDefinition.clazzShort + ":" + d.methodDefinition.name)
+        .append("title")
+        .text(d => d.methodDefinition.clazzLong + ":" + d.methodDefinition.name + d.methodDefinition.signature);
     stackFrame = stackFrame.merge(stackFrameEnter);
 
     stackFrame = stackFrame.each(function (d) {
@@ -188,11 +192,14 @@ function restart() {
 
         let self = d3.select(this);
         d.methodDefinition.localVars.forEach((local, j) => {
+            const shortType = shortenClassName(local.type);
             self.append("text")
                 .attr("text-anchor", "middle")
                 .attr("x", "50%")
                 .attr("y", () => FRAME_BASE_SIZE + LOCAL_VAR_SLOT_PRE_PAD + (LOCAL_VAR_SLOT_HEIGHT * j))
-                .text(() => (local.index || 0) + ": " + local.name + " : " + local.type);
+                .text(() => (`${shortType} ${local.name}`))
+                .append("title")
+                .text(() => (`${local.type} ${local.name}`));
         })
     })
 }
