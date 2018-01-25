@@ -173,13 +173,13 @@ function restart() {
         .attr("x", "50%")
         .attr("y", 10)
         .attr("fill", "white")
-        .text((d) => d.clazz.name);
+        .text((d) => d.methodDefinition.clazz);
     stackFrameEnter.append("text")
         .attr("text-anchor", "middle")
         .attr("x", "50%")
         .attr("y", 25)
         .attr("fill", "white")
-        .text((d) => d.method.name);
+        .text((d) => d.methodDefinition.name);
     stackFrame = stackFrame.merge(stackFrameEnter);
 
     stackFrame = stackFrame.each(function (d) {
@@ -187,7 +187,7 @@ function restart() {
         d.spankingNew = false;
 
         let self = d3.select(this);
-        d.method.localVars.forEach((local, j) => {
+        d.methodDefinition.localVars.forEach((local, j) => {
             self.append("text")
                 .attr("text-anchor", "middle")
                 .attr("x", "50%")

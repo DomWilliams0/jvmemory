@@ -40,8 +40,9 @@ message EventVariant {
 }
 
 message PushMethodFrame {
-    ClassDefinition owning_class = 1;
-    MethodDefinition definition = 2;
+    string owning_class = 1;
+    string name = 2;
+    string signature = 3;
 }
 
 message AddHeapObject {
