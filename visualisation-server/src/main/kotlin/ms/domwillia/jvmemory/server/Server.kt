@@ -13,6 +13,7 @@ import io.javalin.translator.json.JavalinJacksonPlugin
 import ms.domwillia.jvmemory.preprocessor.EventsLoader
 import ms.domwillia.jvmemory.preprocessor.Preprocessor
 import ms.domwillia.jvmemory.preprocessor.protobuf.Event
+import ms.domwillia.jvmemory.protobuf.Definitions
 import org.eclipse.jetty.server.Server
 import java.io.File
 import java.net.InetSocketAddress
@@ -59,7 +60,8 @@ object Server {
         }
 
         app.get("/definitions") { ctx ->
-            ctx.json(events.definitions)
+            val map = events.definitions.associateBy { it.name }
+            ctx.json(map)
         }
     }
 }

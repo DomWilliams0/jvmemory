@@ -52,16 +52,17 @@ class RawMessageHandler {
 
     private fun enterMethod(msg: Flow.MethodEnter, threadId: ThreadID): Pair<ThreadID, EventVariant> {
         val type = msg.class_
-        val name = msg.method
+        val methodName = msg.method
 
         val classDef = classDefinitions[type]
                 ?: throw IllegalStateException("undefined class $type")
-        val methodDef = classDef.methodsList.find { it.name == name }
-                ?: throw IllegalStateException("undefined method $type:$name")
+        val methodDef = classDef.methodsList.find { it.name == methodName }
+                ?: throw IllegalStateException("undefined method $type:$methodName")
 
         val frame = PushMethodFrame.newBuilder().apply {
-            owningClass = classDef
-            definition = methodDef
+            owningClass = classDef.name
+            name = methodDef.name
+            signature = methodDef.signature
         }.build()
 
         callstacks.computeIfAbsent(threadId, { Stack() }).push(frame)

@@ -1,3 +1,5 @@
+let definitions;
+
 function addHeapObject(payload) {
     let {id} = payload,
         clazz = payload["class"];
@@ -44,8 +46,8 @@ function setLocalVarLink(payload) {
     const rm = dstId === undefined;
     const currentFrame = callstack[callstack.length - 1];
 
-    // TODO local vars is not sorted by index?!
-    const name = currentFrame.method.localVars.find(l => l.index === varIndex).name;
+    // TODO duplicate local vars >:(
+    const name = currentFrame.methodDefinition.localVars.find(l => l.index === varIndex).name;
     const id = "stack_" + currentFrame.uuid + "_" + varIndex;
     const stackData = {
         frameUuid: currentFrame.uuid,
@@ -97,11 +99,23 @@ function showHeapObjectAccess(payload) {
     console.log("showing heap access from id %d field %s", objId, fieldName)
 }
 
-function pushMethodFrame({owningClass, definition}) {
-    console.log("entering method %s:%s", owningClass.name, definition.name);
+function pushMethodFrame({owningClass, name, signature}) {
+    console.log("entering method %s:%s", owningClass, name);
+    let classDef = definitions[owningClass];
+    if (classDef === undefined)
+        throw "undefined class " + owningClass;
+    let methodDef = classDef.methods.find(m => m.name === name && m.signature === signature);
+    if (methodDef === undefined)
+        throw "undefined method " + owningClass + ":" + name + " (" + signature + ")";
+
     let frame = {
-        clazz: owningClass, method: definition,
-        localsHeight: LOCAL_VAR_SLOT_HEIGHT * definition.localVars.length,
+        methodDefinition: {
+            clazz: owningClass,
+            name: name,
+            signature: signature,
+            localVars: methodDef.localVars,
+        },
+        localsHeight: LOCAL_VAR_SLOT_HEIGHT * methodDef.localVars.length,
         spankingNew: true,
         uuid: nextUniqueFrameId++,
         y: 0
@@ -133,31 +147,34 @@ const event_handlers = {
 };
 
 function startTicking(server, tickSpeed) {
-    fetch(server + "/thread").then(resp => resp.json()).then(threads => {
-        console.log("%d thread(s) available: %s", threads.length, threads);
-        if (threads.length === 0) throw "no events";
-        return threads[0]
-    }).then(thread_id => {
-        fetch(server + "/thread/" + thread_id).then(resp => resp.json())
-            .then(evts => {
-                let i = 0;
-                const ticker = setInterval(() => {
-                    if (i >= evts.length) {
-                        console.log("all done");
-                        clearInterval(ticker);
-                        setTimeout(sim.stop, 5000);
-                        return;
-                    }
-                    let evt = evts[i];
-                    let handlerTuple = event_handlers[evt.type];
-                    if (handlerTuple) {
-                        let [handler, payload_name] = event_handlers[evt.type];
-                        let payload = evt[payload_name];
-                        handler(payload);
-                    }
+    fetch(server + "/definitions").then(resp => resp.json()).then(defs => {
+        definitions = defs;
+        fetch(server + "/thread").then(resp => resp.json()).then(threads => {
+            console.log("%d thread(s) available: %s", threads.length, threads);
+            if (threads.length === 0) throw "no events";
+            return threads[0]
+        }).then(thread_id => {
+            fetch(server + "/thread/" + thread_id).then(resp => resp.json())
+                .then(evts => {
+                    let i = 0;
+                    const ticker = setInterval(() => {
+                        if (i >= evts.length) {
+                            console.log("all done");
+                            clearInterval(ticker);
+                            setTimeout(sim.stop, 5000);
+                            return;
+                        }
+                        let evt = evts[i];
+                        let handlerTuple = event_handlers[evt.type];
+                        if (handlerTuple) {
+                            let [handler, payload_name] = event_handlers[evt.type];
+                            let payload = evt[payload_name];
+                            handler(payload);
+                        }
 
-                    i += 1;
-                }, tickSpeed);
-            })
+                        i += 1;
+                    }, tickSpeed);
+                })
+        });
     });
 }
