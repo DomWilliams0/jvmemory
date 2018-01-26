@@ -138,7 +138,7 @@ class MethodPatcher(
             // stack: obj value
 
             // store value in tmp
-            val tmp = localVarSorter.newLocal(type) + 1
+            val tmp = localVarSorter.newLocal(type)
             super.store(tmp, type)
 
             // stack: obj
