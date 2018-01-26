@@ -74,18 +74,19 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
         @JvmStatic
         fun premain(agentArgs: String?, inst: Instrumentation) {
             val args = agentArgs ?: bail("No args provided")
-            val split = args.splitToSequence(',').iterator()
+            val split = args.splitToSequence(',')
 
-            if (!split.hasNext())
-                bail()
-
-            val bootstrapPath = split.next()
-            val classes = split.asSequence().map { it.replace('.', '/') }.toList()
+            val bootstrapPath = split.take(1).elementAtOrNull(0) ?: bail()
+            val classes = split
+                    .filter(String::isNotEmpty)
+                    .map { it.replace('.', '/') }
+                    .toList()
 
             if (!File(bootstrapPath).isFile)
                 bail("Bad bootstrap.jar argument '$bootstrapPath'")
 
             inst.appendToBootstrapClassLoaderSearch(JarFile(bootstrapPath))
+            println("Adding to bootstrap path: $bootstrapPath")
             inst.addTransformer(BytecodeTransformer(classes), true)
             inst.retransformClasses(java.lang.Object::class.java)
             inst.retransformClasses(java.lang.ClassLoader::class.java)

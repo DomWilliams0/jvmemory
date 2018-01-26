@@ -47,6 +47,9 @@ static jvmtiError register_callbacks() {
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm, char *options, void *reserved) {
 	jint ret;
 
+	// parse options
+	char *out_path = options == NULL ? "jvmemory.log" : options;
+
 	// set globals
 	jvm = javavm;
 	if ((ret = (*jvm)->GetEnv(jvm, (void **)&env, JVMTI_VERSION_1_2)) != JNI_OK) {
@@ -67,7 +70,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm, char *options, void *reserve
 	DO_SAFE((*env)->CreateRawMonitor(env, "free_lock", &free_lock), "creating raw monitor");
 
 	// init logger
-	DO_SAFE_COND((logger = logger_init("jvmemory.log")) != NULL, "logger initialisation");
+	DO_SAFE_COND((logger = logger_init(out_path)) != NULL, "logger initialisation");
 
 	return JNI_OK;
 }
