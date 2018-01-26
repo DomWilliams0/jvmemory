@@ -43,11 +43,11 @@ class MethodPatcher(
 
             // stack: value tag_long
             functionName = "onStoreLocalVarObject"
-            functionDesc ="(JI)V"
+            functionDesc = "(JI)V"
         } else {
             // stack: value
             functionName = "onStoreLocalVarPrimitive"
-            functionDesc ="(I)V"
+            functionDesc = "(I)V"
         }
 
         // stack: value (tag_long)
@@ -124,66 +124,60 @@ class MethodPatcher(
     override fun putfield(owner: String, name: String, desc: String) {
         // TODO there are extra onLoadLocalVars before every putfield - remove these!
         val type = Type.getType(desc)
+        val size = type.size
 
         // avoid uninitialisedThis
         if (name != "this$0") {
 
             // object:
             // Monitor.onPutFieldObject(Monitor.getTag(obj), field, Monitor.getTag(value))
+            // Monitor.onPutFieldObject(obj, value, field)
             // others:
             // Monitor.onPutFieldPrimitive(Monitor.getTag(obj), field)
-            val functionName: String
-            val functionDesc: String
+            // Monitor.onPutFieldPrimitive(obj, field)
+            // TODO
+            var functionName = "onPutFieldPrimitive"
+            var functionDesc = "(Ljava/lang/Object;Ljava/lang/String;)V"
 
-            // stack: obj value
+            // obj: dup2
+            // size1: dup top to 3
+            // size2:
 
-            // store value in tmp
-            val tmp = localVarSorter.newLocal(type)
-            super.store(tmp, type)
+            if (size == 1) {
+                // stack: obj value
 
-            // stack: obj
+                super.dup2()
 
-            // dup
-            super.dup()
+                // stack: obj value obj value
 
-            // stack: obj obj
+                if (type.sort != Type.OBJECT) {
+                    super.pop()
 
-            // get tag
-            super.invokestatic(
-                    Monitor.internalName,
-                    "getTag",
-                    "(Ljava/lang/Object;)J",
-                    false
-            )
+                    // stack: obj value obj <no value>
 
-            // stack: obj obj_id
+                } else {
+                    functionName = "onPutFieldObject"
+                    functionDesc = "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V"
+                }
 
-            // push field
-            super.visitLdcInsn(name)
+                super.visitLdcInsn(name)
 
-            // stack: obj obj_id field
+                // stack: obj value obj <value> field
 
-            if (type.sort == Type.OBJECT) {
-                // pop value
-                super.load(tmp, type)
-
-                // stack: obj obj_id field value
-
-                // get tag
-                super.invokestatic(
-                        Monitor.internalName,
-                        "getTag",
-                        "(Ljava/lang/Object;)J",
-                        false
-                )
-
-                // stack: obj obj_id field value_id
-                functionName = "onPutFieldObject"
-                functionDesc = "(JLjava/lang/String;J)V"
             } else {
-                // stack: obj obj_id field
-                functionName = "onPutFieldPrimitive"
-                functionDesc = "(JLjava/lang/String;)V"
+                // stack: obj value
+                super.dup2X1()
+
+                // stack: value obj value
+                super.pop2()
+
+                // stack: value obj
+                super.dupX2()
+
+                // stack: obj value obj
+                super.visitLdcInsn(name)
+
+                // stack: obj value obj name
             }
 
             // log
@@ -193,12 +187,6 @@ class MethodPatcher(
                     functionDesc,
                     false
             )
-            // stack: obj
-
-            // pop value
-            super.load(tmp, type)
-
-            // stack: obj value
         }
 
         super.putfield(owner, name, desc)

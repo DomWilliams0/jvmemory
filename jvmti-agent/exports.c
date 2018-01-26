@@ -132,15 +132,19 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField(
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onPutFieldObject
- * Signature: (JLjava/lang/String;J)V
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObject(
         JNIEnv *jnienv,
         jclass klass,
-        jlong obj_id,
-        jstring field,
-        jlong value_id) {
+        jobject obj,
+        jobject value,
+        jstring field) {
     GET_THREAD_ID;
+
+    jlong obj_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, obj);
+    jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
+
     const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
     on_put_field_object(logger, thread_id, obj_id, field_str, value_id);
     (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
@@ -149,14 +153,15 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObje
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onPutFieldPrimitive
- * Signature: (JLjava/lang/String;)V
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrimitive(
         JNIEnv *jnienv,
         jclass klass,
-        jlong obj_id,
+        jobject obj,
         jstring field) {
     GET_THREAD_ID;
+    jlong obj_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, obj);
     const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
     on_put_field_primitive(logger, thread_id, obj_id, field_str);
     (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
