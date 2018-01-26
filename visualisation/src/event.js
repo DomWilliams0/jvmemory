@@ -107,12 +107,16 @@ function setLocalVarLink(payload) {
 
 function showLocalVarAccess(payload) {
     let varIndex = payload.varIndex || 0;
-    console.log("show stack access %d", varIndex)
+    console.log("show stack access %d", varIndex);
+
+    return 10;
 }
 
 function showHeapObjectAccess(payload) {
     let {objId, fieldName} = payload;
-    console.log("showing heap access from id %d field %s", objId, fieldName)
+    console.log("showing heap access from id %d field %s", objId, fieldName);
+
+    return 10;
 }
 
 function pushMethodFrame({owningClass, name, signature}) {
@@ -164,6 +168,68 @@ const event_handlers = {
 };
 
 function startTicking(server, tickSpeed) {
+
+    function Ticker(events, time) {
+        this.time = time;
+        this.index = 0;
+        this.id = null;
+        this.lastTick = new Date();
+
+        let ticker = this;
+        this.pause = function () {
+            clearTimeout(ticker.id);
+            ticker.id = null;
+
+            ticker.time -= new Date() - ticker.lastTick;
+        };
+
+        this.resume = function () {
+            clearTimeout(ticker.id);
+
+            ticker.lastTick = new Date();
+            this.id = setTimeout(function callback() {
+                ticker.lastTick = new Date();
+
+                // end reached
+                if (ticker.index >= events.length) {
+                    console.log("all done");
+                    ticker.pause();
+
+                    console.log("stopping simulation in 5 seconds");
+                    setTimeout(sim.stop, 5000);
+
+                    return;
+                }
+
+                let nextTime;
+                let evt = events[ticker.index];
+                let handlerTuple = event_handlers[evt.type];
+                if (handlerTuple) {
+                    let [handler, payload_name] = event_handlers[evt.type];
+                    let payload = evt[payload_name];
+                    nextTime = handler(payload);
+                }
+
+                ticker.index += 1;
+
+                if (nextTime === undefined)
+                    nextTime = time;
+                ticker.time = nextTime;
+
+                ticker.id = setTimeout(callback, ticker.time);
+
+            }, ticker.time);
+        };
+
+        this.toggle = function () {
+            if (ticker.id)
+                ticker.pause();
+            else
+                ticker.resume();
+        }
+    }
+
+
     fetch(server + "/definitions").then(resp => resp.json()).then(defs => {
         for (let cls of defs) {
             cls.colour = generateRandomPersistentColour(cls);
@@ -177,24 +243,19 @@ function startTicking(server, tickSpeed) {
         }).then(thread_id => {
             fetch(server + "/thread/" + thread_id).then(resp => resp.json())
                 .then(evts => {
-                    let i = 0;
-                    const ticker = setInterval(() => {
-                        if (i >= evts.length) {
-                            console.log("all done");
-                            clearInterval(ticker);
-                            setTimeout(sim.stop, 5000);
-                            return;
-                        }
-                        let evt = evts[i];
-                        let handlerTuple = event_handlers[evt.type];
-                        if (handlerTuple) {
-                            let [handler, payload_name] = event_handlers[evt.type];
-                            let payload = evt[payload_name];
-                            handler(payload);
-                        }
 
-                        i += 1;
-                    }, tickSpeed);
+                    let ticker = new Ticker(evts, tickSpeed);
+
+                    d3.select("body")
+                        .on("keydown", () => {
+                            // space
+                            if (d3.event.keyCode === 32) {
+                                ticker.toggle()
+                            }
+                        });
+
+
+                    ticker.resume();
                 })
         });
     });
