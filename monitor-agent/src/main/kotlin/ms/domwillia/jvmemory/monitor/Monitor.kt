@@ -32,17 +32,14 @@ object Monitor {
     @JvmStatic external fun onGetField(objId: Long, field: String)
 
     /**
-     * @param objId The tag of the object whose field is being set
      * @param field The name of the field being set
-     * @param valueId The tag of the value, 0 if null
      */
-    @JvmStatic external fun onPutFieldObject(objId: Long, field: String, valueId: Long)
+    @JvmStatic external fun onPutFieldObject(obj: Any, value: Any?, field: String)
 
     /**
-     * @param objId The tag of the object whose field is being set
      * @param field The name of the field being set
      */
-    @JvmStatic external fun onPutFieldPrimitive(objId: Long, field: String)
+    @JvmStatic external fun onPutFieldPrimitive(obj: Any, field: String)
 
     /**
      * @param valueId The tag of the value, 0 if null

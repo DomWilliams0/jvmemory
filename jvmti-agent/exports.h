@@ -82,18 +82,18 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onPutFieldObject
- * Signature: (JLjava/lang/String;J)V
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObject
-  (JNIEnv *, jclass, jlong, jstring, jlong);
+  (JNIEnv *, jclass, jobject, jobject, jstring);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onPutFieldPrimitive
- * Signature: (JLjava/lang/String;)V
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrimitive
-  (JNIEnv *, jclass, jlong, jstring);
+  (JNIEnv *, jclass, jobject, jstring);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
