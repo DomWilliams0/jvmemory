@@ -59,6 +59,7 @@ class ClassDefinition(
                     name = m.name
                     signature = m.desc
                     visibility = m.flags.visibility.toString()
+                    static = m.flags.isStatic
                     addAllLocalVars(m.localVars.map { toProtoBuf(it) })
                 }.build()
 
