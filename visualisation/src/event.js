@@ -231,9 +231,20 @@ function startTicking(server, tickSpeed) {
 
 
     fetch(server + "/definitions").then(resp => resp.json()).then(defs => {
+        let main;
         for (let cls of defs) {
             cls.colour = generateRandomPersistentColour(cls);
-            definitions[cls.name] = cls
+            definitions[cls.name] = cls;
+
+            // bit of a hack
+            if (!main &&
+                cls.methods.find(m => m.static && m.name === "main" && m.signature === "([Ljava/lang/String;)V")) {
+                main = cls.name;
+            }
+        }
+
+        if (main) {
+            document.title = "JVMemory - " + main;
         }
 
         fetch(server + "/thread").then(resp => resp.json()).then(threads => {
