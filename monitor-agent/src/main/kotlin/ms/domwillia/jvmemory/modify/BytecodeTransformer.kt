@@ -77,7 +77,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             val split = args.splitToSequence(',')
 
             val bootstrapPath = split.take(1).elementAtOrNull(0) ?: bail()
-            val classes = split
+            val classes = split.drop(1)
                     .filter(String::isNotEmpty)
                     .map { it.replace('.', '/') }
                     .toList()

@@ -26,10 +26,10 @@ mkdir -p $OUT
 # agent
 (
 cd $ROOT/monitor-agent
-[ $CLEAN = 1 ] && mvn clean
-mvn compile assembly:single
+[ $CLEAN = 1 ] && ./gradlew clean
+./gradlew buildJar
 
-cp target/jvmemory-0.1-jar-with-dependencies.jar $JAVA_AGENT
+cp build/libs/monitor-agent-0.1.jar $JAVA_AGENT
 echo Java agent copied to $JAVA_AGENT
 
 cp $JAVA_AGENT $BOOTSTRAP
