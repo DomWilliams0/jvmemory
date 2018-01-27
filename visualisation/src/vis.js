@@ -4,13 +4,17 @@ let heapLinks = [];
 const callstack = [];
 const definitions = {};
 
+// mutable constants
+let WINDOW_WIDTH;
+let WINDOW_HEIGHT;
+let HEAP_WIDTH;
+let HEAP_CENTRE;
+
 // constants
-const SERVER = "http://localhost:52933";
-let WINDOW_WIDTH = window.innerWidth;
-let WINDOW_HEIGHT = window.innerHeight;
 const STACK_FRACTION = 0.38;
 const HEAP_FRACTION = 1.0 - STACK_FRACTION;
-const CENTRE_PULL = 0.010;
+const SERVER = "http://localhost:52933";
+const CENTRE_PULL = 0.030;
 const LINK_LENGTH = 70;
 const LINK_STRENGTH = 0.54;
 const TICK_SPEED = 500;
@@ -22,10 +26,6 @@ const FRAME_BASE_SIZE = 15;
 const LOCAL_VAR_SLOT_PRE_PAD = 10;
 const FRAME_PADDING = 15;
 const LOCAL_VAR_LINK_X = 0;
-let HEAP_CENTRE = [
-    (WINDOW_WIDTH * HEAP_FRACTION) / 2,
-    WINDOW_HEIGHT / 2,
-];
 
 const [heapSvg, stackSvg] = buildSvgs();
 const sim = d3.forceSimulation(heapObjects)
@@ -107,20 +107,24 @@ function tickSim() {
 
 }
 
-function resize() {
+function discoverWindowSize() {
     WINDOW_WIDTH = window.innerWidth;
     WINDOW_HEIGHT = window.innerHeight;
+    HEAP_WIDTH = WINDOW_WIDTH * HEAP_FRACTION;
     HEAP_CENTRE = [
-        (WINDOW_WIDTH * HEAP_FRACTION) / 2,
+        HEAP_WIDTH / 2,
         WINDOW_HEIGHT / 2,
     ];
+}
 
+function resize() {
+    discoverWindowSize();
     stackSvg
         .attr("width", WINDOW_WIDTH * STACK_FRACTION)
         .attr("height", WINDOW_HEIGHT);
 
     heapSvg
-        .attr("width", WINDOW_WIDTH * HEAP_FRACTION)
+        .attr("width", HEAP_WIDTH)
         .attr("height", WINDOW_HEIGHT);
 
     sim.force("x", d3.forceX(HEAP_CENTRE[0]).strength(CENTRE_PULL))
@@ -230,6 +234,8 @@ function restart(changedGraph) {
 }
 
 function buildSvgs() {
+    discoverWindowSize();
+
     const stack = d3.select("#stack").append("svg")
         .attr("width", WINDOW_WIDTH * STACK_FRACTION)
         .attr("height", WINDOW_HEIGHT);
