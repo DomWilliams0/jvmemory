@@ -3,7 +3,7 @@ function generateRandomPersistentColour(className) {
     return "hsl(" + rand + ", 70%, 70%)";
 }
 
-const FLASH_DURATION = 200;
+const FLASH_DURATION = 50;
 const SPAWN_OFFSET = 20;
 
 function addHeapObject(payload) {
