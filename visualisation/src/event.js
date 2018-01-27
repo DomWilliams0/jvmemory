@@ -69,8 +69,12 @@ function setLocalVarLink(payload) {
     const rm = dstId === undefined;
     const currentFrame = callstack[callstack.length - 1];
 
-    // TODO duplicate local vars >:(
-    const name = currentFrame.methodDefinition.localVars.find(l => l.index === varIndex).name;
+    const localVar = currentFrame.methodDefinition.localVars.find(l => l.index === varIndex);
+    if (!localVar) {
+        console.log("error: invalid local var %d, skipping setLocalVarLink", varIndex);
+        return 0;
+    }
+    const name = localVar.name;
     const stackData = {
         frameUuid: currentFrame.uuid,
         index: varIndex,
