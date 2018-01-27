@@ -3,6 +3,8 @@ function generateRandomPersistentColour(className) {
     return "hsl(" + rand + ", 70%, 70%)";
 }
 
+const FLASH_DURATION = 200;
+
 function addHeapObject(payload) {
     let {id} = payload,
         clazz = payload["class"];
@@ -56,6 +58,10 @@ function setInterHeapLink(payload) {
     restart();
 }
 
+function getStackNodeId(frame, index) {
+    return "stack_" + frame.uuid + "_" + index;
+}
+
 function setLocalVarLink(payload) {
     let varIndex = payload.varIndex || 0,
         {dstId} = payload;
@@ -64,13 +70,13 @@ function setLocalVarLink(payload) {
 
     // TODO duplicate local vars >:(
     const name = currentFrame.methodDefinition.localVars.find(l => l.index === varIndex).name;
-    const id = "stack_" + currentFrame.uuid + "_" + varIndex;
     const stackData = {
         frameUuid: currentFrame.uuid,
         index: varIndex
     };
     console.log("setting stack link from var %d to %d (%s)", varIndex, dstId, name);
 
+    const id = getStackNodeId(currentFrame, varIndex);
 
     // add stack node if not already there
     if (!rm) {
@@ -109,14 +115,48 @@ function showLocalVarAccess(payload) {
     let varIndex = payload.varIndex || 0;
     console.log("show stack access %d", varIndex);
 
-    return 10;
+    const currentFrame = callstack[callstack.length - 1];
+    const id = "stack_" + currentFrame.uuid + "_" + varIndex;
+
+    // TODO highlight local var rect in stack too
+
+    // highlight stack node and link, if possible
+    const stackNode = node.filter(d => d.id === id).select("circle");
+    if (stackNode) {
+        const links = link.filter(d => d.source.id === id);
+
+        // stackNode.attr("class", "flash");
+        links.classed("linkFlash", true);
+        stackNode.classed("nodeFlash", true);
+        setTimeout(() => {
+            links.classed("linkFlash", false);
+            stackNode.classed("nodeFlash", false);
+        }, FLASH_DURATION);
+    }
+
+    return FLASH_DURATION;
 }
 
 function showHeapObjectAccess(payload) {
     let {objId, fieldName} = payload;
-    console.log("showing heap access from id %d field %s", objId, fieldName);
+    console.log("showing heap access from id %d field %s", objId, fieldName || "none");
 
-    return 10;
+    const heapNode = node.filter(d => d.id === objId).select("circle");
+    heapNode.classed("nodeFlash", true);
+
+    let links;
+    if (fieldName) {
+        links = link.filter(d => d.source.id === objId && (!fieldName || d.name === fieldName));
+        links.classed("linkFlash", true);
+    }
+    setTimeout(() => {
+        heapNode.classed("nodeFlash", false);
+        if (links)
+            links.classed("linkFlash", false);
+    }, FLASH_DURATION);
+
+
+    return FLASH_DURATION;
 }
 
 function pushMethodFrame({owningClass, name, signature}) {
