@@ -11,7 +11,7 @@ const WINDOW_HEIGHT = window.innerHeight;
 const STACK_FRACTION = 0.38;
 const HEAP_FRACTION = 1.0 - STACK_FRACTION;
 const CENTRE_PULL = 0.010;
-const LINK_LENGTH = 100;
+const LINK_LENGTH = 70;
 const LINK_STRENGTH = 0.54;
 const TICK_SPEED = 500;
 
@@ -134,7 +134,7 @@ function restart(changedGraph) {
     link = link.data(heapLinks, d => d.name);
     link.exit().remove();
     let linkEnter = link.enter().append("line")
-        .attr("class", "link")
+        .attr("class", d => d.stack ? "stackLink" : "link")
         .attr("marker-end", "url(#arrowhead)");
     link = link.merge(linkEnter);
 
@@ -220,10 +220,10 @@ function buildSvgs() {
         .attr("id", "arrowhead")
         .attr("class", "linkArrow")
         .attr("viewBox", "-0 -5 10 10")
-        .attr("refX", 14)
+        .attr("refX", 17)
         .attr("orient", "auto")
-        .attr("markerWidth", 5)
-        .attr("markerHeight", 5)
+        .attr("markerWidth", 7)
+        .attr("markerHeight", 7)
         .attr("xoverflow", "visible")
         .append("svg:path")
         .attr("d", "M 0,-5 L 10 ,0 L 0,5")
