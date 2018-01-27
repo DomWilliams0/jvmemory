@@ -15,7 +15,7 @@ const LINK_LENGTH = 100;
 const LINK_STRENGTH = 0.54;
 const TICK_SPEED = 500;
 
-const HEAP_NODE_RADIUS = 10;
+const HEAP_NODE_RADIUS = 6;
 const STACK_NODE_RADIUS = 4;
 const LOCAL_VAR_SLOT_HEIGHT = 18;
 const FRAME_BASE_SIZE = 15;
@@ -29,14 +29,13 @@ const HEAP_CENTRE = [
 
 const [heapSvg, stackSvg] = buildSvgs();
 const sim = d3.forceSimulation(heapObjects)
-    .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(HEAP_CENTRE[0], HEAP_CENTRE[1]))
+    .force("charge", d3.forceManyBody().strength(-100))
     .force("link", d3.forceLink().id(d => d.id)
         .distance(LINK_LENGTH).strength(LINK_STRENGTH))
     .force("x", d3.forceX(HEAP_CENTRE[0]).strength(CENTRE_PULL))
     .force("y", d3.forceY(HEAP_CENTRE[1]).strength(CENTRE_PULL))
     .on("tick", tickSim)
-    .alphaTarget(1);
+    .alphaTarget(0.5);
 
 let node = heapSvg.select("#nodes").selectAll(".node");
 let link = heapSvg.select("#links").selectAll(".link");
@@ -108,12 +107,12 @@ function tickSim() {
 function shortenClassName(className) {
     const index = className.lastIndexOf('.');
     if (index >= 0) {
-        return className.substring(index+1)
+        return className.substring(index + 1)
     }
     return className
 }
 
-function restart() {
+function restart(changedGraph) {
     // sim.stop(); // necessary?
     sim.nodes(heapObjects);
     sim.force("link").links(heapLinks);
@@ -163,11 +162,6 @@ function restart() {
         .text(d => d.name);
     linkLabel = linkLabel.merge(labelText);
 
-    sim.nodes(heapObjects);
-    // sim.restart()
-    // link_force.links(heap_links);
-    // sim.alpha(1).restart();
-
     // stack
     stackFrame = stackFrame.data(callstack);
     stackFrame.exit().remove();
@@ -203,7 +197,13 @@ function restart() {
                 .append("title")
                 .text(() => (`${local.type} ${local.name}`));
         })
-    })
+    });
+
+    sim.nodes(heapObjects);
+    sim.force("link").links(heapLinks);
+
+    if (changedGraph)
+        sim.alpha(0.5).restart();
 }
 
 function buildSvgs() {
@@ -220,7 +220,7 @@ function buildSvgs() {
         .attr("id", "arrowhead")
         .attr("class", "linkArrow")
         .attr("viewBox", "-0 -5 10 10")
-        .attr("refX", 19)
+        .attr("refX", 14)
         .attr("orient", "auto")
         .attr("markerWidth", 5)
         .attr("markerHeight", 5)

@@ -4,6 +4,7 @@ function generateRandomPersistentColour(className) {
 }
 
 const FLASH_DURATION = 200;
+const SPAWN_OFFSET = 20;
 
 function addHeapObject(payload) {
     let {id} = payload,
@@ -21,10 +22,10 @@ function addHeapObject(payload) {
         id,
         clazz,
         fill: colour,
-        x: WINDOW_WIDTH / 2,
-        y: WINDOW_HEIGHT / 2,
+        x: HEAP_CENTRE[0] + (Math.random() - 0.5) * SPAWN_OFFSET,
+        y: HEAP_CENTRE[1] + (Math.random() - 0.5) * SPAWN_OFFSET,
     });
-    restart();
+    restart(true);
 }
 
 function delHeapObject({id}) {
@@ -36,7 +37,7 @@ function delHeapObject({id}) {
     heapObjects.splice(index, 1);
     heapLinks = heapLinks.filter((x) => x.source.id !== id && x.target.id !== id);
 
-    restart()
+    restart(true)
 }
 
 function setInterHeapLink(payload) {
@@ -55,7 +56,7 @@ function setInterHeapLink(payload) {
     } else if (!rm)
         heapLinks.push({source: srcId, target: dstId, name: fieldName});
 
-    restart();
+    restart(true);
 }
 
 function getStackNodeId(frame, index) {
@@ -108,7 +109,7 @@ function setLocalVarLink(payload) {
             stack: stackData,
         });
     }
-    restart()
+    restart(true)
 }
 
 function showLocalVarAccess(payload) {
@@ -183,7 +184,7 @@ function pushMethodFrame({owningClass, name, signature}) {
     };
     stackFrames[frame.uuid] = frame;
     callstack.push(frame);
-    restart(); // TODO only stack
+    restart();
 }
 
 function popMethodFrame() {
