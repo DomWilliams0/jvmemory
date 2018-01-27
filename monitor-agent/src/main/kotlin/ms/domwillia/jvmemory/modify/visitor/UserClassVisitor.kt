@@ -7,7 +7,6 @@ import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.*
-import org.objectweb.asm.commons.LocalVariablesSorter
 
 class UserClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
 
@@ -42,12 +41,7 @@ class UserClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer)
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
         // instruction patching
-        mv = run {
-            val instr = MethodPatcher(mv, currentClass.registerMethod(access, name, desc))
-            val localVarSorter = LocalVariablesSorter(access, desc, instr)
-            instr.localVarSorter = localVarSorter
-            instr
-        }
+        mv = MethodPatcher(mv, currentClass.registerMethod(access, name, desc))
 
         // call tracing
         // TODO check this at the method level instead of class level

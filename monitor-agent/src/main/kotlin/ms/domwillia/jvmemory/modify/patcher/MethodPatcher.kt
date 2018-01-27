@@ -7,14 +7,11 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.InstructionAdapter
-import org.objectweb.asm.commons.LocalVariablesSorter
 
 class MethodPatcher(
         delegate: MethodVisitor?,
         private val definition: MethodDefinition
 ) : InstructionAdapter(Opcodes.ASM6, delegate) {
-
-    lateinit var localVarSorter: LocalVariablesSorter
 
     override fun store(index: Int, type: Type) {
 
