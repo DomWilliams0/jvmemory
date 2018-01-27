@@ -6,8 +6,8 @@ const definitions = {};
 
 // constants
 const SERVER = "http://localhost:52933";
-const WINDOW_WIDTH = window.innerWidth;
-const WINDOW_HEIGHT = window.innerHeight;
+let WINDOW_WIDTH = window.innerWidth;
+let WINDOW_HEIGHT = window.innerHeight;
 const STACK_FRACTION = 0.38;
 const HEAP_FRACTION = 1.0 - STACK_FRACTION;
 const CENTRE_PULL = 0.010;
@@ -22,7 +22,7 @@ const FRAME_BASE_SIZE = 15;
 const LOCAL_VAR_SLOT_PRE_PAD = 10;
 const FRAME_PADDING = 15;
 const LOCAL_VAR_LINK_X = 0;
-const HEAP_CENTRE = [
+let HEAP_CENTRE = [
     (WINDOW_WIDTH * HEAP_FRACTION) / 2,
     WINDOW_HEIGHT / 2,
 ];
@@ -46,6 +46,9 @@ let stackFrame = stackSvg.selectAll(".stackFrame");
 // frame uuid -> frame
 const stackFrames = {};
 let nextUniqueFrameId = 1000;
+
+resize();
+d3.select(window).on("resize", resize);
 
 restart();
 startTicking(SERVER, TICK_SPEED);
@@ -102,6 +105,26 @@ function tickSim() {
             }
         });
 
+}
+
+function resize() {
+    WINDOW_WIDTH = window.innerWidth;
+    WINDOW_HEIGHT = window.innerHeight;
+    HEAP_CENTRE = [
+        (WINDOW_WIDTH * HEAP_FRACTION) / 2,
+        WINDOW_HEIGHT / 2,
+    ];
+
+    stackSvg
+        .attr("width", WINDOW_WIDTH * STACK_FRACTION)
+        .attr("height", WINDOW_HEIGHT);
+
+    heapSvg
+        .attr("width", WINDOW_WIDTH * HEAP_FRACTION)
+        .attr("height", WINDOW_HEIGHT);
+
+    sim.force("x", d3.forceX(HEAP_CENTRE[0]).strength(CENTRE_PULL))
+        .force("y", d3.forceY(HEAP_CENTRE[1]).strength(CENTRE_PULL))
 }
 
 function shortenClassName(className) {
