@@ -107,9 +107,9 @@ function tickSim() {
 function shortenClassName(className) {
     const index = className.lastIndexOf('.');
     if (index >= 0) {
-        return className.substring(index + 1)
+        return className.substring(index + 1);
     }
-    return className
+    return className;
 }
 
 function restart(changedGraph) {

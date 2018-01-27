@@ -37,7 +37,7 @@ function delHeapObject({id}) {
     heapObjects.splice(index, 1);
     heapLinks = heapLinks.filter((x) => x.source.id !== id && x.target.id !== id);
 
-    restart(true)
+    restart(true);
 }
 
 function setInterHeapLink(payload) {
@@ -49,7 +49,7 @@ function setInterHeapLink(payload) {
     let existingIndex = heapLinks.find((x) => x.source === srcId && x.name === fieldName);
     if (existingIndex >= 0) {
         if (rm) {
-            heapLinks.splice(existingIndex, 1)
+            heapLinks.splice(existingIndex, 1);
         } else {
             heapLinks[existingIndex].target = dstId;
         }
@@ -73,7 +73,7 @@ function setLocalVarLink(payload) {
     const name = currentFrame.methodDefinition.localVars.find(l => l.index === varIndex).name;
     const stackData = {
         frameUuid: currentFrame.uuid,
-        index: varIndex
+        index: varIndex,
     };
     console.log("setting stack link from var %d to %d (%s)", varIndex, dstId, name);
 
@@ -97,9 +97,9 @@ function setLocalVarLink(payload) {
     // existing link
     if (existingLinkIndex >= 0) {
         if (rm) {
-            heapLinks.splice(existingLinkIndex, 1)
+            heapLinks.splice(existingLinkIndex, 1);
         } else {
-            heapLinks[existingLinkIndex].target = dstId
+            heapLinks[existingLinkIndex].target = dstId;
         }
     } else if (!rm) {
         heapLinks.push({
@@ -109,7 +109,7 @@ function setLocalVarLink(payload) {
             stack: stackData,
         });
     }
-    restart(true)
+    restart(true);
 }
 
 function showLocalVarAccess(payload) {
@@ -180,7 +180,7 @@ function pushMethodFrame({owningClass, name, signature}) {
         localsHeight: LOCAL_VAR_SLOT_HEIGHT * methodDef.localVars.length,
         spankingNew: true,
         uuid: nextUniqueFrameId++,
-        y: 0
+        y: 0,
     };
     stackFrames[frame.uuid] = frame;
     callstack.push(frame);
@@ -291,7 +291,7 @@ function startTicking(server, tickSpeed) {
         fetch(server + "/thread").then(resp => resp.json()).then(threads => {
             console.log("%d thread(s) available: %s", threads.length, threads);
             if (threads.length === 0) throw "no events";
-            return threads[0]
+            return threads[0];
         }).then(thread_id => {
             fetch(server + "/thread/" + thread_id).then(resp => resp.json())
                 .then(evts => {
@@ -302,13 +302,13 @@ function startTicking(server, tickSpeed) {
                         .on("keydown", () => {
                             // space
                             if (d3.event.keyCode === 32) {
-                                ticker.toggle()
+                                ticker.toggle();
                             }
                         });
 
 
                     ticker.resume();
-                })
+                });
         });
     });
 }
