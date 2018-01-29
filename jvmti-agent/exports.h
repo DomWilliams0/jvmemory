@@ -33,6 +33,14 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    allocateTagForArray
+ * Signature: (ILjava/lang/Object;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForArray
+  (JNIEnv *, jclass, jint, jobject);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    getTag
  * Signature: (Ljava/lang/Object;)J
  */
