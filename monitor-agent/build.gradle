@@ -14,10 +14,6 @@ buildscript {
     }
 }
 
-plugins {
-    id 'com.github.psxpaul.execfork' version '0.1.7'
-}
-
 group 'ms.domwillia.jvmemory'
 version '0.1'
 
@@ -75,16 +71,14 @@ clean {
     dependsOn("cleanNative")
 }
 
-task buildNative(type: com.github.psxpaul.task.ExecFork) {
-    workingDir = "../jvmti-agent"
-    commandLine = "make"
-    args = ["libagent.so"]
+task buildNative(type: Exec) {
+    workingDir "../jvmti-agent"
+    commandLine "make", "libagent.so"
 }
 
-task cleanNative(type: com.github.psxpaul.task.ExecFork) {
-    workingDir = "../jvmti-agent"
-    commandLine = "make"
-    args = ["clean"]
+task cleanNative(type: Exec) {
+    workingDir "../jvmti-agent"
+    commandLine "make", "clean"
 }
 
 task buildJar(type: Jar) {
