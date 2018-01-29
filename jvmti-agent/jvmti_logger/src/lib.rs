@@ -119,15 +119,15 @@ pub extern fn on_load(logger: *mut Logger, thread_id: Long, index: Int) {
 }
 
 #[no_mangle]
-pub extern fn on_alloc(logger: *mut Logger, thread_id: Long, obj_id: Long, class: String) {
-    let mut payload = allocations::Allocation::new();
+pub extern fn on_alloc_object(logger: *mut Logger, thread_id: Long, obj_id: Long, class: String) {
+    let mut payload = allocations::AllocationObject::new();
     payload.id = obj_id;
     payload.field_type = get_string!(class);
 
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);
-    msg.set_alloc(payload);
-    msg.set_field_type(MessageType::ALLOC);
+    msg.set_alloc_object(payload);
+    msg.set_field_type(MessageType::ALLOC_OBJECT);
     io::log_message(logger, msg);
 }
 
