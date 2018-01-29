@@ -189,6 +189,45 @@ class MethodPatcher(
         super.putfield(owner, name, desc)
     }
 
+    override fun newarray(type: Type) {
+        // stack: size
+        super.dup()
+
+        // stack: size size
+        super.newarray(type)
+
+        // stack: size array
+        super.dupX1()
+
+        // stack: array size array
+        super.invokestatic(
+                Monitor.internalName,
+                "allocateTagForArray",
+                "(ILjava/lang/Object;)V",
+                false
+        )
+
+        // stack: array
+    }
+
+    // TODO deal with sizes
+    override fun multianewarray(desc: String, dims: Int) {
+        super.multianewarray(desc, dims)
+
+        // stack: array
+        super.dup()
+
+        // stack: array array
+        super.invokestatic(
+                Monitor.internalName,
+                "allocateTag",
+                "(Ljava/lang/Object;)V",
+                false
+        )
+
+        // stack: array
+    }
+
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
         definition.registerLocalVariable(name, desc, index)

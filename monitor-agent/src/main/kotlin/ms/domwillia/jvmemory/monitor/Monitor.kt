@@ -15,6 +15,8 @@ object Monitor {
      */
     @JvmStatic external fun allocateTag(o: Any)
 
+    @JvmStatic external fun allocateTagForArray(size: Int, a: Any)
+
     @JvmStatic external fun getTag(o: Any): Long
 
     @JvmStatic external fun enterMethod(clazz: String, method: String)
