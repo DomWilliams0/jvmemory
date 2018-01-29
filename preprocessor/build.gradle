@@ -41,8 +41,8 @@ protobuf.protoc {
 
 sourceSets.main {
     proto {
-        srcDir "$projectDir/../monitor-agent/src/main/proto"
-        srcDir "src/main/proto"
+        srcDir "../protobufs/vis"
+        srcDir "../protobufs/monitor"
     }
 
     java {

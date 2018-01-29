@@ -6,7 +6,7 @@ use std::path::Path;
 
 fn main() {
 
-    let dir = "../../monitor-agent/src/main/proto";
+    let dir = "../../protobufs/monitor";
     let inputs: Vec<String> = {
         let paths = fs::read_dir(dir).expect("read_dir");
         paths.map(|p| p.unwrap().path().into_os_string().into_string().unwrap()).collect() // oh dear
