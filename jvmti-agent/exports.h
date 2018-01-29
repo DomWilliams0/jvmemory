@@ -65,22 +65,6 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onAlloc
- * Signature: (JLjava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onAlloc
-  (JNIEnv *, jclass, jlong, jstring);
-
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onDealloc
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onDealloc
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onGetField
  * Signature: (JLjava/lang/String;)V
  */
