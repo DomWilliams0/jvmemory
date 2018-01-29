@@ -35,16 +35,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad(
     classes_loading += starting == JNI_TRUE ? 1 : -1;
 }
 
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    allocateTag
- * Signature: (Ljava/lang/Object;)V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject obj) {
-    GET_THREAD_ID;
+static void allocate_tag(JNIEnv *jnienv, jobject obj, jint array_size) {
+	GET_THREAD_ID;
 
     jlong new_tag = next_id++;
 
@@ -55,7 +47,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
             jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
             if ((err = (*env)->GetClassSignature(env, cls, &name, NULL)) == JVMTI_ERROR_NONE)
             {
-                on_alloc(logger, thread_id, new_tag, name);
+                if (array_size == 0)
+                    on_alloc_object(logger, thread_id, new_tag, name);
+                else
+                    on_alloc_array(logger, thread_id, new_tag, name, array_size);
+
                 (*env)->Deallocate(env, (unsigned char *) name);
                 name = NULL;
             } else
@@ -66,6 +62,19 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
     } else {
         fprintf(stderr, "could not allocate tag: %d\n", err);
     }
+
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    allocateTag
+ * Signature: (Ljava/lang/Object;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
+        JNIEnv *jnienv,
+        jclass klass,
+        jobject obj) {
+    allocate_tag(jnienv, obj, 0);
 }
 
 /*
@@ -74,12 +83,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
  * Signature: (ILjava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForArray(
-		JNIEnv *jnienv,
-		jclass klass,
-		jint size,
-		jobject array) {
-	// TODO log
-	printf("allocating array of size %d", size);
+        JNIEnv *jnienv,
+        jclass klass,
+        jint size,
+        jobject array) {
+    allocate_tag(jnienv, array, size);
 }
 
 

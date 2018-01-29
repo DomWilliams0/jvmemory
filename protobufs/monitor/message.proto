@@ -12,18 +12,19 @@ enum MessageType {
     CLASS_DEF = 0;
 
     ALLOC_OBJECT = 1;
-    DEALLOC = 2;
+    ALLOC_ARRAY = 2;
+    DEALLOC = 3;
 
-    METHOD_ENTER = 3;
-    METHOD_EXIT = 4;
+    METHOD_ENTER = 4;
+    METHOD_EXIT = 5;
 
-    GETFIELD = 5;
-    PUTFIELD_OBJECT = 6;
-    PUTFIELD_PRIMITIVE = 7;
+    GETFIELD = 6;
+    PUTFIELD_OBJECT = 7;
+    PUTFIELD_PRIMITIVE = 8;
 
-    STORE_OBJECT = 8;
-    STORE_PRIMITIVE = 9;
-    LOAD = 10;
+    STORE_OBJECT = 9;
+    STORE_PRIMITIVE = 10;
+    LOAD = 11;
 }
 
 message Variant {
@@ -33,18 +34,18 @@ message Variant {
         ClassDefinition class_def = 3;
 
         AllocationObject alloc_object = 4;
-        Deallocation dealloc = 5;
+		AllocationArray alloc_array = 5;
+        Deallocation dealloc = 6;
 
-        MethodEnter method_enter = 6;
-//        MethodExit method_exit = 7;
+        MethodEnter method_enter = 7;
 
-        GetField get_field = 9;
-        PutFieldObject put_field_object = 10;
-        PutFieldPrimitive put_field_primitive = 11;
+        GetField get_field = 8;
+        PutFieldObject put_field_object = 9;
+        PutFieldPrimitive put_field_primitive = 10;
 
-        StoreObject store_object = 12;
-        StorePrimitive store_primitive = 13;
-        Load load = 14;
+        StoreObject store_object = 11;
+        StorePrimitive store_primitive = 12;
+        Load load = 13;
     }
 
 }
