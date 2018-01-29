@@ -11,7 +11,7 @@ import "access.proto";
 enum MessageType {
     CLASS_DEF = 0;
 
-    ALLOC = 1;
+    ALLOC_OBJECT = 1;
     DEALLOC = 2;
 
     METHOD_ENTER = 3;
@@ -32,7 +32,7 @@ message Variant {
     oneof payload {
         ClassDefinition class_def = 3;
 
-        Allocation alloc = 4;
+        AllocationObject alloc_object = 4;
         Deallocation dealloc = 5;
 
         MethodEnter method_enter = 6;

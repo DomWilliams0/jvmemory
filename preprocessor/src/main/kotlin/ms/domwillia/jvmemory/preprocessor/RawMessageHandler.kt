@@ -10,7 +10,7 @@ class RawMessageHandler {
     private var callstacks = mutableMapOf<ThreadID, Stack<PushMethodFrame>>()
 
     fun handle(msg: Message.Variant): Pair<ThreadID, EventVariant>? = when (msg.type) {
-        Message.MessageType.ALLOC -> allocate(msg.alloc, msg.threadId)
+        Message.MessageType.ALLOC_OBJECT -> allocateObject(msg.allocObject, msg.threadId)
         Message.MessageType.DEALLOC -> deallocate(msg.dealloc)
 
         Message.MessageType.GETFIELD -> getField(msg.getField, msg.threadId)
@@ -78,7 +78,7 @@ class RawMessageHandler {
         return createEvent(threadId, EventType.POP_METHOD_FRAME, {})
     }
 
-    private fun allocate(alloc: Allocations.Allocation, threadId: ThreadID): Pair<ThreadID, EventVariant> {
+    private fun allocateObject(alloc: Allocations.AllocationObject, threadId: ThreadID): Pair<ThreadID, EventVariant> {
         allocationThread[alloc.id] = threadId
 
         return createEvent(threadId, EventType.ADD_HEAP_OBJECT, {

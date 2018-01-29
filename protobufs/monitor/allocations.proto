@@ -3,7 +3,7 @@ syntax = "proto3";
 option java_package = "ms.domwillia.jvmemory.protobuf";
 option java_outer_classname = "Allocations";
 
-message Allocation {
+message AllocationObject {
     string type = 1;
     int64 id = 2;
 }
