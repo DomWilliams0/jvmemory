@@ -17,7 +17,8 @@ extern void on_store_object(logger_p logger, long thread_id, long value_id, int 
 extern void on_store_primitive(logger_p logger, long thread_id, int index);
 extern void on_load(logger_p logger, long thread_id, int index);
 
-extern void on_alloc(logger_p logger, long thread_id, long obj_id, const char *class);
+extern void on_alloc_object(logger_p logger, long thread_id, long obj_id, const char *class);
+extern void on_alloc_array(logger_p logger, long thread_id, long obj_id, const char *class, int size);
 extern void on_dealloc(logger_p logger, long obj_id);
 
 extern void on_define_class(logger_p logger, long thread_id, const char *buffer, int len);
