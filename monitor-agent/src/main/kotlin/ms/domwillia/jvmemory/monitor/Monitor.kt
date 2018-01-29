@@ -23,10 +23,6 @@ object Monitor {
 
     @JvmStatic external fun exitMethod()
 
-    @JvmStatic external fun onAlloc(id: Long, type: String)
-
-    @JvmStatic external fun onDealloc(id: Long)
-
     /**
      * @param objId The tag of the object whose field is being accessed
      * @param field The name of the field being accessed
