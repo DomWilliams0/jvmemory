@@ -42,7 +42,7 @@ dependencies {
 
 sourceSets.main {
     proto {
-        srcDir "src/main/proto"
+        srcDir "../protobufs/monitor"
     }
 
     java {
