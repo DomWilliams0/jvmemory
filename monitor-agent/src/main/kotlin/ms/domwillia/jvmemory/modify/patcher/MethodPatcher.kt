@@ -212,16 +212,21 @@ class MethodPatcher(
 
     // TODO deal with sizes
     override fun multianewarray(desc: String, dims: Int) {
+        val arrayType = Type.getType(desc.substring(dims - 1)) // 1D array of element type
+
         super.multianewarray(desc, dims)
 
         // stack: array
         super.dup()
 
         // stack: array array
+        super.iconst(dims)
+
+        // stack: array array dims
         super.invokestatic(
                 Monitor.internalName,
-                "allocateTag",
-                "(Ljava/lang/Object;)V",
+                "allocateTagForMultiDimArray",
+                "(Ljava/lang/Object;I)V",
                 false
         )
 

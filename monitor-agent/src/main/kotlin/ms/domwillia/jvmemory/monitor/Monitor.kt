@@ -17,6 +17,8 @@ object Monitor {
 
     @JvmStatic external fun allocateTagForArray(size: Int, a: Any)
 
+    @JvmStatic external fun allocateTagForMultiDimArray(a: Any, dims: Int)
+
     @JvmStatic external fun getTag(o: Any): Long
 
     @JvmStatic external fun enterMethod(clazz: String, method: String)
