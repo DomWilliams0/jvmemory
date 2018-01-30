@@ -9,7 +9,9 @@ fn main() {
     let dir = "../../protobufs/monitor";
     let inputs: Vec<String> = {
         let paths = fs::read_dir(dir).expect("read_dir");
-        paths.map(|p| p.unwrap().path().into_os_string().into_string().unwrap()).collect() // oh dear
+        paths.map(|p| p.unwrap().path().into_os_string().into_string().unwrap())
+            .filter(|p| p.ends_with(".proto"))
+            .collect() // oh dear
     };
 
     println!("inputs: {:?}", inputs);

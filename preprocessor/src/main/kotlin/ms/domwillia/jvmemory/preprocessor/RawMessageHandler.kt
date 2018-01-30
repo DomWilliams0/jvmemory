@@ -11,14 +11,22 @@ class RawMessageHandler {
 
     fun handle(msg: Message.Variant): Pair<ThreadID, EventVariant>? = when (msg.type) {
         Message.MessageType.ALLOC_OBJECT -> allocateObject(msg.allocObject, msg.threadId)
+        Message.MessageType.ALLOC_ARRAY -> allocateArray(msg.allocArray, msg.threadId)
         Message.MessageType.DEALLOC -> deallocate(msg.dealloc)
 
         Message.MessageType.GETFIELD -> getField(msg.getField, msg.threadId)
         Message.MessageType.PUTFIELD_OBJECT -> putFieldObject(msg.putFieldObject, msg.threadId)
         Message.MessageType.PUTFIELD_PRIMITIVE -> putFieldPrimitive(msg.putFieldPrimitive, msg.threadId)
+
+        Message.MessageType.LOAD -> load(msg.load, msg.threadId)
+        Message.MessageType.LOAD_ARRAY -> loadFromArray(msg.loadFromArray, msg.threadId)
+
         Message.MessageType.STORE_OBJECT -> storeObject(msg.storeObject, msg.threadId)
         Message.MessageType.STORE_PRIMITIVE -> storePrimitive(msg.storePrimitive, msg.threadId)
-        Message.MessageType.LOAD -> load(msg.load, msg.threadId)
+
+        Message.MessageType.STORE_OBJECT_IN_ARRAY -> storeObjectInArray(msg.storeObjectInArray, msg.threadId)
+        Message.MessageType.STORE_PRIMITIVE_IN_ARRAY -> storePrimitiveInArray(msg.storePrimitiveInArray, msg.threadId)
+
         Message.MessageType.CLASS_DEF -> {
             defineClass(msg.classDef)
             null
@@ -89,6 +97,18 @@ class RawMessageHandler {
         })
     }
 
+    private fun allocateArray(alloc: Allocations.AllocationArray, threadId: ThreadID): Pair<ThreadID, EventVariant> {
+        allocationThread[alloc.id] = threadId
+
+        // TODO new event for arrays
+        return createEvent(threadId, EventType.ADD_HEAP_OBJECT, {
+            it.addHeapObject = AddHeapObject.newBuilder().apply {
+                id = alloc.id
+                class_ = alloc.type.tidyClassName()
+            }.build()
+        })
+    }
+
     private fun deallocate(dealloc: Allocations.Deallocation): Pair<ThreadID, EventVariant> {
         val threadId = allocationThread[dealloc.id] ?:
                 throw IllegalArgumentException("found deallocation of unknown object ${dealloc.id}")
@@ -144,10 +164,39 @@ class RawMessageHandler {
         })
     }
 
+    private fun storeObjectInArray(store: Access.StoreObjectInArray, threadId: ThreadID): Pair<ThreadID, EventVariant> {
+        // TODO new array access event?
+        return createEvent(threadId, EventType.SET_INTER_HEAP_LINK, {
+            it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
+                srcId = store.id
+                dstId = store.valueId
+                fieldName = store.index.toString()
+            }.build()
+        })
+    }
+
+    private fun storePrimitiveInArray(store: Access.StorePrimitiveInArray, threadId: ThreadID): Pair<ThreadID, EventVariant> {
+        return createEvent(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
+            it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
+                objId = store.id
+            }.build()
+        })
+    }
+
     private fun load(load: Access.Load, threadId: ThreadID): Pair<ThreadID, EventVariant> {
         return createEvent(threadId, EventType.SHOW_LOCAL_VAR_ACCESS, {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = load.index
+            }.build()
+        })
+    }
+
+    private fun loadFromArray(load: Access.LoadFromArray, threadId: ThreadID): Pair<ThreadID, EventVariant> {
+        // TODO new array access event?
+        return createEvent(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
+            it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
+                objId = load.id
+                fieldName = load.index.toString()
             }.build()
         })
     }

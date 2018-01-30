@@ -228,10 +228,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreObjectI
         jobject value,
         jobject array,
         jint index) {
+    GET_THREAD_ID;
 
     jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
     jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
-	printf("store obj %ld in %ld[%d]\n", value_id, array_id, index);
+    on_store_object_in_array(logger, thread_id, value_id, array_id, index);
 }
 
 /*
@@ -244,9 +245,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStorePrimiti
         jclass klass,
         jobject array,
         jint index) {
+    GET_THREAD_ID;
 
     jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
-    printf("store primitive in %ld[%d]\n", array_id, index);
+	on_store_primitive_in_array(logger, thread_id, array_id, index);
 }
 
 /*
@@ -260,8 +262,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadFromArra
         jobject array,
         jint index)
 {
+    GET_THREAD_ID;
+
     jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
-    printf("load %ld[%d]\n", array_id, index);
+	on_load_from_array(logger, thread_id, array_id, index);
 }
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor

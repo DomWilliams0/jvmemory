@@ -107,6 +107,33 @@ pub extern fn on_store_primitive(logger: *mut Logger, thread_id: Long, index: In
 }
 
 #[no_mangle]
+pub extern fn on_store_object_in_array(logger: *mut Logger, thread_id: Long, value_id: Long, array_id: Long, index: Int) {
+    let mut payload = access::StoreObjectInArray::new();
+    payload.id = array_id;
+    payload.index = index;
+    payload.value_id = value_id;
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_store_object_in_array(payload);
+    msg.set_field_type(MessageType::STORE_OBJECT_IN_ARRAY);
+    io::log_message(logger, msg);
+}
+
+#[no_mangle]
+pub extern fn on_store_primitive_in_array(logger: *mut Logger, thread_id: Long, array_id: Long, index: Int) {
+    let mut payload = access::StorePrimitiveInArray::new();
+    payload.id = array_id;
+    payload.index = index;
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_store_primitive_in_array(payload);
+    msg.set_field_type(MessageType::STORE_PRIMITIVE_IN_ARRAY);
+    io::log_message(logger, msg);
+}
+
+#[no_mangle]
 pub extern fn on_load(logger: *mut Logger, thread_id: Long, index: Int) {
     let mut payload = access::Load::new();
     payload.index = index;
@@ -115,6 +142,19 @@ pub extern fn on_load(logger: *mut Logger, thread_id: Long, index: Int) {
     msg.set_thread_id(thread_id);
     msg.set_load(payload);
     msg.set_field_type(MessageType::LOAD);
+    io::log_message(logger, msg);
+}
+
+#[no_mangle]
+pub extern fn on_load_from_array(logger: *mut Logger, thread_id: Long, array_id: Long, index: Int) {
+    let mut payload = access::LoadFromArray::new();
+    payload.id = array_id;
+    payload.index = index;
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_load_from_array(payload);
+    msg.set_field_type(MessageType::LOAD_ARRAY);
     io::log_message(logger, msg);
 }
 
@@ -132,9 +172,9 @@ pub extern fn on_alloc_object(logger: *mut Logger, thread_id: Long, obj_id: Long
 }
 
 #[no_mangle]
-pub extern fn on_alloc_array(logger: *mut Logger, thread_id: Long, obj_id: Long, class: String, size: i32) {
+pub extern fn on_alloc_array(logger: *mut Logger, thread_id: Long, array_id: Long, class: String, size: i32) {
     let mut payload = allocations::AllocationArray::new();
-    payload.id = obj_id;
+    payload.id = array_id;
     payload.size = size;
     payload.field_type = get_string!(class);
 
