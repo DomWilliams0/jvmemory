@@ -196,7 +196,8 @@ class RawMessageHandler {
         return createEvent(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = load.id
-                fieldName = load.index.toString()
+                if (load.hasField(Access.LoadFromArray.getDescriptor().findFieldByNumber(Access.LoadFromArray.INDEX_FIELD_NUMBER)))
+                    fieldName = load.index.toString()
             }.build()
         })
     }

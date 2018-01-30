@@ -149,7 +149,9 @@ pub extern fn on_load(logger: *mut Logger, thread_id: Long, index: Int) {
 pub extern fn on_load_from_array(logger: *mut Logger, thread_id: Long, array_id: Long, index: Int) {
     let mut payload = access::LoadFromArray::new();
     payload.id = array_id;
-    payload.index = index;
+    if index >= 0 {
+        payload.index = index;
+    }
 
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);
