@@ -315,6 +315,26 @@ class MethodPatcher(
         super.aload(type)
     }
 
+    override fun arraylength() {
+        // stack: array
+        super.dup()
+
+        // stack: array array
+        super.iconst(-1)
+
+        // stack: array array dummy_index
+        super.invokestatic(
+                Monitor.internalName,
+                "onLoadFromArray",
+                "(Ljava/lang/Object;I)V",
+                false
+        )
+
+        // stack: array
+
+        super.arraylength()
+    }
+
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
         definition.registerLocalVariable(name, desc, index)
