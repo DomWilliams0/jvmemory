@@ -63,6 +63,21 @@ static void allocate_tag(JNIEnv *jnienv, jobject obj, jint array_size) {
 
 }
 
+static void allocate_tags_for_multidim_array(JNIEnv *jnienv, jobject arr, jint dims)
+{
+	jsize len = (*jnienv)->GetArrayLength(jnienv, arr);
+	allocate_tag(jnienv, arr, len);
+
+	if (dims <= 1)
+		return;
+
+	for (int i = 0; i < len; i++) {
+		jobject child = (*jnienv)->GetObjectArrayElement(jnienv, arr, i);
+		allocate_tags_for_multidim_array(jnienv, child, dims - 1);
+	}
+}
+
+
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    allocateTag
@@ -88,9 +103,21 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
     allocate_tag(jnienv, array, size);
 }
 
-
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    allocateTagForMultiDimArray
+ * Signature: (Ljava/lang/Object;I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForMultiDimArray(
+        JNIEnv *jnienv,
+        jclass klass,
+        jobject array,
+        jint dims) {
+	allocate_tags_for_multidim_array(jnienv, array, dims);
+}
+
+/*
+ * class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    getTag
  * Signature: (Ljava/lang/Object;)J
  */
