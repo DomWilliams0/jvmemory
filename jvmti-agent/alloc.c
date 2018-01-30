@@ -68,4 +68,9 @@ void allocate_tags_for_multidim_array(JNIEnv *jnienv,
 	}
 }
 
-
+jlong get_tag(jobject obj)
+{
+	jlong tag = 0L;
+	(*env)->GetTag(env, obj, &tag);
+	return tag;
+}

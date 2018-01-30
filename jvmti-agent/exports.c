@@ -83,10 +83,7 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(
 		jclass klass,
 		jobject obj)
 {
-
-	jlong tag = 0L;
-	(*env)->GetTag(env, obj, &tag);
-	return tag;
+	return get_tag(obj);
 }
 
 /*
@@ -147,8 +144,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObje
 		jobject value,
 		jstring field)
 {
-	jlong obj_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, obj);
-	jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
+	jlong obj_id = get_tag(obj);
+	jlong value_id = get_tag(value);
 
 	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
 	on_put_field_object(logger, get_thread_id(jnienv), obj_id, field_str, value_id);
@@ -166,7 +163,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrim
 		jobject obj,
 		jstring field)
 {
-	jlong obj_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, obj);
+	jlong obj_id = get_tag(obj);
 	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
 	on_put_field_primitive(logger, get_thread_id(jnienv), obj_id, field_str);
 	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
@@ -211,8 +208,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreObjectI
 		jobject array,
 		jint index)
 {
-	jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
-	jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
+	jlong value_id = get_tag(value);
+	jlong array_id = get_tag(array);
 	on_store_object_in_array(logger, get_thread_id(jnienv), value_id, array_id, index);
 }
 
@@ -227,7 +224,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStorePrimiti
 		jobject array,
 		jint index)
 {
-	jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
+	jlong array_id = get_tag(array);
 	on_store_primitive_in_array(logger, get_thread_id(jnienv), array_id, index);
 }
 
@@ -242,7 +239,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadFromArra
 		jobject array,
 		jint index)
 {
-	jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
+	jlong array_id = get_tag(array);
 	on_load_from_array(logger, get_thread_id(jnienv), array_id, index);
 }
 

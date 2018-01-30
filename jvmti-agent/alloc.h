@@ -14,4 +14,6 @@ void allocate_tags_for_multidim_array(JNIEnv *jnienv,
                                       jobject arr,
                                       jint dims);
 
+jlong get_tag(jobject obj);
+
 #endif
