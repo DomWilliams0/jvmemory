@@ -298,6 +298,23 @@ class MethodPatcher(
         super.astore(type)
     }
 
+    override fun aload(type: Type) {
+        // stack: array index
+        super.dup2()
+
+        // stack: array index array index
+        super.invokestatic(
+                Monitor.internalName,
+                "onLoadFromArray",
+                "(Ljava/lang/Object;I)V",
+                false
+        )
+
+        // stack: array index
+
+        super.aload(type)
+    }
+
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
         definition.registerLocalVariable(name, desc, index)
