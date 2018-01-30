@@ -7,5 +7,8 @@
 extern jvmtiEnv *env;
 extern logger_p logger;
 
+extern unsigned int classes_loading;
+extern jboolean program_running;
+
 
 #endif
