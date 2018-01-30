@@ -50,6 +50,10 @@ object Monitor {
      */
     @JvmStatic external fun onStoreLocalVarPrimitive(index: Int)
 
+    @JvmStatic external fun onStoreObjectInArray(value: Any, array: Any, index: Int)
+
+    @JvmStatic external fun onStorePrimitiveInArray(array: Any, index: Int)
+
     /**
      * @param index The local variable index
      */

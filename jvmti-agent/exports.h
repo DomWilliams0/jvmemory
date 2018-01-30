@@ -105,6 +105,22 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStoreObjectInArray
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreObjectInArray
+  (JNIEnv *, jclass, jobject, jobject, jint);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStorePrimitiveInArray
+ * Signature: (Ljava/lang/Object;I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStorePrimitiveInArray
+  (JNIEnv *, jclass, jobject, jint);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onLoadLocalVar
  * Signature: (I)V
  */

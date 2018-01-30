@@ -219,6 +219,38 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStoreObjectInArray
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreObjectInArray(
+        JNIEnv *jnienv,
+        jclass klass,
+        jobject value,
+        jobject array,
+        jint index) {
+
+    jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
+    jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
+	printf("store obj %ld in %ld[%d]\n", value_id, array_id, index);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onStorePrimitiveInArray
+ * Signature: (Ljava/lang/Object;I)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStorePrimitiveInArray(
+        JNIEnv *jnienv,
+        jclass klass,
+        jobject array,
+        jint index) {
+
+    jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
+    printf("store primitive in %ld[%d]\n",array_id, index);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onLoadLocalVar
  * Signature: (I)V
  */
