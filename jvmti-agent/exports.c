@@ -3,13 +3,8 @@
 #include <stdlib.h>
 #include "agent.h"
 #include "exports.h"
+#include "alloc.h"
 #include "util.h"
-
-static jlong next_id = 1;
-static unsigned int classes_loading = 0;
-static jboolean program_running = 0;
-
-#define SHOULD_LOG_ALLOCATION (program_running == 1 && classes_loading == 0)
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -35,49 +30,6 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad(
     classes_loading += starting == JNI_TRUE ? 1 : -1;
 }
 
-static void allocate_tag(JNIEnv *jnienv, jobject obj, jint array_size) {
-    jlong new_tag = next_id++;
-
-    jvmtiError err;
-    if ((err = (*env)->SetTag(env, obj, new_tag)) == JVMTI_ERROR_NONE) {
-        if (SHOULD_LOG_ALLOCATION) {
-            char *name = NULL;
-            jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
-            if ((err = (*env)->GetClassSignature(env, cls, &name, NULL)) == JVMTI_ERROR_NONE)
-            {
-                if (array_size == 0)
-                    on_alloc_object(logger, get_thread_id(jnienv), new_tag, name);
-                else
-                    on_alloc_array(logger, get_thread_id(jnienv), new_tag, name, array_size);
-
-                (*env)->Deallocate(env, (unsigned char *) name);
-                name = NULL;
-            } else
-            {
-                fprintf(stderr, "could not get class name: %d\n", err);
-            }
-        }
-    } else {
-        fprintf(stderr, "could not allocate tag: %d\n", err);
-    }
-
-}
-
-static void allocate_tags_for_multidim_array(JNIEnv *jnienv, jobject arr, jint dims)
-{
-	jsize len = (*jnienv)->GetArrayLength(jnienv, arr);
-	allocate_tag(jnienv, arr, len);
-
-	if (dims <= 1)
-		return;
-
-	for (int i = 0; i < len; i++) {
-		jobject child = (*jnienv)->GetObjectArrayElement(jnienv, arr, i);
-		allocate_tags_for_multidim_array(jnienv, child, dims - 1);
-	}
-}
-
-
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    allocateTag
@@ -87,7 +39,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
         JNIEnv *jnienv,
         jclass klass,
         jobject obj) {
-    allocate_tag(jnienv, obj, 0);
+    allocate_object_tag(jnienv, obj);
 }
 
 /*
@@ -100,7 +52,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
         jclass klass,
         jint size,
         jobject array) {
-    allocate_tag(jnienv, array, size);
+    allocate_array_tag(jnienv, array, size);
 }
 
 /*
