@@ -13,7 +13,9 @@ extern "C" {
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramInProgress
-  (JNIEnv *, jclass, jboolean);
+		(JNIEnv *,
+		 jclass,
+		 jboolean);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -21,7 +23,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramInPr
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad
-  (JNIEnv *, jclass, jboolean);
+		(JNIEnv *,
+		 jclass,
+		 jboolean);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -29,7 +33,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad
  * Signature: (Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag
-  (JNIEnv *, jclass, jobject);
+		(JNIEnv *,
+		 jclass,
+		 jobject);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -37,7 +43,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag
  * Signature: (ILjava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForArray
-  (JNIEnv *, jclass, jint, jobject);
+		(JNIEnv *,
+		 jclass,
+		 jint,
+		 jobject);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -45,7 +54,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
  * Signature: (Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForMultiDimArray
-  (JNIEnv *, jclass, jobject, jint);
+		(JNIEnv *,
+		 jclass,
+		 jobject,
+		 jint);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -53,7 +65,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
  * Signature: (Ljava/lang/Object;)J
  */
 JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag
-  (JNIEnv *, jclass, jobject);
+		(JNIEnv *,
+		 jclass,
+		 jobject);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -61,7 +75,10 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod
-  (JNIEnv *, jclass, jstring, jstring);
+		(JNIEnv *,
+		 jclass,
+		 jstring,
+		 jstring);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -69,7 +86,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod
-  (JNIEnv *, jclass);
+		(JNIEnv *,
+		 jclass);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -77,7 +95,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod
  * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField
-  (JNIEnv *, jclass, jlong, jstring);
+		(JNIEnv *,
+		 jclass,
+		 jlong,
+		 jstring);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -85,7 +106,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField
  * Signature: (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObject
-  (JNIEnv *, jclass, jobject, jobject, jstring);
+		(JNIEnv *,
+		 jclass,
+		 jobject,
+		 jobject,
+		 jstring);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -93,7 +118,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObje
  * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrimitive
-  (JNIEnv *, jclass, jobject, jstring);
+		(JNIEnv *,
+		 jclass,
+		 jobject,
+		 jstring);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -101,7 +129,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrim
  * Signature: (JI)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarObject
-  (JNIEnv *, jclass, jlong, jint);
+		(JNIEnv *,
+		 jclass,
+		 jlong,
+		 jint);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -109,7 +140,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarPrimitive
-  (JNIEnv *, jclass, jint);
+		(JNIEnv *,
+		 jclass,
+		 jint);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -117,7 +150,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
  * Signature: (Ljava/lang/Object;Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreObjectInArray
-  (JNIEnv *, jclass, jobject, jobject, jint);
+		(JNIEnv *,
+		 jclass,
+		 jobject,
+		 jobject,
+		 jint);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -125,7 +162,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreObjectI
  * Signature: (Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStorePrimitiveInArray
-  (JNIEnv *, jclass, jobject, jint);
+		(JNIEnv *,
+		 jclass,
+		 jobject,
+		 jint);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -133,7 +173,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStorePrimiti
  * Signature: (Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadFromArray
-  (JNIEnv *, jclass, jobject, jint);
+		(JNIEnv *,
+		 jclass,
+		 jobject,
+		 jint);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -141,7 +184,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadFromArra
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar
-  (JNIEnv *, jclass, jint);
+		(JNIEnv *,
+		 jclass,
+		 jint);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -149,7 +194,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar
  * Signature: ([B)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onDefineClass
-  (JNIEnv *, jclass, jbyteArray);
+		(JNIEnv *,
+		 jclass,
+		 jbyteArray);
 
 #ifdef __cplusplus
 }

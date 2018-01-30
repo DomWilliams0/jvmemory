@@ -6,7 +6,8 @@
 #define ARRAY_STARTING_SIZE 65535
 #define ARRAY_TYPE long
 
-struct array {
+struct array
+{
 	ARRAY_TYPE *data;
 	size_t size;
 	size_t count;
@@ -16,7 +17,8 @@ int array_resize(struct array *arr);
 
 int array_init(struct array *arr);
 
-int array_add(struct array *arr, ARRAY_TYPE value);
+int array_add(struct array *arr,
+              ARRAY_TYPE value);
 
 void array_free(struct array *arr);
 

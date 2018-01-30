@@ -12,10 +12,11 @@
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramInProgress(
-    JNIEnv *jnienv,
-    jclass klass,
-    jboolean value) {
-    program_running = value;
+		JNIEnv *jnienv,
+		jclass klass,
+		jboolean value)
+{
+	program_running = value;
 }
 
 /*
@@ -24,10 +25,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramInPr
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad(
-        JNIEnv *jnienv,
-        jclass klass,
-        jboolean starting) {
-    classes_loading += starting == JNI_TRUE ? 1 : -1;
+		JNIEnv *jnienv,
+		jclass klass,
+		jboolean starting)
+{
+	classes_loading += starting == JNI_TRUE ? 1 : -1;
 }
 
 /*
@@ -36,10 +38,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad(
  * Signature: (Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject obj) {
-    allocate_object_tag(jnienv, obj);
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject obj)
+{
+	allocate_object_tag(jnienv, obj);
 }
 
 /*
@@ -48,11 +51,12 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
  * Signature: (ILjava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForArray(
-        JNIEnv *jnienv,
-        jclass klass,
-        jint size,
-        jobject array) {
-    allocate_array_tag(jnienv, array, size);
+		JNIEnv *jnienv,
+		jclass klass,
+		jint size,
+		jobject array)
+{
+	allocate_array_tag(jnienv, array, size);
 }
 
 /*
@@ -61,10 +65,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
  * Signature: (Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForMultiDimArray(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject array,
-        jint dims) {
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject array,
+		jint dims)
+{
 	allocate_tags_for_multidim_array(jnienv, array, dims);
 }
 
@@ -74,13 +79,14 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
  * Signature: (Ljava/lang/Object;)J
  */
 JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject obj) {
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject obj)
+{
 
-    jlong tag = 0L;
-    (*env)->GetTag(env, obj, &tag);
-    return tag;
+	jlong tag = 0L;
+	(*env)->GetTag(env, obj, &tag);
+	return tag;
 }
 
 /*
@@ -89,15 +95,16 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod(
-        JNIEnv *jnienv,
-        jclass klass,
-        jstring class_name,
-        jstring method_name) {
-    const char *cls = (*jnienv)->GetStringUTFChars(jnienv, class_name, NULL);
-    const char *mthd = (*jnienv)->GetStringUTFChars(jnienv, method_name, NULL);
-    on_enter_method(logger, get_thread_id(jnienv), cls, mthd);
-    (*jnienv)->ReleaseStringUTFChars(jnienv, class_name, cls);
-    (*jnienv)->ReleaseStringUTFChars(jnienv, method_name, mthd);
+		JNIEnv *jnienv,
+		jclass klass,
+		jstring class_name,
+		jstring method_name)
+{
+	const char *cls = (*jnienv)->GetStringUTFChars(jnienv, class_name, NULL);
+	const char *mthd = (*jnienv)->GetStringUTFChars(jnienv, method_name, NULL);
+	on_enter_method(logger, get_thread_id(jnienv), cls, mthd);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, class_name, cls);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, method_name, mthd);
 }
 
 /*
@@ -106,9 +113,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod(
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
-        JNIEnv *jnienv,
-        jclass klass) {
-    on_exit_method(logger, get_thread_id(jnienv));
+		JNIEnv *jnienv,
+		jclass klass)
+{
+	on_exit_method(logger, get_thread_id(jnienv));
 }
 
 /*
@@ -117,13 +125,14 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
  * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField(
-        JNIEnv *jnienv,
-        jclass klass,
-        jlong obj_id,
-        jstring field) {
-    const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
-    on_get_field(logger, get_thread_id(jnienv), obj_id, field_str);
-    (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+		JNIEnv *jnienv,
+		jclass klass,
+		jlong obj_id,
+		jstring field)
+{
+	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
+	on_get_field(logger, get_thread_id(jnienv), obj_id, field_str);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
 }
 
 /*
@@ -132,17 +141,18 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField(
  * Signature: (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObject(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject obj,
-        jobject value,
-        jstring field) {
-    jlong obj_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, obj);
-    jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject obj,
+		jobject value,
+		jstring field)
+{
+	jlong obj_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, obj);
+	jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
 
-    const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
-    on_put_field_object(logger, get_thread_id(jnienv), obj_id, field_str, value_id);
-    (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
+	on_put_field_object(logger, get_thread_id(jnienv), obj_id, field_str, value_id);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
 }
 
 /*
@@ -151,14 +161,15 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldObje
  * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrimitive(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject obj,
-        jstring field) {
-    jlong obj_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, obj);
-    const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
-    on_put_field_primitive(logger, get_thread_id(jnienv), obj_id, field_str);
-    (*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject obj,
+		jstring field)
+{
+	jlong obj_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, obj);
+	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
+	on_put_field_primitive(logger, get_thread_id(jnienv), obj_id, field_str);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
 }
 
 /*
@@ -167,11 +178,12 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrim
  * Signature: (JI)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarObject(
-        JNIEnv *jnienv,
-        jclass klass,
-        jlong value_id,
-        jint index) {
-    on_store_object(logger, get_thread_id(jnienv), value_id, index);
+		JNIEnv *jnienv,
+		jclass klass,
+		jlong value_id,
+		jint index)
+{
+	on_store_object(logger, get_thread_id(jnienv), value_id, index);
 }
 
 /*
@@ -180,10 +192,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarPrimitive(
-        JNIEnv *jnienv,
-        jclass klass,
-        jint index) {
-    on_store_primitive(logger, get_thread_id(jnienv), index);
+		JNIEnv *jnienv,
+		jclass klass,
+		jint index)
+{
+	on_store_primitive(logger, get_thread_id(jnienv), index);
 }
 
 /*
@@ -192,14 +205,15 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVa
  * Signature: (Ljava/lang/Object;Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreObjectInArray(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject value,
-        jobject array,
-        jint index) {
-    jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
-    jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
-    on_store_object_in_array(logger, get_thread_id(jnienv), value_id, array_id, index);
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject value,
+		jobject array,
+		jint index)
+{
+	jlong value_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, value);
+	jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
+	on_store_object_in_array(logger, get_thread_id(jnienv), value_id, array_id, index);
 }
 
 /*
@@ -208,11 +222,12 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreObjectI
  * Signature: (Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStorePrimitiveInArray(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject array,
-        jint index) {
-    jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject array,
+		jint index)
+{
+	jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
 	on_store_primitive_in_array(logger, get_thread_id(jnienv), array_id, index);
 }
 
@@ -222,11 +237,12 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStorePrimiti
  * Signature: (Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadFromArray(
-        JNIEnv *jnienv,
-        jclass klass,
-        jobject array,
-        jint index) {
-    jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject array,
+		jint index)
+{
+	jlong array_id = Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(jnienv, klass, array);
 	on_load_from_array(logger, get_thread_id(jnienv), array_id, index);
 }
 
@@ -236,10 +252,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadFromArra
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar(
-        JNIEnv *jnienv,
-        jclass klass,
-        jint index) {
-    on_load(logger, get_thread_id(jnienv), index);
+		JNIEnv *jnienv,
+		jclass klass,
+		jint index)
+{
+	on_load(logger, get_thread_id(jnienv), index);
 }
 
 /*
@@ -248,15 +265,16 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onLoadLocalVar
  * Signature: ([B)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onDefineClass(
-        JNIEnv *jnienv,
-        jclass klass,
-        jbyteArray def) {
+		JNIEnv *jnienv,
+		jclass klass,
+		jbyteArray def)
+{
 
-    // TODO avoid possible copy
-    jbyte *array = (*jnienv)->GetByteArrayElements(jnienv, def, NULL);
-    jint len = (*jnienv)->GetArrayLength(jnienv, def);
+	// TODO avoid possible copy
+	jbyte *array = (*jnienv)->GetByteArrayElements(jnienv, def, NULL);
+	jint len = (*jnienv)->GetArrayLength(jnienv, def);
 
-    on_define_class(logger, get_thread_id(jnienv), (const char *) array, len);
+	on_define_class(logger, get_thread_id(jnienv), (const char *) array, len);
 
-    (*jnienv)->ReleaseByteArrayElements(jnienv, def, array, JNI_ABORT);
+	(*jnienv)->ReleaseByteArrayElements(jnienv, def, array, JNI_ABORT);
 }
