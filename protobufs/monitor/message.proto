@@ -22,9 +22,16 @@ enum MessageType {
     PUTFIELD_OBJECT = 7;
     PUTFIELD_PRIMITIVE = 8;
 
-    STORE_OBJECT = 9;
-    STORE_PRIMITIVE = 10;
-    LOAD = 11;
+    LOAD = 9;
+    LOAD_ARRAY = 10;
+
+    STORE_OBJECT = 11;
+    STORE_PRIMITIVE = 12;
+
+    STORE_OBJECT_IN_ARRAY = 13;
+    STORE_PRIMITIVE_IN_ARRAY = 14;
+
+
 }
 
 message Variant {
@@ -34,7 +41,7 @@ message Variant {
         ClassDefinition class_def = 3;
 
         AllocationObject alloc_object = 4;
-		AllocationArray alloc_array = 5;
+        AllocationArray alloc_array = 5;
         Deallocation dealloc = 6;
 
         MethodEnter method_enter = 7;
@@ -43,9 +50,14 @@ message Variant {
         PutFieldObject put_field_object = 9;
         PutFieldPrimitive put_field_primitive = 10;
 
-        StoreObject store_object = 11;
-        StorePrimitive store_primitive = 12;
-        Load load = 13;
+        Load load = 11;
+        LoadFromArray load_from_array = 12;
+
+        StoreObject store_object = 13;
+        StorePrimitive store_primitive = 14;
+
+        StoreObjectInArray store_object_in_array = 15;
+        StorePrimitiveInArray store_primitive_in_array = 16;
     }
 
 }

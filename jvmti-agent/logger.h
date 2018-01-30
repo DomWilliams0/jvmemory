@@ -15,7 +15,10 @@ extern void on_put_field_primitive(logger_p logger, long thread_id, long obj_id,
 
 extern void on_store_object(logger_p logger, long thread_id, long value_id, int index);
 extern void on_store_primitive(logger_p logger, long thread_id, int index);
+extern void on_store_object_in_array(logger_p logger, long thread_id, long value_id, long array_id, int index);
+extern void on_store_primitive_in_array(logger_p logger, long thread_id, long array_id, int index);
 extern void on_load(logger_p logger, long thread_id, int index);
+extern void on_load_from_array(logger_p logger, long thread_id, long array_id, int index);
 
 extern void on_alloc_object(logger_p logger, long thread_id, long obj_id, const char *class);
 extern void on_alloc_array(logger_p logger, long thread_id, long obj_id, const char *class, int size);
