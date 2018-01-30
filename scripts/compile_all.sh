@@ -56,7 +56,7 @@ cp -r $ROOT/visualisation/src $VIS
 echo Visualisation sources copied to $VIS
 ) &
 
-cp $ROOT/scripts/run.sh $RUN
+cp -v $ROOT/scripts/run.sh $RUN
 
 wait
 echo All done, run $RUN
