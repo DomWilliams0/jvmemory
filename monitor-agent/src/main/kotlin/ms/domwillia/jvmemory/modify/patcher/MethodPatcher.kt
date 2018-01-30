@@ -228,6 +228,76 @@ class MethodPatcher(
         // stack: array
     }
 
+    override fun astore(type: Type) {
+        // stack: array index value
+
+        when {
+            type.size == 2 -> {
+                super.dup2X2()
+
+                // stack: value array index value
+                super.pop2()
+
+                // stack: value array index
+                super.dup2X2()
+
+                // stack: array index value array index
+                super.invokestatic(
+                        Monitor.internalName,
+                        "onStorePrimitiveInArray",
+                        "(Ljava/lang/Object;I)V",
+                        false
+                )
+
+                // stack: array index value
+
+            }
+            type.sort != Type.OBJECT -> {
+                super.dupX2()
+
+                // stack: value array index value
+                super.pop()
+
+                // stack: value array index
+                super.dup2X1()
+
+                // stack: array index value array index
+                super.invokestatic(
+                        Monitor.internalName,
+                        "onStorePrimitiveInArray",
+                        "(Ljava/lang/Object;I)V",
+                        false
+                )
+
+                // stack: array index value
+            }
+            else -> {
+                super.dup()
+
+                // stack: array index value value
+                super.dup2X2()
+
+                // stack: value value array index value value
+                super.pop2()
+
+                // stack: value value array index
+                super.dup2X2()
+
+                // stack: array index value value array index
+                super.invokestatic(
+                        Monitor.internalName,
+                        "onStoreObjectInArray",
+                        "(Ljava/lang/Object;Ljava/lang/Object;I)V",
+                        false
+                )
+
+                // stack: array index value
+            }
+        }
+
+        super.astore(type)
+    }
+
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
         definition.registerLocalVariable(name, desc, index)
