@@ -64,6 +64,17 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    allocateTagForConstant
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForConstant
+		(JNIEnv *,
+		 jclass,
+		 jobject,
+		 jstring);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    getTag
  * Signature: (Ljava/lang/Object;)J
  */
