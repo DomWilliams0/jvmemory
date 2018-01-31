@@ -344,6 +344,28 @@ class MethodPatcher(
         super.arraylength()
     }
 
+    override fun visitLdcInsn(cst: Any) {
+        super.visitLdcInsn(cst)
+
+        // stack: value
+        if (cst is String || (cst is Type && cst.sort == Type.OBJECT)) {
+            super.dup()
+
+            // stack: value value
+            super.visitLdcInsn(cst::class.java.typeName)
+
+            // stack: value value name
+            super.invokestatic(
+                    Monitor.internalName,
+                    "allocateTagForConstant",
+                    "(Ljava/lang/Object;Ljava/lang/String;)V",
+                    false
+            )
+
+            // stack: value
+        }
+    }
+
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
         definition.registerLocalVariable(name, desc, index)

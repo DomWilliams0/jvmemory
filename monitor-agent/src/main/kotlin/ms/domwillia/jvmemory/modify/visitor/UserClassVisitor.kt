@@ -40,9 +40,6 @@ class UserClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer)
 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
-        // instruction patching
-        mv = MethodPatcher(mv, currentClass.registerMethod(access, name, desc))
-
         // call tracing
         // TODO check this at the method level instead of class level
         if (currentClass.flags.type != ClassType.INTERFACE)
@@ -51,6 +48,9 @@ class UserClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer)
         // main
         if (name == "main" && desc == "([Ljava/lang/String;)V")
             mv = MainPatcher(mv, access, name, desc)
+
+        // instruction patching
+        mv = MethodPatcher(mv, currentClass.registerMethod(access, name, desc))
 
         return mv
     }
