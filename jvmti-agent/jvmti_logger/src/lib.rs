@@ -188,6 +188,32 @@ pub extern fn on_alloc_array(logger: *mut Logger, thread_id: Long, array_id: Lon
 }
 
 #[no_mangle]
+pub extern fn on_alloc_array_in_array(logger: *mut Logger,
+                                      thread_id: Long,
+                                      array_id: Long,
+                                      class: String,
+                                      size: i32,
+                                      src_array_id: Long,
+                                      src_index: Int) {
+    let mut payload = allocations::AllocationArray::new();
+    payload.id = array_id;
+    payload.size = size;
+    payload.field_type = get_string!(class);
+
+    if src_array_id != 0 {
+        payload.src_array_id = src_array_id;
+        payload.src_index = src_index;
+    }
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_alloc_array(payload);
+    msg.set_field_type(MessageType::ALLOC_ARRAY);
+    io::log_message(logger, msg);
+}
+
+
+#[no_mangle]
 pub extern fn on_dealloc(logger: *mut Logger, obj_id: Long) {
     let mut payload = allocations::Deallocation::new();
     payload.id = obj_id;
