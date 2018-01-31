@@ -35,42 +35,45 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad(
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    allocateTag
- * Signature: (Ljava/lang/Object;)V
+ * Signature: (Ljava/lang/String;Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
 		JNIEnv *jnienv,
 		jclass klass,
+		jstring clazz,
 		jobject obj)
 {
-	allocate_object_tag(jnienv, obj);
+	allocate_object_tag(jnienv, obj, clazz);
 }
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    allocateTagForArray
- * Signature: (ILjava/lang/Object;)V
+ * Signature: (ILjava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForArray(
 		JNIEnv *jnienv,
 		jclass klass,
 		jint size,
-		jobject array)
+		jobject array,
+		jstring clazz)
 {
-	allocate_array_tag(jnienv, array, size);
+	allocate_array_tag(jnienv, array, size, clazz);
 }
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    allocateTagForMultiDimArray
- * Signature: (Ljava/lang/Object;I)V
+ * Signature: (Ljava/lang/Object;ILjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagForMultiDimArray(
 		JNIEnv *jnienv,
 		jclass klass,
 		jobject array,
-		jint dims)
+		jint dims,
+		jstring clazz)
 {
-	allocate_tags_for_multidim_array(jnienv, array, dims);
+	allocate_tags_for_multidim_array(jnienv, array, dims, clazz);
 }
 
 /*

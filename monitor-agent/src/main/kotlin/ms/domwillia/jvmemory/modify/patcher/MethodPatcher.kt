@@ -200,10 +200,13 @@ class MethodPatcher(
         super.dupX1()
 
         // stack: array size array
+        super.visitLdcInsn(type.className)
+
+        // stack: array size array clazz
         super.invokestatic(
                 Monitor.internalName,
                 "allocateTagForArray",
-                "(ILjava/lang/Object;)V",
+                "(ILjava/lang/Object;Ljava/lang/String;)V",
                 false
         )
 
@@ -221,10 +224,13 @@ class MethodPatcher(
         super.iconst(dims)
 
         // stack: array array dims
+        super.visitLdcInsn(Type.getType(desc).className)
+
+        // stack: array array dims clazz
         super.invokestatic(
                 Monitor.internalName,
                 "allocateTagForMultiDimArray",
-                "(Ljava/lang/Object;I)V",
+                "(Ljava/lang/Object;ILjava/lang/String;)V",
                 false
         )
 

@@ -100,7 +100,7 @@ class RawMessageHandler {
         return createEvents(threadId, EventType.ADD_HEAP_OBJECT, {
             it.addHeapObject = AddHeapObject.newBuilder().apply {
                 id = alloc.id
-                class_ = alloc.type.tidyClassName()
+                class_ = alloc.type
             }.build()
         })
     }
@@ -112,7 +112,7 @@ class RawMessageHandler {
                 createEvent(threadId, EventType.ADD_HEAP_OBJECT, {
                     it.addHeapObject = AddHeapObject.newBuilder().apply {
                         id = alloc.id
-                        class_ = alloc.type.tidyClassName()
+                        class_ = alloc.type
                     }.build()
                 }))
 
@@ -222,20 +222,6 @@ class RawMessageHandler {
                     fieldName = load.index.toString()
             }.build()
         })
-    }
-
-    /**
-     * Converts class names of the formats "Lcom/package/Class;" and "com/package/Class"
-     * to "com.package.Class"
-     */
-    private fun String.tidyClassName(): String {
-        val name = StringBuilder(if (this[lastIndex] == ';') {
-            subSequence(1, lastIndex)
-        } else {
-            this
-        })
-        name.forEachIndexed { i, c -> if (c == '/') name.setCharAt(i, '.') }
-        return name.toString()
     }
 
     internal val loadedClassDefinitions: Collection<Definitions.ClassDefinition>

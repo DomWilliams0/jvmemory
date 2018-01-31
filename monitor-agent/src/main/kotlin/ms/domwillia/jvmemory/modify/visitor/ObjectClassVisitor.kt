@@ -34,11 +34,34 @@ class ObjectClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, write
             }
 
             super.visitVarInsn(Opcodes.ALOAD, 0)
+
+            // stack: this
+            super.visitMethodInsn(
+                    Opcodes.INVOKEVIRTUAL,
+                    "java/lang/Object",
+                    "getClass",
+                    "()Ljava/lang/Class;",
+                    false
+            )
+
+            // stack: class
+            super.visitMethodInsn(
+                    Opcodes.INVOKEVIRTUAL,
+                    "java/lang/Class",
+                    "getTypeName",
+                    "()Ljava/lang/String;",
+                    false
+            )
+
+            // stack: name
+            super.visitVarInsn(Opcodes.ALOAD, 0)
+
+            // stack: name this
             super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
                     Monitor.internalName,
                     "allocateTag",
-                    "(Ljava/lang/Object;)V",
+                    "(Ljava/lang/String;Ljava/lang/Object;)V",
                     false
             )
 
