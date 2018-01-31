@@ -14,37 +14,21 @@ class MethodPatcher(
 ) : InstructionAdapter(Opcodes.ASM6, delegate) {
 
     override fun store(index: Int, type: Type) {
-
-        // object:
-        // Monitor.onStoreLocalVarObject(Monitor.getTag(value), index)
-        // others:
-        // Monitor.onStoreLocalVarPrimitive(index)
-
         // stack: value
         val func = if (type.sort == Type.OBJECT) {
-            // dup value
             super.dup()
 
             // stack: value value
-
-            // get tag
-            callMonitor(Monitor::getTag)
-
-            // stack: value tag_long
             Monitor::onStoreLocalVarObject
         } else {
             // stack: value
             Monitor::onStoreLocalVarPrimitive
         }
 
-        // stack: value (tag_long)
-
-        // push index
+        // stack: value (value)
         super.iconst(index)
 
-        // stack: value (tag_long) index
-
-        // log
+        // stack: value (value) index
         callMonitor(func)
 
         // stack: value
@@ -61,26 +45,15 @@ class MethodPatcher(
     }
 
     override fun getfield(owner: String, name: String, desc: String) {
+        // TODO uninitialisedThis causes problems again
 
         // stack: object
-
-        // TODO uninitialisedThis causes problems again
-        // dup object
         super.dup()
 
         // stack: object object
-
-        // get tag
-        callMonitor(Monitor::getTag)
-
-        // stack: object tag
-
-        // push field
         super.visitLdcInsn(name)
 
-        // stack: object tag fieldName
-
-        // log
+        // stack: object object fieldName
         callMonitor(Monitor::onGetField)
 
         // stack: object
