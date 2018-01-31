@@ -57,18 +57,18 @@ class Preprocessor(outputDirPath: File) {
 
             val proc = Preprocessor(outputDirPath)
 
-            val messages = run {
-                val stream = inputLogPath.inputStream()
-                generateSequence { Message.Variant.parseDelimitedFrom(stream) }
-            }
-
-            for (m in messages) {
+            for (m in readMessages(inputLogPath)) {
                 proc.handle(m)
             }
 
             proc.finish()
 
             return proc.events
+        }
+
+        fun readMessages(inputLogPath: File): Sequence<Message.Variant> {
+            val stream = inputLogPath.inputStream()
+            return generateSequence { Message.Variant.parseDelimitedFrom(stream) }
         }
     }
 
