@@ -13,11 +13,11 @@ object Monitor {
     /**
      * To be called from within java/lang/Object's constructor only
      */
-    @JvmStatic external fun allocateTag(o: Any)
+    @JvmStatic external fun allocateTag(clazz: String, o: Any)
 
-    @JvmStatic external fun allocateTagForArray(size: Int, a: Any)
+    @JvmStatic external fun allocateTagForArray(size: Int, a: Any, clazz: String)
 
-    @JvmStatic external fun allocateTagForMultiDimArray(a: Any, dims: Int)
+    @JvmStatic external fun allocateTagForMultiDimArray(a: Any, dims: Int, clazz: String)
 
     @JvmStatic external fun getTag(o: Any): Long
 
