@@ -53,7 +53,7 @@ function setInterHeapLink(payload) {
 
     console.log("set link %s from %s to %s", fieldName, srcId, dstId || "null");
 
-    let existingIndex = heapLinks.find((x) => x.source === srcId && x.name === fieldName);
+    let existingIndex = heapLinks.findIndex((x) => x.source.id === srcId && x.name === fieldName);
     if (existingIndex >= 0) {
         if (rm) {
             heapLinks.splice(existingIndex, 1);
