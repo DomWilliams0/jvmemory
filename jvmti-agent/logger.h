@@ -72,6 +72,14 @@ extern void on_alloc_array(logger_p logger,
                            const char *class,
                            int size);
 
+extern void on_alloc_array_in_array(logger_p logger,
+                                    long thread_id,
+                                    long obj_id,
+                                    const char *class,
+                                    int size,
+                                    long src_array_id,
+                                    int src_index);
+
 extern void on_dealloc(logger_p logger,
                        long obj_id);
 

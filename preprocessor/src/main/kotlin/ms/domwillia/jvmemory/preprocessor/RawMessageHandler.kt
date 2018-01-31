@@ -5,7 +5,7 @@ import ms.domwillia.jvmemory.protobuf.*
 import java.util.*
 
 typealias EmittedEvent = Pair<ThreadID, EventVariant>
-typealias EmittedEvents = Array<EmittedEvent>
+typealias EmittedEvents = List<EmittedEvent>
 
 class RawMessageHandler {
     private var classDefinitions = mutableMapOf<String, Definitions.ClassDefinition>()
@@ -32,7 +32,7 @@ class RawMessageHandler {
 
         Message.MessageType.CLASS_DEF -> {
             defineClass(msg.classDef)
-            emptyArray()
+            emptyList()
         }
 
         Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter, msg.threadId)
@@ -47,7 +47,7 @@ class RawMessageHandler {
     private fun createEvents(
             threadId: ThreadID,
             messageType: EventType,
-            initialiser: (EventVariant.Builder) -> Unit): EmittedEvents = arrayOf(createEvent(threadId, messageType, initialiser))
+            initialiser: (EventVariant.Builder) -> Unit): EmittedEvents = listOf(createEvent(threadId, messageType, initialiser))
 
     private fun createEvent(
             threadId: ThreadID,
@@ -108,12 +108,27 @@ class RawMessageHandler {
     private fun allocateArray(alloc: Allocations.AllocationArray, threadId: ThreadID): EmittedEvents {
         allocationThread[alloc.id] = threadId
 
-        return createEvents(threadId, EventType.ADD_HEAP_OBJECT, {
-            it.addHeapObject = AddHeapObject.newBuilder().apply {
-                id = alloc.id
-                class_ = alloc.type.tidyClassName()
-            }.build()
-        })
+        val events = mutableListOf(
+                createEvent(threadId, EventType.ADD_HEAP_OBJECT, {
+                    it.addHeapObject = AddHeapObject.newBuilder().apply {
+                        id = alloc.id
+                        class_ = alloc.type.tidyClassName()
+                    }.build()
+                }))
+
+        if (alloc.hasField(Allocations.AllocationArray.getDescriptor().findFieldByNumber(Allocations.AllocationArray.SRC_ARRAY_ID_FIELD_NUMBER))) {
+            events.add(
+                    createEvent(threadId, EventType.SET_INTER_HEAP_LINK, {
+                        it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
+                            srcId = alloc.srcArrayId
+                            dstId = alloc.id
+                            fieldName = alloc.srcIndex.toString()
+                        }.build()
+                    })
+            )
+        }
+
+        return events
     }
 
     private fun deallocate(dealloc: Allocations.Deallocation): EmittedEvents {
