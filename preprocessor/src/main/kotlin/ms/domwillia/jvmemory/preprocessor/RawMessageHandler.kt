@@ -63,7 +63,6 @@ class RawMessageHandler {
 
     private fun defineClass(classDef: Definitions.ClassDefinition) {
         classDefinitions[classDef.name] = classDef
-        println("registered ${classDef.name}")
     }
 
     private fun enterMethod(msg: Flow.MethodEnter, threadId: ThreadID): EmittedEvents {
