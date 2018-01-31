@@ -15,6 +15,8 @@ object DebugPrinter {
         val (inFile, outDir) = paths
         val thread = paths.getOrNull(2)?.toLong()
 
+        Preprocessor.readMessages(File(inFile)).forEach { println("$it\n-------------") }
+
         val events = Preprocessor.runPreprocessor(File(inFile), File(outDir))
 
         val tids = if (thread == null) {
@@ -25,7 +27,7 @@ object DebugPrinter {
 
         tids.forEach { tid ->
             println("=================== Thread $tid")
-            events.getEventsForThread(tid).forEach(::println)
+            events.getEventsForThread(tid).forEach { println("$it\n-------------") }
         }
 
 
