@@ -212,8 +212,6 @@ class MethodPatcher(
 
     // TODO deal with sizes
     override fun multianewarray(desc: String, dims: Int) {
-        val arrayType = Type.getType(desc.substring(dims - 1)) // 1D array of element type
-
         super.multianewarray(desc, dims)
 
         // stack: array
