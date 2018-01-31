@@ -23,11 +23,7 @@ object Monitor {
 
     @JvmStatic external fun exitMethod()
 
-    /**
-     * @param objId The tag of the object whose field is being accessed
-     * @param field The name of the field being accessed
-     */
-    @JvmStatic external fun onGetField(objId: Long, field: String)
+    @JvmStatic external fun onGetField(obj: Any, field: String)
 
     /**
      * @param field The name of the field being set
@@ -39,11 +35,7 @@ object Monitor {
      */
     @JvmStatic external fun onPutFieldPrimitive(obj: Any, field: String)
 
-    /**
-     * @param valueId The tag of the value, 0 if null
-     * @param index The local variable index
-     */
-    @JvmStatic external fun onStoreLocalVarObject(valueId: Long, index: Int)
+    @JvmStatic external fun onStoreLocalVarObject(value: Any, index: Int)
 
     /**
      * @param index The local variable index

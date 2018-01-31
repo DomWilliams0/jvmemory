@@ -137,14 +137,15 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onGetField
- * Signature: (JLjava/lang/String;)V
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetField(
 		JNIEnv *jnienv,
 		jclass klass,
-		jlong obj_id,
+		jobject obj,
 		jstring field)
 {
+	jlong obj_id = get_tag(obj);
 	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
 	on_get_field(logger, get_thread_id(jnienv), obj_id, field_str);
 	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
@@ -190,14 +191,15 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrim
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onStoreLocalVarObject
- * Signature: (JI)V
+ * Signature: (Ljava/lang/Object;I)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onStoreLocalVarObject(
 		JNIEnv *jnienv,
 		jclass klass,
-		jlong value_id,
+		jobject value,
 		jint index)
 {
+	jlong value_id = get_tag(value);
 	on_store_object(logger, get_thread_id(jnienv), value_id, index);
 }
 
