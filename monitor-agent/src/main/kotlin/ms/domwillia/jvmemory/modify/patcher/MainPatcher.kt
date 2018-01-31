@@ -19,13 +19,7 @@ class MainPatcher(
         }
 
         visitInsn(opcode)
-        visitMethodInsn(
-                Opcodes.INVOKESTATIC,
-                Monitor.internalName,
-                "setProgramInProgress",
-                "(Z)V",
-                false
-        )
+        callMonitor(Monitor::setProgramInProgress)
     }
 
     override fun onMethodEnter() {

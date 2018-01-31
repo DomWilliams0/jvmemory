@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.modify.visitor
 
+import ms.domwillia.jvmemory.modify.patcher.callMonitor
 import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -57,13 +58,7 @@ class ObjectClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, write
             super.visitVarInsn(Opcodes.ALOAD, 0)
 
             // stack: name this
-            super.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
-                    Monitor.internalName,
-                    "allocateTag",
-                    "(Ljava/lang/String;Ljava/lang/Object;)V",
-                    false
-            )
+            callMonitor(Monitor::allocateTag)
 
             super.visitInsn(opcode)
         }

@@ -19,32 +19,22 @@ class MethodPatcher(
         // Monitor.onStoreLocalVarObject(Monitor.getTag(value), index)
         // others:
         // Monitor.onStoreLocalVarPrimitive(index)
-        val functionName: String
-        val functionDesc: String
 
         // stack: value
-
-        if (type.sort == Type.OBJECT) {
+        val func = if (type.sort == Type.OBJECT) {
             // dup value
             super.dup()
 
             // stack: value value
 
             // get tag
-            super.invokestatic(
-                    Monitor.internalName,
-                    "getTag",
-                    "(Ljava/lang/Object;)J",
-                    false
-            )
+            callMonitor(Monitor::getTag)
 
             // stack: value tag_long
-            functionName = "onStoreLocalVarObject"
-            functionDesc = "(JI)V"
+            Monitor::onStoreLocalVarObject
         } else {
             // stack: value
-            functionName = "onStoreLocalVarPrimitive"
-            functionDesc = "(I)V"
+            Monitor::onStoreLocalVarPrimitive
         }
 
         // stack: value (tag_long)
@@ -55,12 +45,7 @@ class MethodPatcher(
         // stack: value (tag_long) index
 
         // log
-        super.invokestatic(
-                Monitor.internalName,
-                functionName,
-                functionDesc,
-                false
-        )
+        callMonitor(func)
 
         // stack: value
         super.store(index, type)
@@ -70,13 +55,7 @@ class MethodPatcher(
         // Monitor.onLoadLocalVar(index)
 
         super.iconst(index)
-        super.visitMethodInsn(
-                Opcodes.INVOKESTATIC,
-                Monitor.internalName,
-                "onLoadLocalVar",
-                "(I)V",
-                false
-        )
+        callMonitor(Monitor::onLoadLocalVar)
 
         super.load(index, type)
     }
@@ -92,12 +71,7 @@ class MethodPatcher(
         // stack: object object
 
         // get tag
-        super.invokestatic(
-                Monitor.internalName,
-                "getTag",
-                "(Ljava/lang/Object;)J",
-                false
-        )
+        callMonitor(Monitor::getTag)
 
         // stack: object tag
 
@@ -107,12 +81,7 @@ class MethodPatcher(
         // stack: object tag fieldName
 
         // log
-        super.invokestatic(
-                Monitor.internalName,
-                "onGetField",
-                "(JLjava/lang/String;)V",
-                false
-        )
+        callMonitor(Monitor::onGetField)
 
         // stack: object
         super.getfield(owner, name, desc)
@@ -125,16 +94,7 @@ class MethodPatcher(
 
         // avoid uninitialisedThis
         if (name != "this$0") {
-
-            // object:
-            // Monitor.onPutFieldObject(Monitor.getTag(obj), field, Monitor.getTag(value))
-            // Monitor.onPutFieldObject(obj, value, field)
-            // others:
-            // Monitor.onPutFieldPrimitive(Monitor.getTag(obj), field)
-            // Monitor.onPutFieldPrimitive(obj, field)
-            // TODO
-            var functionName = "onPutFieldPrimitive"
-            var functionDesc = "(Ljava/lang/Object;Ljava/lang/String;)V"
+            var func: MonitorMethod = Monitor::onPutFieldPrimitive
 
             // obj: dup2
             // size1: dup top to 3
@@ -153,8 +113,7 @@ class MethodPatcher(
                     // stack: obj value obj <no value>
 
                 } else {
-                    functionName = "onPutFieldObject"
-                    functionDesc = "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V"
+                    func = Monitor::onPutFieldObject
                 }
 
                 super.visitLdcInsn(name)
@@ -178,12 +137,7 @@ class MethodPatcher(
             }
 
             // log
-            super.invokestatic(
-                    Monitor.internalName,
-                    functionName,
-                    functionDesc,
-                    false
-            )
+            callMonitor(func)
         }
 
         super.putfield(owner, name, desc)
@@ -203,12 +157,7 @@ class MethodPatcher(
         super.visitLdcInsn(type.className)
 
         // stack: array size array clazz
-        super.invokestatic(
-                Monitor.internalName,
-                "allocateTagForArray",
-                "(ILjava/lang/Object;Ljava/lang/String;)V",
-                false
-        )
+        callMonitor(Monitor::allocateTagForArray)
 
         // stack: array
     }
@@ -227,12 +176,7 @@ class MethodPatcher(
         super.visitLdcInsn(Type.getType(desc).className)
 
         // stack: array array dims clazz
-        super.invokestatic(
-                Monitor.internalName,
-                "allocateTagForMultiDimArray",
-                "(Ljava/lang/Object;ILjava/lang/String;)V",
-                false
-        )
+        callMonitor(Monitor::allocateTagForMultiDimArray)
 
         // stack: array
     }
@@ -251,12 +195,7 @@ class MethodPatcher(
                 super.dup2X2()
 
                 // stack: array index value array index
-                super.invokestatic(
-                        Monitor.internalName,
-                        "onStorePrimitiveInArray",
-                        "(Ljava/lang/Object;I)V",
-                        false
-                )
+                callMonitor(Monitor::onStorePrimitiveInArray)
 
                 // stack: array index value
 
@@ -271,12 +210,7 @@ class MethodPatcher(
                 super.dup2X1()
 
                 // stack: array index value array index
-                super.invokestatic(
-                        Monitor.internalName,
-                        "onStorePrimitiveInArray",
-                        "(Ljava/lang/Object;I)V",
-                        false
-                )
+                callMonitor(Monitor::onStorePrimitiveInArray)
 
                 // stack: array index value
             }
@@ -293,12 +227,7 @@ class MethodPatcher(
                 super.dup2X2()
 
                 // stack: array index value value array index
-                super.invokestatic(
-                        Monitor.internalName,
-                        "onStoreObjectInArray",
-                        "(Ljava/lang/Object;Ljava/lang/Object;I)V",
-                        false
-                )
+                callMonitor(Monitor::onStoreObjectInArray)
 
                 // stack: array index value
             }
@@ -312,12 +241,7 @@ class MethodPatcher(
         super.dup2()
 
         // stack: array index array index
-        super.invokestatic(
-                Monitor.internalName,
-                "onLoadFromArray",
-                "(Ljava/lang/Object;I)V",
-                false
-        )
+        callMonitor(Monitor::onLoadFromArray)
 
         // stack: array index
 
@@ -332,12 +256,7 @@ class MethodPatcher(
         super.iconst(-1)
 
         // stack: array array dummy_index
-        super.invokestatic(
-                Monitor.internalName,
-                "onLoadFromArray",
-                "(Ljava/lang/Object;I)V",
-                false
-        )
+        callMonitor(Monitor::onLoadFromArray)
 
         // stack: array
 
@@ -355,12 +274,7 @@ class MethodPatcher(
             super.visitLdcInsn(cst::class.java.typeName)
 
             // stack: value value name
-            super.invokestatic(
-                    Monitor.internalName,
-                    "allocateTagForConstant",
-                    "(Ljava/lang/Object;Ljava/lang/String;)V",
-                    false
-            )
+            callMonitor(Monitor::allocateTagForConstant)
 
             // stack: value
         }

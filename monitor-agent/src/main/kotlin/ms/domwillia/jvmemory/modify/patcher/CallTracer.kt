@@ -22,25 +22,13 @@ class CallTracer(
     override fun onMethodEnter() {
         super.visitLdcInsn(className)
         super.visitLdcInsn(methodName)
-        super.visitMethodInsn(
-                Opcodes.INVOKESTATIC,
-                Monitor.internalName,
-                "enterMethod",
-                "(Ljava/lang/String;Ljava/lang/String;)V",
-                false
-        )
+        callMonitor(Monitor::enterMethod)
 
         super.onMethodEnter()
     }
 
     override fun onMethodExit(opcode: Int) {
-        super.visitMethodInsn(
-                Opcodes.INVOKESTATIC,
-                Monitor.internalName,
-                "exitMethod",
-                "()V",
-                false
-        )
+        callMonitor(Monitor::exitMethod)
 
         super.onMethodExit(opcode)
     }

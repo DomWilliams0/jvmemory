@@ -1,11 +1,7 @@
 package ms.domwillia.jvmemory.monitor
 
-import org.objectweb.asm.Type
-
 @Suppress("unused")
 object Monitor {
-    val internalName = Type.getType(Monitor::class.java).internalName!!
-
     @JvmStatic external fun setProgramInProgress(running: Boolean)
 
     @JvmStatic external fun onClassLoad(starting: Boolean)

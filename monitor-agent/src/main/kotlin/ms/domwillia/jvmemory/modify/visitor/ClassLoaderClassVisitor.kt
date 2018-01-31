@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.modify.visitor
 
+import ms.domwillia.jvmemory.modify.patcher.callMonitor
 import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -27,26 +28,14 @@ class ClassLoaderClassVisitor(cv: ClassVisitor?) : ClassVisitor(Opcodes.ASM6, cv
 
         override fun onMethodEnter() {
             super.visitInsn(Opcodes.ICONST_1)
-            super.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
-                    Monitor.internalName,
-                    "onClassLoad",
-                    "(Z)V",
-                    false
-            )
+            callMonitor(Monitor::onClassLoad)
 
             super.onMethodEnter()
         }
 
         override fun onMethodExit(opcode: Int) {
             super.visitInsn(Opcodes.ICONST_0)
-            super.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
-                    Monitor.internalName,
-                    "onClassLoad",
-                    "(Z)V",
-                    false
-            )
+            callMonitor(Monitor::onClassLoad)
 
             super.onMethodExit(opcode)
         }
