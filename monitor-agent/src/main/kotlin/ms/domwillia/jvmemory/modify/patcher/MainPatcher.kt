@@ -6,11 +6,12 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.AdviceAdapter
 
 class MainPatcher(
+        api: Int,
         mv: MethodVisitor?,
         access: Int,
         name: String?,
         desc: String?
-) : AdviceAdapter(Opcodes.ASM6, mv, access, name, desc) {
+) : AdviceAdapter(api, mv, access, name, desc) {
     private fun setRunning(running: Boolean) {
         val opcode = if (running) {
             Opcodes.ICONST_1

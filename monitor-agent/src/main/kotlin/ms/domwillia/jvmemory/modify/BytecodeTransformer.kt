@@ -6,6 +6,7 @@ import ms.domwillia.jvmemory.modify.visitor.UserClassVisitor
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
 import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
@@ -15,11 +16,13 @@ import kotlin.system.exitProcess
 
 class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFileTransformer {
 
+    private val apiVersion = Opcodes.ASM6
+
     private fun isUserClass(className: String): Boolean {
         return userClassPrefixes.find { className.startsWith(it) } != null
     }
 
-    private fun createVisitor(className: String): ((ClassWriter) -> ClassVisitor)? = when {
+    private fun createVisitor(className: String): ((Int, ClassWriter) -> ClassVisitor)? = when {
     // user classes
         isUserClass(className) -> ::UserClassVisitor
 
@@ -42,7 +45,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
 
             try {
                 // teehee
-                reader.accept(this(writer), ClassReader.EXPAND_FRAMES)
+                reader.accept(this(apiVersion, writer), ClassReader.EXPAND_FRAMES)
             } catch (e: RuntimeException) {
                 e.printStackTrace()
             }

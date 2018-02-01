@@ -7,7 +7,7 @@ import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
-class ObjectClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
+class ObjectClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer) {
 
     override fun visitMethod(
             access: Int,
@@ -20,13 +20,13 @@ class ObjectClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, write
 
         // constructor only
         if (name == "<init>") {
-            mv = ObjectConstructorTracer(mv)
+            mv = ObjectConstructorTracer(api, mv)
         }
 
         return mv
     }
 
-    private class ObjectConstructorTracer(mv: MethodVisitor?) : MethodVisitor(Opcodes.ASM6, mv) {
+    private class ObjectConstructorTracer(api: Int, mv: MethodVisitor?) : MethodVisitor(api, mv) {
 
         override fun visitInsn(opcode: Int) {
             if (opcode != Opcodes.RETURN) {
