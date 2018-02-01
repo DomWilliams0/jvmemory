@@ -149,12 +149,19 @@ function restart(changedGraph) {
     node.exit().remove();
 
     let nodeEnter = node.enter().append("g");
-    nodeEnter.append("circle")
+    let nodeEnterObjs = nodeEnter.append("circle");
+    nodeEnterObjs
         .attr("class", d => d.stack ? "nodeStack" : "node")
         .attr("r", d => d.stack ? STACK_NODE_RADIUS : HEAP_NODE_RADIUS)
         .attr("fill", d => d.fill ? d.fill : "none");
-    nodeEnter.append("title") // hover
+    nodeEnterObjs.append("title") // hover
         .text(d => d.id + " - " + d.clazz);
+
+    // array nodes
+    nodeEnter.append("circle")
+        .filter(d => d.array)
+        .attr("class", "nodeArray")
+        .attr("r", HEAP_NODE_RADIUS + 2);
     node = node.merge(nodeEnter);
 
     // links

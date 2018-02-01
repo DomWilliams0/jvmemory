@@ -8,13 +8,19 @@ public class Arrays implements Specimen {
 
 	@Override
 	public void go() {
-		int[][] arrint = new int[10][20];
-		double[][][] arrdouble = new double[3][4][2];
-		Object[][][][] arrobj = new Object[5][2][3][3];
+//		int[][] arrint = new int[10][20];
+//		double[][][] arrdouble = new double[3][4][2];
+//		Object[][][][] arrobj = new Object[5][2][3][3];
 
-		printArray(arrint, "ints");
-		printArray(arrdouble, "doubles");
-		printArray(arrobj, "objs");
+		Object[] arr = new Object[5];
+		for (int i = 0; i < arr.length; i++)
+		arr[i] = new Object();
+
+		Object[][][] arr2 = new Object[3][3][3];
+		for (int i = 0; i < arr2.length; i++)
+			for (int j = 0; j < arr2[0].length; j++)
+				for (int k = 0; k < arr2[0].length; k++)
+					arr2[i][j][k] = new Object();
 	}
 
 	static void printArray(Object array, String prefix) {
