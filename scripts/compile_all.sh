@@ -29,14 +29,14 @@ cd $ROOT/monitor-agent
 [ $CLEAN = 1 ] && ./gradlew clean
 ./gradlew buildJar
 
-cp build/libs/monitor-agent-0.1.jar $JAVA_AGENT
+cp -f build/libs/monitor-agent-0.1.jar $JAVA_AGENT
 echo Java agent copied to $JAVA_AGENT
 
-cp $JAVA_AGENT $BOOTSTRAP
+cp -f $JAVA_AGENT $BOOTSTRAP
 zip -d $BOOTSTRAP ms/domwillia/jvmemory/modify/*
 echo Bootstrap created at $BOOTSTRAP
 
-cp $ROOT/jvmti-agent/libagent.so $LIBAGENT
+cp -f $ROOT/jvmti-agent/libagent.so $LIBAGENT
 echo Native agent copied to $LIBAGENT
 ) &
 
@@ -46,17 +46,17 @@ cd $ROOT/visualisation-server
 [ $CLEAN = 1 ] && ./gradlew clean
 ./gradlew buildJar
 
-cp build/libs/visualisation-server-0.1.jar $SERVER
+cp -f build/libs/visualisation-server-0.1.jar $SERVER
 echo Visualisation server copied to $SERVER
 ) &
 
 # vis src
 (
-cp -r $ROOT/visualisation/src $VIS
+cp -f -r $ROOT/visualisation/src $VIS
 echo Visualisation sources copied to $VIS
 ) &
 
-cp -v $ROOT/scripts/run.sh $RUN
+cp -f -v $ROOT/scripts/run.sh $RUN
 
 wait
 echo All done, run $RUN
