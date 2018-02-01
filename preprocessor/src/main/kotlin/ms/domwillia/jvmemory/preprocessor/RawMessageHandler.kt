@@ -150,11 +150,20 @@ class RawMessageHandler {
         })
     }
 
+    // removes implicitly allocated objects that haven't been explicitly added to the heap graph
+    // these will typically be boxed types (Long, Integer, Byte etc.) for which a range of low
+    // values have been preallocated and cached
+    private fun checkObjectIsNotImplicit(objectID: ObjectID): ObjectID =
+            if (objectID != 0L && !allocationThread.containsKey(objectID))
+                0L
+            else
+                objectID
+
     private fun putFieldObject(putFieldObject: Access.PutFieldObject, threadId: ThreadID): EmittedEvents {
         return createEvents(threadId, EventType.SET_INTER_HEAP_LINK, {
             it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
                 srcId = putFieldObject.id
-                dstId = putFieldObject.valueId // may be 0/null
+                dstId = checkObjectIsNotImplicit(putFieldObject.valueId) // may be 0/null
                 fieldName = putFieldObject.field
             }.build()
         })
@@ -172,7 +181,7 @@ class RawMessageHandler {
         return createEvents(threadId, EventType.SET_LOCAL_VAR_LINK, {
             it.setLocalVarLink = SetLocalVarLink.newBuilder().apply {
                 varIndex = storeObject.index
-                dstId = storeObject.valueId
+                dstId = checkObjectIsNotImplicit(storeObject.valueId)
             }.build()
         })
     }
@@ -186,11 +195,10 @@ class RawMessageHandler {
     }
 
     private fun storeObjectInArray(store: Access.StoreObjectInArray, threadId: ThreadID): EmittedEvents {
-        // TODO new array access event?
         return createEvents(threadId, EventType.SET_INTER_HEAP_LINK, {
             it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
                 srcId = store.id
-                dstId = store.valueId
+                dstId = checkObjectIsNotImplicit(store.valueId)
                 fieldName = store.index.toString()
             }.build()
         })
