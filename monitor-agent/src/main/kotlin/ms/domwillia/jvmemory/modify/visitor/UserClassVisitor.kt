@@ -8,7 +8,7 @@ import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.ClassType
 import org.objectweb.asm.*
 
-class UserClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer) {
+class UserClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer) {
 
     private lateinit var currentClass: ClassDefinition
 
@@ -43,14 +43,14 @@ class UserClassVisitor(writer: ClassWriter) : ClassVisitor(Opcodes.ASM6, writer)
         // call tracing
         // TODO check this at the method level instead of class level
         if (currentClass.flags.type != ClassType.INTERFACE)
-            mv = CallTracer(currentClass.name, mv, access, name, desc)
+            mv = CallTracer(api, currentClass.name, mv, access, name, desc)
 
         // main
         if (name == "main" && desc == "([Ljava/lang/String;)V")
-            mv = MainPatcher(mv, access, name, desc)
+            mv = MainPatcher(api, mv, access, name, desc)
 
         // instruction patching
-        mv = MethodPatcher(mv, currentClass.registerMethod(access, name, desc))
+        mv = MethodPatcher(api, mv, currentClass.registerMethod(access, name, desc))
 
         return mv
     }

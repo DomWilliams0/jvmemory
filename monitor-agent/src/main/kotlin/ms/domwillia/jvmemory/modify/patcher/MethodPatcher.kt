@@ -9,9 +9,10 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.commons.InstructionAdapter
 
 class MethodPatcher(
+        api: Int,
         delegate: MethodVisitor?,
         private val definition: MethodDefinition
-) : InstructionAdapter(Opcodes.ASM6, delegate) {
+) : InstructionAdapter(api, delegate) {
 
     override fun store(index: Int, type: Type) {
         // stack: value

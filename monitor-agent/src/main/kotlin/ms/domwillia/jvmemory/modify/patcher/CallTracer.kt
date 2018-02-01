@@ -6,13 +6,14 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.AdviceAdapter
 
 class CallTracer(
+        api: Int,
         private val className: String,
         mv: MethodVisitor?,
         access: Int,
         private val methodName: String,
         desc: String?
 ) : AdviceAdapter(
-        Opcodes.ASM6,
+        api,
         mv,
         access,
         methodName,
