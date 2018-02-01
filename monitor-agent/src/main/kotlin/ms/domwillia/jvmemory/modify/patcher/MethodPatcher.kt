@@ -127,7 +127,7 @@ class MethodPatcher(
         super.dupX1()
 
         // stack: array size array
-        super.visitLdcInsn(type.className)
+        super.visitLdcInsn(type.className + "[]")
 
         // stack: array size array clazz
         callMonitor(Monitor::allocateTagForArray)
