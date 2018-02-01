@@ -3,7 +3,7 @@ function generateRandomPersistentColour(className, isSystem) {
     if (!isSystem)
         return "hsl(" + rand + ", 70%, 70%)";
     else
-        return "hsl(" + rand + ", 22%, 34%)";
+        return "hsl(" + rand + ", 60%, 40%)";
 }
 
 const FLASH_DURATION = 50;
@@ -18,8 +18,9 @@ function addHeapObject(payload) {
     if (!classDef) {
         // TODO arrays of different dimensions should share the same colour
         //      i.e., remove [[[[[
-        colour = generateRandomPersistentColour(clazz, true);
-        definitions[clazz] = {colour}
+        const clazzName = clazz.name || clazz;
+        colour = generateRandomPersistentColour(clazzName, true);
+        definitions[clazz] = {colour};
     }
     else
         colour = classDef.colour;
