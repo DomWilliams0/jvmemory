@@ -112,6 +112,7 @@ class RawMessageHandler {
                     it.addHeapObject = AddHeapObject.newBuilder().apply {
                         id = alloc.id
                         class_ = alloc.type
+                        arraySize = alloc.size
                     }.build()
                 }))
 

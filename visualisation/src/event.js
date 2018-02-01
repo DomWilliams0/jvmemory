@@ -10,7 +10,7 @@ const FLASH_DURATION = 50;
 const SPAWN_OFFSET = 20;
 
 function addHeapObject(payload) {
-    let {id} = payload,
+    let {id, arraySize} = payload,
         clazz = payload["class"];
 
     let classDef = definitions[clazz];
@@ -24,10 +24,18 @@ function addHeapObject(payload) {
     else
         colour = classDef.colour;
 
-    console.log("add obj %s %s", id, clazz);
+    console.log("add obj %s %s%s", id, clazz, arraySize ? " of size " + arraySize : "");
+
+    let array = undefined;
+    if (arraySize)
+        array = {
+            size: arraySize,
+        };
+
     heapObjects.push({
         id,
         clazz,
+        array,
         fill: colour,
         x: HEAP_CENTRE[0] + (Math.random() - 0.5) * SPAWN_OFFSET,
         y: HEAP_CENTRE[1] + (Math.random() - 0.5) * SPAWN_OFFSET,

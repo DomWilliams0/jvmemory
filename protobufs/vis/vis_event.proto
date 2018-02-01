@@ -48,6 +48,7 @@ message PushMethodFrame {
 message AddHeapObject {
     int64 id = 1;
     string class = 2;
+    int32 array_size = 3;
 }
 
 message DelHeapObject {
