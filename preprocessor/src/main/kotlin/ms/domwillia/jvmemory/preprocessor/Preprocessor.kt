@@ -1,38 +1,37 @@
 package ms.domwillia.jvmemory.preprocessor
 
-import ms.domwillia.jvmemory.preprocessor.protobuf.Event
 import ms.domwillia.jvmemory.protobuf.Message
+import java.io.BufferedOutputStream
 import java.io.File
 import java.nio.file.Files
 
 typealias ThreadID = Long
 typealias ObjectID = Long
 
-class Preprocessor {
+class Preprocessor(outputDirPath: File) {
 
     private val handler = RawMessageHandler()
+    private val threadOutputs = mutableMapOf<ThreadID, BufferedOutputStream>()
+    private val events = EventsLoader(outputDirPath)
 
-    private val events = mutableMapOf<ThreadID, MutableCollection<Event.EventVariant>>()
+    private fun getOutputStream(threadId: ThreadID): BufferedOutputStream {
+        val file = events.getFileForThread(threadId)
+        return threadOutputs.computeIfAbsent(threadId, { file.outputStream().buffered() })
+    }
 
     private fun handle(msg: Message.Variant) {
-        handler.handle(msg).forEach { (tid, event) ->
-            events.computeIfAbsent(tid, { mutableListOf() }).add(event)
+        handler.handle(msg).forEach { (threadId, event) ->
+            event.writeDelimitedTo(getOutputStream(threadId))
         }
     }
 
-    private fun process() {
-        // TODO have fun here
-    }
+    private fun finish() {
+        threadOutputs.values.forEach(BufferedOutputStream::close)
 
-    private fun flushToDisk(eventsLoader: EventsLoader) {
-        events.keys.forEach { tid ->
-            eventsLoader.getFileForThread(tid).outputStream().buffered().use { stream ->
-                events[tid]!!.forEach { it.writeDelimitedTo(stream) }
+        with(events.definitionFile.outputStream()) {
+            for (classDef in handler.loadedClassDefinitions) {
+                classDef.writeDelimitedTo(this)
             }
-        }
-
-        eventsLoader.definitionFile.outputStream().use { stream ->
-            handler.loadedClassDefinitions.forEach { it.writeDelimitedTo(stream) }
         }
     }
 
@@ -42,25 +41,29 @@ class Preprocessor {
          * @param outputDirPath Directory to write out processed visualisation events
          *                      A file will be created for each thread
          */
-        fun runPreprocessor(inputLogPath: File, outputDirPath: File): EventsLoader {
+        fun runPreprocessor(
+                inputLogPath: File,
+                outputDirPath: File
+        ): EventsLoader {
             val outDirPath = outputDirPath.toPath()
-            when {
-                !inputLogPath.isFile -> throw IllegalArgumentException("Bad log file path given")
-                outputDirPath.exists() -> {
-                    if (!outputDirPath.isDirectory) throw IllegalArgumentException("Bad output directory: it is not a directory!")
-                    outputDirPath.listFiles().forEach { it.delete() }
-                }
-                else -> Files.createDirectories(outDirPath)
+            if (!inputLogPath.isFile)
+                throw IllegalArgumentException("Bad log file path given")
+            if (outputDirPath.exists()) {
+                if (!outputDirPath.isDirectory) throw IllegalArgumentException("Bad output directory: it is not a directory!")
+                outputDirPath.listFiles().forEach { it.delete() }
+            } else {
+                Files.createDirectories(outDirPath)
             }
-            val eventsLoader = EventsLoader(outDirPath.toFile())
-            val proc = Preprocessor()
 
-            readMessages(inputLogPath).forEach(proc::handle)
+            val proc = Preprocessor(outputDirPath)
 
-            proc.process()
-            proc.flushToDisk(eventsLoader)
+            for (m in readMessages(inputLogPath)) {
+                proc.handle(m)
+            }
 
-            return eventsLoader
+            proc.finish()
+
+            return proc.events
         }
 
         fun readMessages(inputLogPath: File): Sequence<Message.Variant> {
