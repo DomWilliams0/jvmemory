@@ -296,7 +296,7 @@ function startTicking(server, tickSpeed) {
     fetch(server + "/definitions").then(resp => resp.json()).then(defs => {
         let main;
         for (let cls of defs) {
-            cls.colour = generateRandomPersistentColour(cls);
+            cls.colour = generateRandomPersistentColour(cls.name);
             definitions[cls.name] = cls;
 
             // bit of a hack
