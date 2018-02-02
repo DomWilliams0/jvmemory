@@ -14,18 +14,43 @@ class Preprocessor(outputDirPath: File) {
     private val threadOutputs = mutableMapOf<ThreadID, BufferedOutputStream>()
     private val events = EventsLoader(outputDirPath)
 
-    private fun getOutputStream(threadId: ThreadID): BufferedOutputStream {
-        val file = events.getFileForThread(threadId)
-        return threadOutputs.computeIfAbsent(threadId, { file.outputStream().buffered() })
+    private val continuousIndices = hashSetOf<Int>()
+
+    private fun preprocess(messages: List<Message.Variant>) {
+        // combine multi dimensional arrays
+        messages.forEachIndexed { i, msg ->
+            if (msg.type != Message.MessageType.ALLOC_ARRAY)
+                return@forEachIndexed
+
+            val srcArray = msg.allocArray.srcArrayId
+            if (srcArray != 0L) {
+                continuousIndices.add(i)
+
+                if (i > 0) {
+                    val previous = messages[i - 1]
+                    if (previous.type == Message.MessageType.ALLOC_ARRAY &&
+                            srcArray == previous.allocArray.id &&
+                            previous.allocArray.srcArrayId == 0L)
+                        continuousIndices.add(i - 1)
+                }
+            }
+        }
     }
 
-    private fun handle(msg: Message.Variant) {
+    private fun handle(index: Int, msg: Message.Variant) {
+        val continuous = continuousIndices.contains(index)
+
         handler.handle(msg).forEach { (threadId, event) ->
-            event.writeDelimitedTo(getOutputStream(threadId))
+            event.continuous = continuous
+            val stream = threadOutputs.computeIfAbsent(threadId, {
+                events.getFileForThread(threadId).outputStream().buffered()
+            })
+            event.build().writeDelimitedTo(stream)
         }
     }
 
     private fun finish() {
+        continuousIndices.clear()
         threadOutputs.values.forEach(BufferedOutputStream::close)
 
         with(events.definitionFile.outputStream()) {
@@ -56,19 +81,21 @@ class Preprocessor(outputDirPath: File) {
             }
 
             val proc = Preprocessor(outputDirPath)
+            val messages = readMessages(inputLogPath)
 
-            for (m in readMessages(inputLogPath)) {
-                proc.handle(m)
-            }
+            proc.preprocess(messages)
+
+            messages.forEachIndexed(proc::handle)
 
             proc.finish()
 
             return proc.events
         }
 
-        fun readMessages(inputLogPath: File): Sequence<Message.Variant> {
-            val stream = inputLogPath.inputStream()
-            return generateSequence { Message.Variant.parseDelimitedFrom(stream) }
+        fun readMessages(inputLogPath: File): List<Message.Variant> {
+            inputLogPath.inputStream().use {
+                return generateSequence { Message.Variant.parseDelimitedFrom(it) }.toList()
+            }
         }
     }
 

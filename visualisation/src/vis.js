@@ -157,6 +157,8 @@ function restart(changedGraph) {
     nodeEnterObjs.append("title") // hover
         .text(d => d.id + " - " + d.clazz);
 
+    node = node.merge(nodeEnter);
+
     // array nodes
     node.each(function (d) {
         if (!d.array) return; // TODO filter?!
@@ -169,7 +171,6 @@ function restart(changedGraph) {
                 .attr("r", HEAP_NODE_RADIUS + 2 * (i+1));
         }
     });
-    node = node.merge(nodeEnter);
 
 
     // links

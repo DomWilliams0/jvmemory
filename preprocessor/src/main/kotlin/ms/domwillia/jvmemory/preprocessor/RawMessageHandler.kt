@@ -4,7 +4,7 @@ import ms.domwillia.jvmemory.preprocessor.protobuf.Event.*
 import ms.domwillia.jvmemory.protobuf.*
 import java.util.*
 
-typealias EmittedEvent = Pair<ThreadID, EventVariant>
+typealias EmittedEvent = Pair<ThreadID, EventVariant.Builder>
 typealias EmittedEvents = List<EmittedEvent>
 
 class RawMessageHandler {
@@ -57,7 +57,7 @@ class RawMessageHandler {
         val event = EventVariant.newBuilder().apply {
             type = messageType
             initialiser(this)
-        }.build()
+        }
         return Pair(threadId, event)
     }
 
