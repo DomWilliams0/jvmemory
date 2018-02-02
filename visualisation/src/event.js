@@ -242,12 +242,14 @@ function startTicking(server, tickSpeed) {
         this.pause = function () {
             clearTimeout(ticker.id);
             ticker.id = null;
+            sim.stop();
 
             ticker.time -= new Date() - ticker.lastTick;
         };
 
         this.resume = function () {
             clearTimeout(ticker.id);
+            sim.restart();
 
             ticker.lastTick = new Date();
             this.id = setTimeout(function callback() {
@@ -257,10 +259,6 @@ function startTicking(server, tickSpeed) {
                 if (ticker.index >= events.length) {
                     console.log("all done");
                     ticker.pause();
-
-                    console.log("stopping simulation in 5 seconds");
-                    setTimeout(sim.stop, 5000);
-
                     return;
                 }
 
