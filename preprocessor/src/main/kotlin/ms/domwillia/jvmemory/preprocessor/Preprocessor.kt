@@ -8,13 +8,17 @@ import java.nio.file.Files
 typealias ThreadID = Long
 typealias ObjectID = Long
 
+enum class EventFlag {
+    CONTINUOUS, REMOVED
+}
+
 class Preprocessor(outputDirPath: File) {
 
     private val handler = RawMessageHandler()
     private val threadOutputs = mutableMapOf<ThreadID, BufferedOutputStream>()
     private val events = EventsLoader(outputDirPath)
 
-    private val continuousIndices = hashSetOf<Int>()
+    private val flags = hashMapOf<Int, EventFlag>()
 
     private fun preprocess(messages: List<Message.Variant>) {
         // combine multi dimensional arrays
@@ -24,24 +28,38 @@ class Preprocessor(outputDirPath: File) {
 
             val srcArray = msg.allocArray.srcArrayId
             if (srcArray != 0L) {
-                continuousIndices.add(i)
+                flags[i] = EventFlag.CONTINUOUS
 
                 if (i > 0) {
                     val previous = messages[i - 1]
                     if (previous.type == Message.MessageType.ALLOC_ARRAY &&
                             srcArray == previous.allocArray.id &&
                             previous.allocArray.srcArrayId == 0L)
-                        continuousIndices.add(i - 1)
+                        flags[i - 1] = EventFlag.CONTINUOUS
                 }
+            }
+        }
+
+        // remove empty method calls (enter immediately followed by exit)
+        messages.forEachIndexed { i, msg ->
+            if (msg.type == Message.MessageType.METHOD_EXIT &&
+                    i > 0 &&
+                    messages[i - 1].type == Message.MessageType.METHOD_ENTER) {
+                flags[i] = EventFlag.REMOVED
+                flags[i - 1] = EventFlag.REMOVED
             }
         }
     }
 
     private fun handle(index: Int, msg: Message.Variant) {
-        val continuous = continuousIndices.contains(index)
+        val flag = flags.getOrElse(index, { null })
 
         handler.handle(msg).forEach { (threadId, event) ->
-            event.continuous = continuous
+            when (flag) {
+                EventFlag.CONTINUOUS -> event.continuous = true
+                EventFlag.REMOVED -> return@forEach
+            }
+
             val stream = threadOutputs.computeIfAbsent(threadId, {
                 events.getFileForThread(threadId).outputStream().buffered()
             })
@@ -50,7 +68,7 @@ class Preprocessor(outputDirPath: File) {
     }
 
     private fun finish() {
-        continuousIndices.clear()
+        flags.clear()
         threadOutputs.values.forEach(BufferedOutputStream::close)
 
         with(events.definitionFile.outputStream()) {
