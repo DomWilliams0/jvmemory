@@ -158,11 +158,19 @@ function restart(changedGraph) {
         .text(d => d.id + " - " + d.clazz);
 
     // array nodes
-    nodeEnter.append("circle")
-        .filter(d => d.array)
-        .attr("class", "nodeArray")
-        .attr("r", HEAP_NODE_RADIUS + 2);
+    node.each(function (d) {
+        if (!d.array) return; // TODO filter?!
+        if (d.array.done) return;
+        d.array.done = true;
+        let self = d3.select(this);
+        for (let i = 0; i < d.array.dims; i++) {
+            self.append("circle")
+                .attr("class", "nodeArray")
+                .attr("r", HEAP_NODE_RADIUS + 2 * (i+1));
+        }
+    });
     node = node.merge(nodeEnter);
+
 
     // links
     link = link.data(heapLinks, d => d.name);
