@@ -296,6 +296,7 @@ function startTicking(server, tickSpeed) {
                         let [handler, payload_name] = handlerTuple;
                         let payload = evt[payload_name];
                         handler(payload, ctx);
+                        ctx.keepGoing = evt.continuous;
 
                         // thanks to true=1, false=0
                         totalChangesToGraph += ctx.simChange === CHANGED_GRAPH;

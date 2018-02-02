@@ -24,6 +24,7 @@ enum EventType {
 
 message EventVariant {
     EventType type = 1;
+    bool continuous = 9;
     oneof payload {
         AddHeapObject add_heap_object = 2;
         DelHeapObject del_heap_object = 3;
