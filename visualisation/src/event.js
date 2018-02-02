@@ -1,5 +1,6 @@
 function generateRandomPersistentColour(className, isSystem) {
-    let rand = new Math.seedrandom(className)() * 360;
+    const classNameWithoutArray = className.replace(/\[\]/g, "");
+    let rand = new Math.seedrandom(classNameWithoutArray)() * 360;
     if (!isSystem)
         return "hsl(" + rand + ", 70%, 70%)";
     else
@@ -31,6 +32,7 @@ function addHeapObject(payload) {
     if (arraySize)
         array = {
             size: arraySize,
+            dims: clazz.split("[]").length - 1 // counts []s
         };
 
     heapObjects.push({
