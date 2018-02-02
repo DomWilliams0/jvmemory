@@ -10,6 +10,11 @@ function generateRandomPersistentColour(className, isSystem) {
 const FLASH_DURATION = 50;
 const SPAWN_OFFSET = 20;
 
+const
+    DIDNT_CHANGE_SIM = 0x100,
+    DIDNT_CHANGE_GRAPH = 0x101,
+    CHANGED_GRAPH = 0x102;
+
 function addHeapObject(payload) {
     let {id, arraySize} = payload,
         clazz = payload["class"];
@@ -43,7 +48,6 @@ function addHeapObject(payload) {
         x: HEAP_CENTRE[0] + (Math.random() - 0.5) * SPAWN_OFFSET,
         y: HEAP_CENTRE[1] + (Math.random() - 0.5) * SPAWN_OFFSET,
     });
-    restart(true);
 }
 
 function delHeapObject({id}) {
@@ -54,8 +58,6 @@ function delHeapObject({id}) {
         throw "cant dealloc missing heap object " + id;
     heapObjects.splice(index, 1);
     heapLinks = heapLinks.filter((x) => x.source.id !== id && x.target.id !== id);
-
-    restart(true);
 }
 
 function setInterHeapLink(payload) {
@@ -73,15 +75,13 @@ function setInterHeapLink(payload) {
         }
     } else if (!rm)
         heapLinks.push({source: srcId, target: dstId, name: fieldName});
-
-    restart(true);
 }
 
 function getStackNodeId(frame, index) {
     return "stack_" + frame.uuid + "_" + index;
 }
 
-function setLocalVarLink(payload) {
+function setLocalVarLink(payload, ctx) {
     let varIndex = payload.varIndex || 0,
         {dstId} = payload;
     const rm = dstId === undefined;
@@ -90,7 +90,8 @@ function setLocalVarLink(payload) {
     const localVar = currentFrame.methodDefinition.localVars.find(l => l.index === varIndex);
     if (!localVar) {
         console.log("error: invalid local var %d, skipping setLocalVarLink", varIndex);
-        return 0;
+        ctx.nextTime = 0;
+        return;
     }
     const name = localVar.name;
     const stackData = {
@@ -131,10 +132,9 @@ function setLocalVarLink(payload) {
             stack: stackData,
         });
     }
-    restart(true);
 }
 
-function showLocalVarAccess(payload) {
+function showLocalVarAccess(payload, ctx) {
     let varIndex = payload.varIndex || 0;
     console.log("show stack access %d", varIndex);
 
@@ -157,10 +157,11 @@ function showLocalVarAccess(payload) {
         }, FLASH_DURATION);
     }
 
-    return FLASH_DURATION;
+    ctx.nextTime = FLASH_DURATION;
+    ctx.simChange = DIDNT_CHANGE_SIM;
 }
 
-function showHeapObjectAccess(payload) {
+function showHeapObjectAccess(payload, ctx) {
     let {objId, fieldName} = payload;
     console.log("showing heap access from id %d field %s", objId, fieldName || "none");
 
@@ -178,11 +179,11 @@ function showHeapObjectAccess(payload) {
             links.classed("linkFlash", false);
     }, FLASH_DURATION);
 
-
-    return FLASH_DURATION;
+    ctx.nextTime = FLASH_DURATION;
+    ctx.simChange = DIDNT_CHANGE_SIM;
 }
 
-function pushMethodFrame({owningClass, name, signature}) {
+function pushMethodFrame({owningClass, name, signature}, ctx) {
     console.log("entering method %s:%s", owningClass, name);
     let classDef = definitions[owningClass];
     if (classDef === undefined)
@@ -206,17 +207,18 @@ function pushMethodFrame({owningClass, name, signature}) {
     };
     stackFrames[frame.uuid] = frame;
     callstack.push(frame);
-    restart();
+
+    ctx.simChange = DIDNT_CHANGE_GRAPH;
 }
 
-function popMethodFrame() {
+function popMethodFrame(_payload, ctx) {
     console.log("exiting method");
     const old_frame = callstack.pop();
 
     heapLinks = heapLinks.filter(d => !d.stack || d.stack.frameUuid !== old_frame.uuid);
     heapObjects = heapObjects.filter(d => !d.stack || d.stack.frameUuid !== old_frame.uuid);
 
-    restart();
+    ctx.simChange = DIDNT_CHANGE_GRAPH; // TODO really?
 }
 
 const event_handlers = {
@@ -247,7 +249,20 @@ function startTicking(server, tickSpeed) {
             ticker.time -= new Date() - ticker.lastTick;
         };
 
+        function isInRange(x) {
+            const val = x === undefined ? ticker.index : x;
+            return val < events.length && val >= 0;
+        }
         this.resume = function () {
+            function advance(delta) {
+                let advanced = ticker.index += delta;
+                if (!isInRange(advanced))
+                    return false;
+                ticker.index = advanced;
+                return true;
+            }
+
+
             clearTimeout(ticker.id);
             sim.restart();
 
@@ -255,28 +270,52 @@ function startTicking(server, tickSpeed) {
             this.id = setTimeout(function callback() {
                 ticker.lastTick = new Date();
 
-                // end reached
-                if (ticker.index >= events.length) {
-                    console.log("all done");
-                    ticker.pause();
-                    return;
+                let ctx = {
+                    nextTime: undefined,
+                    keepGoing: true,
+                    simChange: CHANGED_GRAPH,
+
+                    reset: function () {
+                        this.nextTime = undefined;
+                        this.keepGoing = false;
+                        this.simChange = CHANGED_GRAPH;
+                    }
+                };
+
+                let totalChangesToGraph = 0;
+                let totalChangesToSim = 0;
+                while (ctx.keepGoing) {
+                    ctx.reset();
+
+                    if (!isInRange())
+                        return;
+
+                    let evt = events[ticker.index];
+                    let handlerTuple = event_handlers[evt.type];
+                    if (handlerTuple) {
+                        let [handler, payload_name] = handlerTuple;
+                        let payload = evt[payload_name];
+                        handler(payload, ctx);
+
+                        // thanks to true=1, false=0
+                        totalChangesToGraph += ctx.simChange === CHANGED_GRAPH;
+                        totalChangesToSim += ctx.simChange !== DIDNT_CHANGE_SIM
+                    }
+
+                    // step
+                    if (!advance(1)) {
+                        // an end has been reached
+                        ticker.pause();
+                        console.log("end reached");
+                        return;
+                    }
                 }
 
-                let nextTime;
-                let evt = events[ticker.index];
-                let handlerTuple = event_handlers[evt.type];
-                if (handlerTuple) {
-                    let [handler, payload_name] = event_handlers[evt.type];
-                    let payload = evt[payload_name];
-                    nextTime = handler(payload);
-                }
+                if (totalChangesToSim > 0)
+                    restart(totalChangesToGraph > 0);
 
-                ticker.index += 1;
-
-                if (nextTime === undefined)
-                    nextTime = time;
-                ticker.time = nextTime;
-
+                // schedule next
+                ticker.time = ctx.nextTime === undefined ? time : ctx.nextTime;
                 ticker.id = setTimeout(callback, ticker.time);
 
             }, ticker.time);
