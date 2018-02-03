@@ -4,15 +4,10 @@ let heapLinks = [];
 const callstack = [];
 const definitions = {};
 
-// mutable constants
-let WINDOW_WIDTH;
 let WINDOW_HEIGHT;
-let HEAP_WIDTH;
 let HEAP_CENTRE;
 
 // constants
-const STACK_FRACTION = 0.38;
-const HEAP_FRACTION = 1.0 - STACK_FRACTION;
 const SERVER = "http://localhost:52933";
 const CENTRE_PULL = 0.030;
 const LINK_LENGTH = 70;
@@ -32,8 +27,6 @@ const sim = d3.forceSimulation(heapObjects)
     .force("charge", d3.forceManyBody().strength(-100))
     .force("link", d3.forceLink().id(d => d.id)
         .distance(LINK_LENGTH).strength(LINK_STRENGTH))
-    .force("x", d3.forceX(HEAP_CENTRE[0]).strength(CENTRE_PULL))
-    .force("y", d3.forceY(HEAP_CENTRE[1]).strength(CENTRE_PULL))
     .on("tick", tickSim)
     .alphaTarget(0.5);
 
@@ -107,26 +100,15 @@ function tickSim() {
 
 }
 
-function discoverWindowSize() {
-    WINDOW_WIDTH = window.innerWidth;
-    WINDOW_HEIGHT = window.innerHeight;
-    HEAP_WIDTH = WINDOW_WIDTH * HEAP_FRACTION;
-    HEAP_CENTRE = [
-        HEAP_WIDTH / 2,
-        WINDOW_HEIGHT / 2,
-    ];
-}
-
 function resize() {
-    discoverWindowSize();
-    stackSvg
-        .attr("width", WINDOW_WIDTH * STACK_FRACTION)
-        .attr("height", WINDOW_HEIGHT);
+    const stack = document.getElementById("stack");
+    const heap = document.getElementById("heap");
 
-    heapSvg
-        .attr("width", HEAP_WIDTH)
-        .attr("height", WINDOW_HEIGHT);
-
+    WINDOW_HEIGHT = heap.clientHeight;
+    HEAP_CENTRE = [
+        heap.clientWidth / 2,
+        heap.clientHeight / 2,
+    ];
     sim.force("x", d3.forceX(HEAP_CENTRE[0]).strength(CENTRE_PULL))
         .force("y", d3.forceY(HEAP_CENTRE[1]).strength(CENTRE_PULL))
 }
@@ -168,7 +150,7 @@ function restart(changedGraph) {
         for (let i = 0; i < d.array.dims; i++) {
             self.append("circle")
                 .attr("class", "nodeArray")
-                .attr("r", HEAP_NODE_RADIUS + 2 * (i+1));
+                .attr("r", HEAP_NODE_RADIUS + 2 * (i + 1));
         }
     });
 
@@ -250,15 +232,13 @@ function restart(changedGraph) {
 }
 
 function buildSvgs() {
-    discoverWindowSize();
-
     const stack = d3.select("#stack").append("svg")
-        .attr("width", WINDOW_WIDTH * STACK_FRACTION)
-        .attr("height", WINDOW_HEIGHT);
+        .attr("width", "100%")
+        .attr("height", "100%");
 
     const heap = d3.select("#heap").append("svg")
-        .attr("width", WINDOW_WIDTH * HEAP_FRACTION)
-        .attr("height", WINDOW_HEIGHT);
+        .attr("width", "100%")
+        .attr("height", "100%");
     heap.append("g").attr("id", "links");
     heap.append("g").attr("id", "nodes");
     heap.append("marker")
