@@ -147,6 +147,7 @@ class RawMessageHandler {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = getField.id
                 fieldName = getField.field
+                read = true
             }.build()
         })
     }
@@ -174,6 +175,7 @@ class RawMessageHandler {
         return createEvents(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = putFieldPrimitive.id
+                read = false
             }.build()
         })
     }
@@ -191,6 +193,7 @@ class RawMessageHandler {
         return createEvents(threadId, EventType.SHOW_LOCAL_VAR_ACCESS, {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = storePrimitive.index
+                read = false
             }.build()
         })
     }
@@ -209,6 +212,7 @@ class RawMessageHandler {
         return createEvents(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = store.id
+                read = false
             }.build()
         })
     }
@@ -217,15 +221,16 @@ class RawMessageHandler {
         return createEvents(threadId, EventType.SHOW_LOCAL_VAR_ACCESS, {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = load.index
+                read = true
             }.build()
         })
     }
 
     private fun loadFromArray(load: Access.LoadFromArray, threadId: ThreadID): EmittedEvents {
-        // TODO new array access event?
         return createEvents(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = load.id
+                read = true
                 if (load.hasField(Access.LoadFromArray.getDescriptor().findFieldByNumber(Access.LoadFromArray.INDEX_FIELD_NUMBER)))
                     fieldName = load.index.toString()
             }.build()

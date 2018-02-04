@@ -69,9 +69,11 @@ message SetLocalVarLink {
 
 message ShowLocalVarAccess {
     int32 var_index = 1;
+    bool read = 2;
 }
 
 message ShowHeapObjectAccess {
     int64 obj_id = 1;
     string field_name = 2;
+    bool read = 3;
 }
