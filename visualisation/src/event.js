@@ -7,7 +7,6 @@ function generateRandomPersistentColour(className, isSystem) {
         return "hsl(" + rand + ", 60%, 40%)";
 }
 
-const FLASH_DURATION = 50;
 const SPAWN_OFFSET = 20;
 
 const
@@ -136,50 +135,57 @@ function setLocalVarLink(payload, ctx) {
 
 function showLocalVarAccess(payload, ctx) {
     let varIndex = payload.varIndex || 0;
-    console.log("show stack access %d", varIndex);
+    console.log("show %s stack access %d", payload.read ? "read" : "write", varIndex);
 
     const currentFrame = callstack[callstack.length - 1];
     const id = "stack_" + currentFrame.uuid + "_" + varIndex;
 
     // TODO highlight local var rect in stack too
 
-    // highlight stack node and link, if possible
     const stackNode = node.filter(d => d.id === id).select("circle");
-    if (stackNode) {
+    if (!stackNode.empty()) {
+        let highlightClass;
+        if (stackNode.classed("AccessR") || stackNode.classed("AccessW")) {
+            highlightClass = "AccessRW";
+        } else {
+            highlightClass = payload.read ? "AccessR" : "AccessW";
+        }
+
         const links = link.filter(d => d.source.id === id);
 
-        // stackNode.attr("class", "flash");
-        links.classed("linkFlash", true);
-        stackNode.classed("nodeFlash", true);
-        setTimeout(() => {
-            links.classed("linkFlash", false);
-            stackNode.classed("nodeFlash", false);
-        }, FLASH_DURATION);
+        links.classed("link" + highlightClass, true);
+        stackNode.classed("node" + highlightClass, true);
+
+        stackNode.nodes().forEach(n => n.onanimationend= () => n.classList.remove("node" + highlightClass));
+        links.nodes().forEach(n => n.onanimationend = () => n.classList.remove("link" + highlightClass));
     }
 
-    ctx.nextTime = FLASH_DURATION;
     ctx.simChange = DIDNT_CHANGE_SIM;
 }
 
 function showHeapObjectAccess(payload, ctx) {
-    let {objId, fieldName} = payload;
-    console.log("showing heap access from id %d field %s", objId, fieldName || "none");
+    let {objId, fieldName, read} = payload;
+    console.log("showing %s heap access from id %d field %s", read ? "read" : "write", objId, fieldName || "none");
 
     const heapNode = node.filter(d => d.id === objId).select("circle");
-    heapNode.classed("nodeFlash", true);
+
+    let highlightClass;
+    if (heapNode.classed("AccessR") || heapNode.classed("AccessW")) {
+        highlightClass = "AccessRW";
+    } else {
+        highlightClass = read ? "AccessR" : "AccessW";
+    }
+
+    heapNode.classed("node" + highlightClass, true);
+    heapNode.nodes().forEach(n => n.onanimationend= () => n.classList.remove("node" + highlightClass));
 
     let links;
     if (fieldName) {
         links = link.filter(d => d.source.id === objId && (!fieldName || d.name === fieldName));
-        links.classed("linkFlash", true);
+        links.classed("link" + highlightClass, true);
+        links.nodes().forEach(n => n.onanimationend = () => n.classList.remove("link" + highlightClass));
     }
-    setTimeout(() => {
-        heapNode.classed("nodeFlash", false);
-        if (links)
-            links.classed("linkFlash", false);
-    }, FLASH_DURATION);
 
-    ctx.nextTime = FLASH_DURATION;
     ctx.simChange = DIDNT_CHANGE_SIM;
 }
 
@@ -253,6 +259,7 @@ function startTicking(server, tickSpeed) {
             const val = x === undefined ? ticker.index : x;
             return val < events.length && val >= 0;
         }
+
         this.resume = function () {
             function advance(delta) {
                 let advanced = ticker.index += delta;
