@@ -133,6 +133,29 @@ function setLocalVarLink(payload, ctx) {
     }
 }
 
+function highlight(selection, wat, read) {
+    let first = selection.node();
+    if (!first) return;
+
+    const prefix = wat + "Access";
+    let isAlreadyAccessed = false;
+    for (let cls of first.classList) {
+        if (cls.startsWith(prefix)) {
+            isAlreadyAccessed = true;
+            break;
+        }
+    }
+
+    let highlightClass = prefix + (isAlreadyAccessed ? "RW" : (read ? "R" : "W"));
+    selection.classed(highlightClass, true);
+    selection.nodes().forEach(n => {
+        n.onanimationend = () => n.classList.remove(highlightClass);
+    });
+}
+
+const highlightNode = (selection, read) => highlight(selection, "node", read);
+const highlightLinks = (selection, read) => highlight(selection, "link", read);
+
 function showLocalVarAccess(payload, ctx) {
     let varIndex = payload.varIndex || 0;
     console.log("show %s stack access %d", payload.read ? "read" : "write", varIndex);
@@ -144,20 +167,10 @@ function showLocalVarAccess(payload, ctx) {
 
     const stackNode = node.filter(d => d.id === id).select("circle");
     if (!stackNode.empty()) {
-        let highlightClass;
-        if (stackNode.classed("AccessR") || stackNode.classed("AccessW")) {
-            highlightClass = "AccessRW";
-        } else {
-            highlightClass = payload.read ? "AccessR" : "AccessW";
-        }
+        highlightNode(stackNode, payload.read);
 
         const links = link.filter(d => d.source.id === id);
-
-        links.classed("link" + highlightClass, true);
-        stackNode.classed("node" + highlightClass, true);
-
-        stackNode.nodes().forEach(n => n.onanimationend= () => n.classList.remove("node" + highlightClass));
-        links.nodes().forEach(n => n.onanimationend = () => n.classList.remove("link" + highlightClass));
+        highlightLinks(links, payload.read);
     }
 
     ctx.simChange = DIDNT_CHANGE_SIM;
@@ -168,22 +181,11 @@ function showHeapObjectAccess(payload, ctx) {
     console.log("showing %s heap access from id %d field %s", read ? "read" : "write", objId, fieldName || "none");
 
     const heapNode = node.filter(d => d.id === objId).select("circle");
+    highlightNode(heapNode, read);
 
-    let highlightClass;
-    if (heapNode.classed("AccessR") || heapNode.classed("AccessW")) {
-        highlightClass = "AccessRW";
-    } else {
-        highlightClass = read ? "AccessR" : "AccessW";
-    }
-
-    heapNode.classed("node" + highlightClass, true);
-    heapNode.nodes().forEach(n => n.onanimationend= () => n.classList.remove("node" + highlightClass));
-
-    let links;
     if (fieldName) {
-        links = link.filter(d => d.source.id === objId && (!fieldName || d.name === fieldName));
-        links.classed("link" + highlightClass, true);
-        links.nodes().forEach(n => n.onanimationend = () => n.classList.remove("link" + highlightClass));
+        const links = link.filter(d => d.source.id === objId && (!fieldName || d.name === fieldName));
+        highlightLinks(links);
     }
 
     ctx.simChange = DIDNT_CHANGE_SIM;
