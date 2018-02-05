@@ -10,9 +10,11 @@ let HEAP_CENTRE;
 // constants
 const SERVER = "http://localhost:52933";
 const CENTRE_PULL = 0.030;
-const LINK_LENGTH = 70;
-const LINK_STRENGTH = 0.54;
-const TICK_SPEED = 500;
+const NODE_REPULSION = 100;
+const LINK_LENGTH = 50;
+const HEAP_LINK_STRENGTH = 3.0;
+const STACK_LINK_STRENGTH = 1.0;
+const TICK_SPEED = 50;
 
 const HEAP_NODE_RADIUS = 6;
 const STACK_NODE_RADIUS = 4;
@@ -24,9 +26,10 @@ const LOCAL_VAR_LINK_X = 0;
 
 const [heapSvg, stackSvg] = buildSvgs();
 const sim = d3.forceSimulation(heapObjects)
-    .force("charge", d3.forceManyBody().strength(-100))
+    .force("charge", d3.forceManyBody().strength(-NODE_REPULSION))
     .force("link", d3.forceLink().id(d => d.id)
-        .distance(LINK_LENGTH).strength(LINK_STRENGTH))
+        .distance(LINK_LENGTH)
+        .strength(d => d.stack ? STACK_LINK_STRENGTH : HEAP_LINK_STRENGTH))
     .on("tick", tickSim)
     .alphaTarget(0.5);
 
