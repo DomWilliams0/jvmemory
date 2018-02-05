@@ -1,7 +1,7 @@
 package ms.domwillia.jvmemory.preprocessor
 
+import ms.domwillia.jvmemory.preprocessor.protobuf.Event
 import ms.domwillia.jvmemory.protobuf.Message
-import java.io.BufferedOutputStream
 import java.io.File
 import java.nio.file.Files
 
@@ -15,8 +15,8 @@ enum class EventFlag {
 class Preprocessor(outputDirPath: File) {
 
     private val handler = RawMessageHandler()
-    private val threadOutputs = mutableMapOf<ThreadID, BufferedOutputStream>()
-    private val events = EventsLoader(outputDirPath)
+    private val eventsLoader = EventsLoader(outputDirPath)
+    private val emittedEvents = mutableMapOf<ThreadID, MutableList<Event.EventVariant.Builder>>()
 
     private val flags = hashMapOf<Int, EventFlag>()
 
@@ -51,37 +51,54 @@ class Preprocessor(outputDirPath: File) {
         }
     }
 
-    private fun handle(index: Int, msg: Message.Variant) {
-        val flag = flags.getOrElse(index, { null })
+    private fun process(messages: MutableList<Message.Variant>) {
+        fun handle(index: Int, msg: Message.Variant): EmittedEvents {
+            val flag = flags.getOrElse(index, { null })
 
-        handler.handle(msg).forEach { (threadId, event) ->
-            when (flag) {
-                EventFlag.CONTINUOUS -> event.continuous = true
-                EventFlag.REMOVED -> return@forEach
+            if (flag == EventFlag.REMOVED)
+                return emptyEmittedEvents
+
+            val emitted = handler.handle(msg)
+            emitted.forEach { (_, eventBuilder) ->
+                if (flag == EventFlag.CONTINUOUS)
+                    eventBuilder.continuous = true
             }
 
-            val stream = threadOutputs.computeIfAbsent(threadId, {
-                events.getFileForThread(threadId).outputStream().buffered()
-            })
-            event.build().writeDelimitedTo(stream)
+            return emitted
         }
+
+        val it = messages.iterator()
+        var index = 0
+        while (it.hasNext()) {
+            val msg = it.next()
+            it.remove()
+            handle(index++, msg).forEach { (tid, event) ->
+                emittedEvents.computeIfAbsent(tid, { mutableListOf() }).add(event)
+            }
+        }
+
+        flags.clear()
     }
 
-    private fun finish() {
-        flags.clear()
-        threadOutputs.values.forEach(BufferedOutputStream::close)
+    private fun postprocess() {
+        // TODO
+    }
 
-        with(events.definitionFile.outputStream()) {
-            for (classDef in handler.loadedClassDefinitions) {
-                classDef.writeDelimitedTo(this)
+    private fun writeOut() {
+        emittedEvents.forEach { tid, events ->
+            eventsLoader.getFileForThread(tid).outputStream().buffered().use { stream ->
+                events.forEach { it.build().writeDelimitedTo(stream) }
             }
+        }
+        eventsLoader.definitionFile.outputStream().use { stream ->
+            handler.loadedClassDefinitions.forEach { it.writeDelimitedTo(stream) }
         }
     }
 
     companion object {
         /**
          * @param inputLogPath Raw event log from monitor agent
-         * @param outputDirPath Directory to write out processed visualisation events
+         * @param outputDirPath Directory to write out processed visualisation eventsLoader
          *                      A file will be created for each thread
          */
         fun runPreprocessor(
@@ -102,17 +119,16 @@ class Preprocessor(outputDirPath: File) {
             val messages = readMessages(inputLogPath)
 
             proc.preprocess(messages)
+            proc.process(messages)
+            proc.postprocess()
+            proc.writeOut()
 
-            messages.forEachIndexed(proc::handle)
-
-            proc.finish()
-
-            return proc.events
+            return proc.eventsLoader
         }
 
-        fun readMessages(inputLogPath: File): List<Message.Variant> {
+        fun readMessages(inputLogPath: File): MutableList<Message.Variant> {
             inputLogPath.inputStream().use {
-                return generateSequence { Message.Variant.parseDelimitedFrom(it) }.toList()
+                return generateSequence { Message.Variant.parseDelimitedFrom(it) }.toMutableList()
             }
         }
     }
