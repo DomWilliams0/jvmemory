@@ -47,6 +47,8 @@ function addHeapObject(payload) {
         x: HEAP_CENTRE[0] + (Math.random() - 0.5) * SPAWN_OFFSET,
         y: HEAP_CENTRE[1] + (Math.random() - 0.5) * SPAWN_OFFSET,
     });
+
+    return CHANGED_GRAPH;
 }
 
 function delHeapObject({id}) {
@@ -57,6 +59,8 @@ function delHeapObject({id}) {
         throw "cant dealloc missing heap object " + id;
     heapObjects.splice(index, 1);
     heapLinks = heapLinks.filter((x) => x.source.id !== id && x.target.id !== id);
+
+    return CHANGED_GRAPH;
 }
 
 function setInterHeapLink(payload) {
@@ -74,13 +78,15 @@ function setInterHeapLink(payload) {
         }
     } else if (!rm)
         heapLinks.push({source: srcId, target: dstId, name: fieldName});
+
+    return CHANGED_GRAPH;
 }
 
 function getStackNodeId(frame, index) {
     return "stack_" + frame.uuid + "_" + index;
 }
 
-function setLocalVarLink(payload, ctx) {
+function setLocalVarLink(payload) {
     let varIndex = payload.varIndex || 0,
         {dstId} = payload;
     const rm = dstId === undefined;
@@ -89,8 +95,7 @@ function setLocalVarLink(payload, ctx) {
     const localVar = currentFrame.methodDefinition.localVars.find(l => l.index === varIndex);
     if (!localVar) {
         console.log("error: invalid local var %d, skipping setLocalVarLink", varIndex);
-        ctx.nextTime = 0;
-        return;
+        return DIDNT_CHANGE_GRAPH;
     }
     const name = localVar.name;
     const stackData = {
@@ -131,6 +136,7 @@ function setLocalVarLink(payload, ctx) {
             stack: stackData,
         });
     }
+    return CHANGED_GRAPH;
 }
 
 function highlight(selection, wat, read) {
@@ -159,7 +165,7 @@ function highlight(selection, wat, read) {
 const highlightNode = (selection, read) => highlight(selection, "node", read);
 const highlightLinks = (selection, read) => highlight(selection, "link", read);
 
-function showLocalVarAccess(payload, ctx) {
+function showLocalVarAccess(payload) {
     let varIndex = payload.varIndex || 0;
     console.log("show %s stack access %d", payload.read ? "read" : "write", varIndex);
 
@@ -176,10 +182,10 @@ function showLocalVarAccess(payload, ctx) {
         highlightLinks(links, payload.read);
     }
 
-    ctx.simChange = DIDNT_CHANGE_SIM;
+    return DIDNT_CHANGE_SIM;
 }
 
-function showHeapObjectAccess(payload, ctx) {
+function showHeapObjectAccess(payload) {
     let {objId, fieldName, read} = payload;
     console.log("showing %s heap access from id %d field %s", read ? "read" : "write", objId, fieldName || "none");
 
@@ -191,10 +197,10 @@ function showHeapObjectAccess(payload, ctx) {
         highlightLinks(links);
     }
 
-    ctx.simChange = DIDNT_CHANGE_SIM;
+    return DIDNT_CHANGE_SIM;
 }
 
-function pushMethodFrame({owningClass, name, signature}, ctx) {
+function pushMethodFrame({owningClass, name, signature}) {
     console.log("entering method %s:%s", owningClass, name);
     let classDef = definitions[owningClass];
     if (classDef === undefined)
@@ -219,17 +225,17 @@ function pushMethodFrame({owningClass, name, signature}, ctx) {
     stackFrames[frame.uuid] = frame;
     callstack.push(frame);
 
-    ctx.simChange = DIDNT_CHANGE_GRAPH;
+    return DIDNT_CHANGE_GRAPH;
 }
 
-function popMethodFrame(_payload, ctx) {
+function popMethodFrame(_payload) {
     console.log("exiting method");
     const old_frame = callstack.pop();
 
     heapLinks = heapLinks.filter(d => !d.stack || d.stack.frameUuid !== old_frame.uuid);
     heapObjects = heapObjects.filter(d => !d.stack || d.stack.frameUuid !== old_frame.uuid);
 
-    ctx.simChange = DIDNT_CHANGE_GRAPH; // TODO really?
+    return CHANGED_GRAPH;
 }
 
 const event_handlers = {
@@ -274,7 +280,6 @@ function startTicking(server, tickSpeed) {
                 return true;
             }
 
-
             clearTimeout(ticker.id);
             sim.restart();
 
@@ -282,22 +287,11 @@ function startTicking(server, tickSpeed) {
             this.id = setTimeout(function callback() {
                 ticker.lastTick = new Date();
 
-                let ctx = {
-                    nextTime: undefined,
-                    keepGoing: true,
-                    simChange: CHANGED_GRAPH,
-
-                    reset: function () {
-                        this.nextTime = undefined;
-                        this.keepGoing = false;
-                        this.simChange = CHANGED_GRAPH;
-                    }
-                };
-
                 let totalChangesToGraph = 0;
                 let totalChangesToSim = 0;
-                while (ctx.keepGoing) {
-                    ctx.reset();
+                let keepGoing = true;
+                while (keepGoing) {
+                    keepGoing = false;
 
                     if (!isInRange())
                         return;
@@ -307,12 +301,12 @@ function startTicking(server, tickSpeed) {
                     if (handlerTuple) {
                         let [handler, payload_name] = handlerTuple;
                         let payload = evt[payload_name];
-                        handler(payload, ctx);
-                        ctx.keepGoing = evt.continuous;
+                        let simChange = handler(payload);
+                        keepGoing = evt.continuous;
 
                         // thanks to true=1, false=0
-                        totalChangesToGraph += ctx.simChange === CHANGED_GRAPH;
-                        totalChangesToSim += ctx.simChange !== DIDNT_CHANGE_SIM
+                        totalChangesToGraph += simChange === CHANGED_GRAPH;
+                        totalChangesToSim += simChange !== DIDNT_CHANGE_SIM
                     }
 
                     // step
@@ -328,7 +322,7 @@ function startTicking(server, tickSpeed) {
                     restart(totalChangesToGraph > 0);
 
                 // schedule next
-                ticker.time = ctx.nextTime === undefined ? time : ctx.nextTime;
+                // ticker.time = ctx.nextTime === undefined ? time : ctx.nextTime;
                 ticker.id = setTimeout(callback, ticker.time);
 
             }, ticker.time);
