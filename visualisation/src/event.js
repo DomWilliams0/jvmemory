@@ -138,15 +138,18 @@ function highlight(selection, wat, read) {
     if (!first) return;
 
     const prefix = wat + "Access";
-    let isAlreadyAccessed = false;
+    const expected = prefix + (read ? "R" : "W");
+    const pat = new RegExp("^" + prefix + "[R|W|RW]$");
+    let rw = false;
     for (let cls of first.classList) {
-        if (cls.startsWith(prefix)) {
-            isAlreadyAccessed = true;
+        if (cls.match(pat)) {
+            rw = cls !== expected;
+            console.log("MATCH " + cls + " and change: " + rw);
             break;
         }
     }
 
-    let highlightClass = prefix + (isAlreadyAccessed ? "RW" : (read ? "R" : "W"));
+    let highlightClass = prefix + (rw ? "RW" : (read ? "R" : "W"));
     selection.classed(highlightClass, true);
     selection.nodes().forEach(n => {
         n.onanimationend = () => n.classList.remove(highlightClass);
