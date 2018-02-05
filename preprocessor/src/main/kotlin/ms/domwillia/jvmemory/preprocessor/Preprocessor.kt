@@ -81,15 +81,16 @@ class Preprocessor(outputDirPath: File) {
     }
 
     private fun postprocess() {
-        fun isAccess(e: Event.EventVariant.Builder) = e.type == Event.EventType.SHOW_HEAP_OBJECT_ACCESS ||
-                e.type == Event.EventType.SHOW_LOCAL_VAR_ACCESS
+        fun isMergeableAccess(e: Event.EventVariant.Builder) =
+                (e.type == Event.EventType.SHOW_HEAP_OBJECT_ACCESS && e.showHeapObjectAccess.explicit) ||
+                        (e.type == Event.EventType.SHOW_LOCAL_VAR_ACCESS && e.showLocalVarAccess.explicit)
 
         emittedEvents.forEach { (_, events) ->
             for (i in 1..events.lastIndex) {
                 // combine consecutive accesses
                 val e1 = events[i - 1]
                 val e2 = events[i]
-                if (isAccess(e1) && isAccess(e2)) {
+                if (isMergeableAccess(e1) && isMergeableAccess(e2)) {
                     e1.continuous = true
                     e2.continuous = true
                 }

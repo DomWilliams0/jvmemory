@@ -12,15 +12,15 @@ public class Arrays implements Specimen {
 //		double[][][] arrdouble = new double[3][4][2];
 //		Object[][][][] arrobj = new Object[5][2][3][3];
 
-		Object[] arr = new Object[5];
+		Object[] arr = new Object[3];
 		for (int i = 0; i < arr.length; i++)
 		arr[i] = new Object();
 
-		Object[][][] arr2 = new Object[3][3][3];
-		for (int i = 0; i < arr2.length; i++)
-			for (int j = 0; j < arr2[0].length; j++)
-				for (int k = 0; k < arr2[0].length; k++)
-					arr2[i][j][k] = new Object();
+		int[] ints = new int[8];
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = i;
+		}
+
 	}
 
 	static void printArray(Object array, String prefix) {
