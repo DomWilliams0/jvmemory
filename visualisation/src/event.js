@@ -150,7 +150,6 @@ function highlight(selection, wat, read) {
     for (let cls of first.classList) {
         if (cls.match(pat)) {
             rw = cls !== expected;
-            console.log("MATCH " + cls + " and change: " + rw);
             break;
         }
     }
@@ -255,15 +254,12 @@ function startTicking(server, tickSpeed) {
         this.time = time;
         this.index = 0;
         this.id = null;
-        this.lastTick = new Date();
 
         let ticker = this;
         this.pause = function () {
             clearTimeout(ticker.id);
             ticker.id = null;
             sim.stop();
-
-            ticker.time -= new Date() - ticker.lastTick;
         };
 
         function isInRange(x) {
@@ -283,10 +279,7 @@ function startTicking(server, tickSpeed) {
             clearTimeout(ticker.id);
             sim.restart();
 
-            ticker.lastTick = new Date();
             this.id = setTimeout(function callback() {
-                ticker.lastTick = new Date();
-
                 let totalChangesToGraph = 0;
                 let totalChangesToSim = 0;
                 let keepGoing = true;
