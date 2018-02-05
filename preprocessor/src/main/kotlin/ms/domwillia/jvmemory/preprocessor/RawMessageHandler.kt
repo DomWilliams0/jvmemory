@@ -48,15 +48,19 @@ class RawMessageHandler {
     private fun createEvents(
             threadId: ThreadID,
             messageType: EventType,
-            initialiser: (EventVariant.Builder) -> Unit): EmittedEvents = mutableListOf(createEvent(threadId, messageType, initialiser))
+            initialiser: (EventVariant.Builder) -> Unit,
+            continuous: Boolean = false): EmittedEvents =
+            mutableListOf(createEvent(threadId, messageType, initialiser, continuous))
 
     private fun createEvent(
             threadId: ThreadID,
             messageType: EventType,
-            initialiser: (EventVariant.Builder) -> Unit): EmittedEvent {
+            initialiser: (EventVariant.Builder) -> Unit,
+            continuous: Boolean = false): EmittedEvent {
 
         val event = EventVariant.newBuilder().apply {
             type = messageType
+            this.continuous = continuous
             initialiser(this)
         }
         return Pair(threadId, event)
@@ -148,7 +152,6 @@ class RawMessageHandler {
                 objId = getField.id
                 fieldName = getField.field
                 read = true
-                explicit = false
             }.build()
         })
     }
@@ -177,7 +180,6 @@ class RawMessageHandler {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = putFieldPrimitive.id
                 read = false
-                explicit = true
             }.build()
         })
     }
@@ -196,7 +198,6 @@ class RawMessageHandler {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = storePrimitive.index
                 read = false
-                explicit = true
             }.build()
         })
     }
@@ -216,7 +217,6 @@ class RawMessageHandler {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = store.id
                 read = false
-                explicit = true
             }.build()
         })
     }
@@ -226,9 +226,8 @@ class RawMessageHandler {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = load.index
                 read = true
-                explicit = false
             }.build()
-        })
+        }, continuous = true)
     }
 
     private fun loadFromArray(load: Access.LoadFromArray, threadId: ThreadID): EmittedEvents {
@@ -236,11 +235,10 @@ class RawMessageHandler {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = load.id
                 read = true
-                explicit = true
                 if (load.hasField(Access.LoadFromArray.getDescriptor().findFieldByNumber(Access.LoadFromArray.INDEX_FIELD_NUMBER)))
                     fieldName = load.index.toString()
             }.build()
-        })
+        }, continuous = true)
     }
 
     internal val loadedClassDefinitions: Collection<Definitions.ClassDefinition>
