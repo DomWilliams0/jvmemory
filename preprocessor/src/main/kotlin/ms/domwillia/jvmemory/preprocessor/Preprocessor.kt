@@ -82,8 +82,8 @@ class Preprocessor(outputDirPath: File) {
 
     private fun postprocess() {
         fun isMergeableAccess(e: Event.EventVariant.Builder) =
-                (e.type == Event.EventType.SHOW_HEAP_OBJECT_ACCESS && e.showHeapObjectAccess.explicit) ||
-                        (e.type == Event.EventType.SHOW_LOCAL_VAR_ACCESS && e.showLocalVarAccess.explicit)
+                (e.type == Event.EventType.SHOW_HEAP_OBJECT_ACCESS && !e.showHeapObjectAccess.read) ||
+                        (e.type == Event.EventType.SHOW_LOCAL_VAR_ACCESS && !e.showLocalVarAccess.read)
 
         emittedEvents.forEach { (_, events) ->
             for (i in 1..events.lastIndex) {
