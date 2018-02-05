@@ -148,6 +148,7 @@ class RawMessageHandler {
                 objId = getField.id
                 fieldName = getField.field
                 read = true
+                explicit = false
             }.build()
         })
     }
@@ -176,6 +177,7 @@ class RawMessageHandler {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = putFieldPrimitive.id
                 read = false
+                explicit = true
             }.build()
         })
     }
@@ -194,6 +196,7 @@ class RawMessageHandler {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = storePrimitive.index
                 read = false
+                explicit = true
             }.build()
         })
     }
@@ -213,6 +216,7 @@ class RawMessageHandler {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = store.id
                 read = false
+                explicit = true
             }.build()
         })
     }
@@ -222,6 +226,7 @@ class RawMessageHandler {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = load.index
                 read = true
+                explicit = false
             }.build()
         })
     }
@@ -231,6 +236,7 @@ class RawMessageHandler {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = load.id
                 read = true
+                explicit = true
                 if (load.hasField(Access.LoadFromArray.getDescriptor().findFieldByNumber(Access.LoadFromArray.INDEX_FIELD_NUMBER)))
                     fieldName = load.index.toString()
             }.build()
