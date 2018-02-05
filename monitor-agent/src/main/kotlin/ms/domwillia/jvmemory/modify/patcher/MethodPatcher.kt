@@ -81,7 +81,7 @@ class MethodPatcher(
 
                 // stack: obj value obj value
 
-                if (type.sort != Type.OBJECT) {
+                if (type.sort != Type.OBJECT && type.sort != Type.ARRAY) {
                     super.pop()
 
                     // stack: obj value obj <no value>
