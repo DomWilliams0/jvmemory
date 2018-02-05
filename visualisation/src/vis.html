@@ -27,9 +27,8 @@
             overflow: hidden;
         }
 
-        .node {
-            stroke: black;
-        }
+        .node { stroke: black; }
+
         .nodeStack {
             fill: #46c3e1;
             stroke: black;
@@ -45,27 +44,50 @@
             stroke-width: 1px;
         }
 
-        .stackLink {
-            stroke: #333;
-        }
+        .stackLink { stroke: #333; }
 
         .linkLabel {
             font-size: 8pt;
             fill: #666
         }
 
-        .linkArrow {
-            fill: #111
+        .linkArrow { fill: #111 }
+
+        .nodeAccessR { animation: node-glow-r 0.5s; }
+
+        .nodeAccessW { animation: node-glow-w 0.5s; }
+
+        .nodeAccessRW { animation: node-glow-rw 0.5s; }
+
+        .linkAccessR { animation: link-glow-r 0.5s; }
+
+        .linkAccessW { animation: link-glow-w 0.5s; }
+
+        .linkAccessRW { animation: link-glow-rw 0.5s; }
+
+        @keyframes node-glow-r {
+            50% { fill: #18bc0b; }
         }
 
-        .linkFlash {
-            stroke: #f83535;
+        @keyframes node-glow-w {
+            50% { fill: #f83535; }
         }
 
-        .nodeFlash {
-            fill: #f83535;
+        @keyframes node-glow-w {
+            50% { fill: #e5e142; }
         }
 
+        @keyframes link-glow-r {
+            50% { stroke: #18bc0b; }
+        }
+
+        @keyframes link-glow-w {
+            50% { stroke: #f83535; }
+        }
+
+        @keyframes link-glow-w {
+            50% { stroke: #e5e142; }
+        }
     </style>
 </head>
 <body>
