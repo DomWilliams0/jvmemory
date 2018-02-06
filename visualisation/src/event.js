@@ -257,15 +257,33 @@ const event_handlers = {
 
 let ticker;
 const playPauseButton = document.getElementById("playpause");
+const speedSlider = document.getElementById("speedslider");
+const MIN_SPEED = 500; // ms between events
+const MAX_SPEED = 1; // ms between events
+const SPEED_STEP = 20;
+const DEFAULT_SPEED = 100;
 
-function startTicking(server, tickSpeed) {
+function startTicking(server) {
 
-    function Ticker(events, time) {
-        this.time = time;
+    function setSliderValue(time) {
+        speedSlider.value = MIN_SPEED - time;
+    }
+
+    function getSliderValue() {
+        return MIN_SPEED - speedSlider.value;
+    }
+
+    function Ticker(events) {
+        this.time = DEFAULT_SPEED;
         this.index = 0;
         this.id = null;
-
         let ticker = this;
+
+        speedSlider.min = MAX_SPEED;
+        speedSlider.max = MIN_SPEED;
+        speedSlider.onchange = () => ticker.setTime(getSliderValue());
+        setSliderValue(this.time);
+
         this.pause = function () {
             clearTimeout(ticker.id);
             ticker.id = null;
@@ -337,7 +355,21 @@ function startTicking(server, tickSpeed) {
                 ticker.pause();
             else
                 ticker.resume();
+        };
+
+        this.setTime = function (newValue) {
+            ticker.time = Math.max(MAX_SPEED, Math.min(MIN_SPEED, newValue));
+        };
+
+        function addToTimer(delta) {
+            return function () {
+                ticker.setTime(ticker.time + delta);
+                setSliderValue(ticker.time);
+            }
         }
+
+        this.slowdown = addToTimer(SPEED_STEP);
+        this.speedup = addToTimer(-SPEED_STEP);
     }
 
 
@@ -366,7 +398,7 @@ function startTicking(server, tickSpeed) {
             fetch(server + "/thread/" + thread_id).then(resp => resp.json())
                 .then(evts => {
 
-                    ticker = new Ticker(evts, tickSpeed);
+                    ticker = new Ticker(evts);
 
                     d3.select("body")
                         .on("keydown", () => {

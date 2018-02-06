@@ -24,6 +24,7 @@
         #left {
             flex: 0 0 25%;
             min-width: 150px;
+            max-width: 350px;
             display: flex;
             flex-direction: column;
         }
@@ -38,18 +39,30 @@
 
         #controls, #timeline { flex: 0 0 10%; }
 
-        #controls {
+        #buttons {
             background-color: darkorchid;
             display: flex;
             text-align: center;
             align-items: center;
             justify-content: space-evenly;
+            flex-wrap: wrap;
         }
 
         #controls button {
-            /*font-size: 10px;*/
+            font-size: 10px;
             padding: 0;
             flex-grow: 1;
+        }
+
+        #slider input {
+            width: 100%;
+            flex-grow: 2;
+        }
+
+        #slider {
+            display: flex;
+            flex-direction: row;
+            justify-content: stretch;
         }
 
         #left { background-color: darkolivegreen;}
@@ -128,11 +141,16 @@
     <div id="left">
         <div id="stack"></div>
         <div id="controls">
-            <button><i class="fas fa-backward"></i></button>
-            <button><i class="fas fa-fast-backward"></i></button>
-            <button id="playpause" onclick="ticker.toggle()"><i class="fas fa-pause"></i></button>
-            <button><i class="fas fa-fast-forward"></i></button>
-            <button><i class="fas fa-forward"></i></button>
+            <div id="buttons">
+                <button><i class="fas fa-fast-backward"></i></button>
+                <button id="playpause" onclick="ticker.toggle()"><i class="fas fa-pause"></i></button>
+                <button><i class="fas fa-fast-forward"></i></button>
+            </div>
+            <div id="slider">
+                <button onclick="ticker.slowdown()"><i class="fas fa-backward"></i></button>
+                <input id="speedslider" type="range">
+                <button onclick="ticker.speedup()"><i class="fas fa-forward"></i></button>
+            </div>
         </div>
     </div>
     <div id="right">
