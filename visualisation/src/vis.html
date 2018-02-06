@@ -3,7 +3,17 @@
 <head>
     <meta charset='utf-8'>
     <title>JVMemory</title>
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet">
+    <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
     <style>
+        body, html {
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: Noto Sans, sans-serif;
+        }
+
         #container {
             display: flex;
             flex-direction: row;
@@ -28,7 +38,19 @@
 
         #controls, #timeline { flex: 0 0 10%; }
 
-        #controls { background-color: #46c3e1; }
+        #controls {
+            background-color: darkorchid;
+            display: flex;
+            text-align: center;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+
+        #controls button {
+            /*font-size: 10px;*/
+            padding: 0;
+            flex-grow: 1;
+        }
 
         #left { background-color: darkolivegreen;}
 
@@ -36,16 +58,7 @@
 
         #stack { background-color: aqua; }
 
-        #controls { background-color: mediumvioletred; }
-
         #heap { background-color: orange; }
-
-        body, html {
-            margin: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-        }
 
         .node { stroke: black; }
 
@@ -114,7 +127,13 @@
 <div id="container">
     <div id="left">
         <div id="stack"></div>
-        <div id="controls"></div>
+        <div id="controls">
+            <button><i class="fas fa-backward"></i></button>
+            <button><i class="fas fa-fast-backward"></i></button>
+            <button id="playpause" onclick="ticker.toggle()"><i class="fas fa-pause"></i></button>
+            <button><i class="fas fa-fast-forward"></i></button>
+            <button><i class="fas fa-forward"></i></button>
+        </div>
     </div>
     <div id="right">
         <div id="heap"></div>

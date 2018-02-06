@@ -248,6 +248,8 @@ const event_handlers = {
     "POP_METHOD_FRAME": [popMethodFrame, "pushMethodFrame"], // null placeholder
 };
 
+let ticker;
+const playPauseButton = document.getElementById("playpause");
 function startTicking(server, tickSpeed) {
 
     function Ticker(events, time) {
@@ -322,6 +324,7 @@ function startTicking(server, tickSpeed) {
         };
 
         this.toggle = function () {
+            togglePlayButton();
             if (ticker.id)
                 ticker.pause();
             else
@@ -355,12 +358,12 @@ function startTicking(server, tickSpeed) {
             fetch(server + "/thread/" + thread_id).then(resp => resp.json())
                 .then(evts => {
 
-                    let ticker = new Ticker(evts, tickSpeed);
+                    ticker = new Ticker(evts, tickSpeed);
 
                     d3.select("body")
                         .on("keydown", () => {
-                            // space
-                            if (d3.event.keyCode === 32) {
+                            // space when not on button
+                            if (d3.event.target !== playPauseButton && d3.event.keyCode === 32) {
                                 ticker.toggle();
                             }
                         });
@@ -370,4 +373,9 @@ function startTicking(server, tickSpeed) {
                 });
         });
     });
+}
+
+function togglePlayButton() {
+    playPauseButton.firstChild.classList.toggle("fa-play");
+    playPauseButton.firstChild.classList.toggle("fa-pause");
 }
