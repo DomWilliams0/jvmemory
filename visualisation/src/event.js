@@ -7,6 +7,13 @@ function generateRandomPersistentColour(className, isSystem) {
         return "hsl(" + rand + ", 60%, 40%)";
 }
 
+let DEBUG_LOG = false;
+
+function debugLog(msg, ...args) {
+    if (DEBUG_LOG)
+        console.log(msg, ...args);
+}
+
 const SPAWN_OFFSET = 20;
 
 const
@@ -30,7 +37,7 @@ function addHeapObject(payload) {
     else
         colour = classDef.colour;
 
-    console.log("add obj %s %s%s", id, clazz, arraySize ? " of size " + arraySize : "");
+    debugLog("add obj %s %s%s", id, clazz, arraySize ? " of size " + arraySize : "");
 
     let array = undefined;
     if (arraySize)
@@ -52,7 +59,7 @@ function addHeapObject(payload) {
 }
 
 function delHeapObject({id}) {
-    console.log("delete obj %s", id);
+    debugLog("delete obj %s", id);
 
     const index = heapObjects.findIndex((x) => x.id === id);
     if (index < 0)
@@ -67,7 +74,7 @@ function setInterHeapLink(payload) {
     let {srcId, dstId, fieldName} = payload;
     const rm = dstId === undefined;
 
-    console.log("set link %s from %s to %s", fieldName, srcId, dstId || "null");
+    debugLog("set link %s from %s to %s", fieldName, srcId, dstId || "null");
 
     let existingIndex = heapLinks.findIndex((x) => x.source.id === srcId && x.name === fieldName);
     if (existingIndex >= 0) {
@@ -102,7 +109,7 @@ function setLocalVarLink(payload) {
         frameUuid: currentFrame.uuid,
         index: varIndex,
     };
-    console.log("setting stack link from var %d to %d (%s)", varIndex, dstId, name);
+    debugLog("setting stack link from var %d to %d (%s)", varIndex, dstId, name);
 
     const id = getStackNodeId(currentFrame, varIndex);
 
@@ -166,7 +173,7 @@ const highlightLinks = (selection, read) => highlight(selection, "link", read);
 
 function showLocalVarAccess(payload) {
     let varIndex = payload.varIndex || 0;
-    console.log("show %s stack access %d", payload.read ? "read" : "write", varIndex);
+    debugLog("show %s stack access %d", payload.read ? "read" : "write", varIndex);
 
     const currentFrame = callstack[callstack.length - 1];
     const id = "stack_" + currentFrame.uuid + "_" + varIndex;
@@ -186,7 +193,7 @@ function showLocalVarAccess(payload) {
 
 function showHeapObjectAccess(payload) {
     let {objId, fieldName, read} = payload;
-    console.log("showing %s heap access from id %d field %s", read ? "read" : "write", objId, fieldName || "none");
+    debugLog("showing %s heap access from id %d field %s", read ? "read" : "write", objId, fieldName || "none");
 
     const heapNode = node.filter(d => d.id === objId).select("circle");
     highlightNode(heapNode, read);
@@ -200,7 +207,7 @@ function showHeapObjectAccess(payload) {
 }
 
 function pushMethodFrame({owningClass, name, signature}) {
-    console.log("entering method %s:%s", owningClass, name);
+    debugLog("entering method %s:%s", owningClass, name);
     let classDef = definitions[owningClass];
     if (classDef === undefined)
         throw "undefined class " + owningClass;
@@ -228,7 +235,7 @@ function pushMethodFrame({owningClass, name, signature}) {
 }
 
 function popMethodFrame(_payload) {
-    console.log("exiting method");
+    debugLog("exiting method");
     const old_frame = callstack.pop();
 
     heapLinks = heapLinks.filter(d => !d.stack || d.stack.frameUuid !== old_frame.uuid);
@@ -250,6 +257,7 @@ const event_handlers = {
 
 let ticker;
 const playPauseButton = document.getElementById("playpause");
+
 function startTicking(server, tickSpeed) {
 
     function Ticker(events, time) {
