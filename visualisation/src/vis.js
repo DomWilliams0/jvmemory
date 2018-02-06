@@ -14,7 +14,6 @@ const NODE_REPULSION = 100;
 const LINK_LENGTH = 50;
 const HEAP_LINK_STRENGTH = 3.0;
 const STACK_LINK_STRENGTH = 1.0;
-const TICK_SPEED = 50;
 
 const HEAP_NODE_RADIUS = 6;
 const STACK_NODE_RADIUS = 4;
@@ -47,7 +46,7 @@ resize();
 d3.select(window).on("resize", resize);
 
 restart();
-startTicking(SERVER, TICK_SPEED);
+startTicking(SERVER);
 
 function tickSim() {
 
