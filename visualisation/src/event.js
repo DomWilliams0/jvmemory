@@ -288,6 +288,7 @@ function startTicking(server) {
             clearTimeout(ticker.id);
             ticker.id = null;
             sim.stop();
+            setPlayButtonState(false);
         };
 
         function isInRange(x) {
@@ -304,6 +305,7 @@ function startTicking(server) {
                 return true;
             }
 
+            setPlayButtonState(true);
             clearTimeout(ticker.id);
             sim.restart();
 
@@ -350,7 +352,6 @@ function startTicking(server) {
         };
 
         this.toggle = function () {
-            togglePlayButton();
             if (ticker.id)
                 ticker.pause();
             else
@@ -415,7 +416,18 @@ function startTicking(server) {
     });
 }
 
-function togglePlayButton() {
-    playPauseButton.firstChild.classList.toggle("fa-play");
-    playPauseButton.firstChild.classList.toggle("fa-pause");
+function setPlayButtonState(playing) {
+    const play = "fa-play";
+    const pause = "fa-pause";
+
+    let del, add;
+    if (!playing) {
+        del = pause;
+        add = play;
+    } else {
+        del = play;
+        add = pause;
+    }
+    playPauseButton.firstChild.classList.add(add);
+    playPauseButton.firstChild.classList.remove(del)
 }
