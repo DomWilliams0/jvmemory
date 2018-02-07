@@ -234,7 +234,7 @@ function pushMethodFrame({owningClass, name, signature}) {
     return DIDNT_CHANGE_GRAPH;
 }
 
-function popMethodFrame(_payload) {
+function popMethodFrame() {
     debugLog("exiting method");
     const old_frame = callstack.pop();
 
@@ -252,7 +252,7 @@ const event_handlers = {
     "SHOW_LOCAL_VAR_ACCESS": [showLocalVarAccess, "showLocalVarAccess"],
     "SHOW_HEAP_OBJECT_ACCESS": [showHeapObjectAccess, "showHeapObjectAccess"],
     "PUSH_METHOD_FRAME": [pushMethodFrame, "pushMethodFrame"],
-    "POP_METHOD_FRAME": [popMethodFrame, "pushMethodFrame"], // null placeholder
+    "POP_METHOD_FRAME": [popMethodFrame, "popMethodFrame"],
 };
 
 let ticker;

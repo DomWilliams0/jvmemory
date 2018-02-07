@@ -45,6 +45,7 @@ message Variant {
         Deallocation dealloc = 6;
 
         MethodEnter method_enter = 7;
+        MethodExit method_exit = 17;
 
         GetField get_field = 8;
         PutFieldObject put_field_object = 9;
