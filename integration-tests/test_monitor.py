@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import BinaryIO, Generator, List
 
 from google.protobuf.json_format import MessageToDict
+from google.protobuf.message import Message
 
 from pb import message_pb2
 from pb.message_pb2 import Variant, MessageType
@@ -100,19 +101,21 @@ class MonitorTest(unittest.TestCase):
         cls.MESSAGES.clear()
         _delete_working_dir()
 
-    def filter_messages(self, *types: MessageType) -> Generator[Variant, None, None]:
-        yield from filter(lambda m: m.type in types, self.MESSAGES)
+    def filter_messages(self, *types: MessageType) -> Generator[Message, None, None]:
+        for variant in filter(lambda m: m.type in types, self.MESSAGES):
+            which = variant.WhichOneof("payload")
+            self.assertIsNotNone(which)
+            payload = getattr(variant, which)
+            self.assertIsNotNone(payload)
+            yield payload
 
     def test_definitions(self):
         messages = self.filter_messages(message_pb2.CLASS_DEF)
-        msg: Variant = next(messages)
+        definition = next(messages)
 
         # just one
         with self.assertRaises(StopIteration):
             next(messages)
-
-        definition = msg.class_def
-        self.assertIsNotNone(definition)
 
         oracle = {
             'name': 'specimens.SimpleTest',
