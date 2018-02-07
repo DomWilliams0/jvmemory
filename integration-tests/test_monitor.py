@@ -141,3 +141,21 @@ class MonitorTest(unittest.TestCase):
             ]
         }
         self.assertEqual(MessageToDict(definition), oracle)
+
+    def test_callstack(self):
+        messages = self.filter_messages(message_pb2.METHOD_ENTER, message_pb2.METHOD_EXIT)
+        oracle = [
+            {'class': 'specimens.SimpleTest', 'method': 'main'}, {'class': 'specimens.SimpleTest', 'method': 'd'},
+            {},
+            {'class': 'specimens.SimpleTest', 'method': '<init>'},
+            {},
+            {'class': 'specimens.SimpleTest', 'method': 'c'}, {'class': 'specimens.SimpleTest', 'method': 'b'},
+            {'class': 'specimens.SimpleTest', 'method': 'a'},
+            {},
+            {},
+            {},
+            {}
+        ]
+
+        serialised = [MessageToDict(m) for m in messages]
+        self.assertEqual(serialised, oracle)
