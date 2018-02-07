@@ -34,7 +34,7 @@ message EventVariant {
         ShowHeapObjectAccess show_heap_object_access = 7;
 
         PushMethodFrame push_method_frame = 8;
-        // no pop variant needed
+        PopMethodFrame pop_method_frame = 10;
     }
 }
 
@@ -43,6 +43,8 @@ message PushMethodFrame {
     string name = 2;
     string signature = 3;
 }
+
+message PopMethodFrame {}
 
 message AddHeapObject {
     int64 id = 1;

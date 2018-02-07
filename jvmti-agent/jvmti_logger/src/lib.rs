@@ -37,6 +37,7 @@ pub extern fn on_enter_method(logger: *mut Logger, thread_id: Long, class: Strin
 pub extern fn on_exit_method(logger: *mut Logger, thread_id: Long) {
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);
+    msg.set_method_exit(flow::MethodExit::new());
     msg.set_field_type(MessageType::METHOD_EXIT);
     io::log_message(logger, msg);
 }

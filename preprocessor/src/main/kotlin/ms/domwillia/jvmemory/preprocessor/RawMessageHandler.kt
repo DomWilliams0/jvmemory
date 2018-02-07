@@ -95,7 +95,9 @@ class RawMessageHandler {
     private fun exitMethod(threadId: ThreadID): EmittedEvents {
         callstacks[threadId]!!.pop()
 
-        return createEvents(threadId, EventType.POP_METHOD_FRAME, {})
+        return createEvents(threadId, EventType.POP_METHOD_FRAME, {
+            it.popMethodFrame = PopMethodFrame.getDefaultInstance()
+        })
     }
 
     private fun allocateObject(alloc: Allocations.AllocationObject, threadId: ThreadID): EmittedEvents {
