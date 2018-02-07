@@ -10,7 +10,7 @@ enum EventType {
     ADD_HEAP_OBJECT = 1;
     DEL_HEAP_OBJECT = 2;
 
-    SET_INTER_HEAP_LINK = 3;
+    SET_INTRA_HEAP_LINK = 3;
     SET_LOCAL_VAR_LINK = 4;
 
     SHOW_LOCAL_VAR_ACCESS = 5;
@@ -27,7 +27,7 @@ message EventVariant {
         AddHeapObject add_heap_object = 2;
         DelHeapObject del_heap_object = 3;
 
-        SetInterHeapLink set_inter_heap_link = 4;
+        SetIntraHeapLink set_intra_heap_link = 4;
         SetLocalVarLink set_local_var_link = 5;
 
         ShowLocalVarAccess show_local_var_access = 6;
@@ -54,7 +54,7 @@ message DelHeapObject {
     int64 id = 1;
 }
 
-message SetInterHeapLink {
+message SetIntraHeapLink {
     int64 src_id = 1;
     int64 dst_id = 2;
     string field_name = 3;

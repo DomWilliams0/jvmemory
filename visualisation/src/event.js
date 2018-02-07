@@ -70,7 +70,7 @@ function delHeapObject({id}) {
     return CHANGED_GRAPH;
 }
 
-function setInterHeapLink(payload) {
+function setIntraHeapLink(payload) {
     let {srcId, dstId, fieldName} = payload;
     const rm = dstId === undefined;
 
@@ -247,7 +247,7 @@ function popMethodFrame(_payload) {
 const event_handlers = {
     "ADD_HEAP_OBJECT": [addHeapObject, "addHeapObject"],
     "DEL_HEAP_OBJECT": [delHeapObject, "delHeapObject"],
-    "SET_INTER_HEAP_LINK": [setInterHeapLink, "setInterHeapLink"],
+    "SET_INTRA_HEAP_LINK": [setIntraHeapLink, "setIntraHeapLink"],
     "SET_LOCAL_VAR_LINK": [setLocalVarLink, "setLocalVarLink"],
     "SHOW_LOCAL_VAR_ACCESS": [showLocalVarAccess, "showLocalVarAccess"],
     "SHOW_HEAP_OBJECT_ACCESS": [showHeapObjectAccess, "showHeapObjectAccess"],

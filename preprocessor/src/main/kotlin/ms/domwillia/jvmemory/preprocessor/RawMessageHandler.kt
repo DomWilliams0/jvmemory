@@ -122,8 +122,8 @@ class RawMessageHandler {
 
         if (alloc.hasField(Allocations.AllocationArray.getDescriptor().findFieldByNumber(Allocations.AllocationArray.SRC_ARRAY_ID_FIELD_NUMBER))) {
             events.add(
-                    createEvent(threadId, EventType.SET_INTER_HEAP_LINK, {
-                        it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
+                    createEvent(threadId, EventType.SET_INTRA_HEAP_LINK, {
+                        it.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
                             srcId = alloc.srcArrayId
                             dstId = alloc.id
                             fieldName = alloc.srcIndex.toString()
@@ -166,8 +166,8 @@ class RawMessageHandler {
                 objectID
 
     private fun putFieldObject(putFieldObject: Access.PutFieldObject, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SET_INTER_HEAP_LINK, {
-            it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
+        return createEvents(threadId, EventType.SET_INTRA_HEAP_LINK, {
+            it.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
                 srcId = putFieldObject.id
                 dstId = checkObjectIsNotImplicit(putFieldObject.valueId) // may be 0/null
                 fieldName = putFieldObject.field
@@ -203,8 +203,8 @@ class RawMessageHandler {
     }
 
     private fun storeObjectInArray(store: Access.StoreObjectInArray, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SET_INTER_HEAP_LINK, {
-            it.setInterHeapLink = SetInterHeapLink.newBuilder().apply {
+        return createEvents(threadId, EventType.SET_INTRA_HEAP_LINK, {
+            it.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
                 srcId = store.id
                 dstId = checkObjectIsNotImplicit(store.valueId)
                 fieldName = store.index.toString()
