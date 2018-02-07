@@ -37,7 +37,13 @@
 
         #heap, #stack { flex: 1; }
 
-        #controls, #timeline { flex: 0 0 10%; }
+        #controls, #timeline { height: 50px; }
+
+        #controls {
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
+        }
 
         #buttons {
             background-color: darkorchid;
