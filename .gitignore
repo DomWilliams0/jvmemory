@@ -9,6 +9,7 @@ jvmti-agent/jvmti_logger/Cargo.lock
 jvmti-agent/jvmti_logger/src/proto
 gen
 venv
+integration-tests/pb
 
 ## Java
 
