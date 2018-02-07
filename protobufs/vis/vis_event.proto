@@ -4,8 +4,6 @@ package vis;
 option java_package = "ms.domwillia.jvmemory.preprocessor.protobuf";
 option java_outer_classname = "Event";
 
-import "definitions.proto";
-
 enum EventType {
     MESSAGE_TYPE_PADDING = 0; // grumble grumble
 
