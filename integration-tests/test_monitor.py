@@ -3,11 +3,14 @@ import os
 import shutil
 import subprocess
 import sys
-import typing
 import unittest
 from pathlib import Path
+from typing import BinaryIO, Generator, List
+
+from google.protobuf.json_format import MessageToDict
 
 from pb import message_pb2
+from pb.message_pb2 import Variant, MessageType
 
 
 def _get_env(name: str) -> Path:
@@ -59,7 +62,7 @@ def run_specimen(specimen_name: str, out_file: Path):
     )
 
 
-def read_messages(f: typing.BinaryIO) -> typing.Generator[message_pb2.Variant, None, None]:
+def read_messages(f: BinaryIO) -> Generator[Variant, None, None]:
     from google.protobuf.internal.decoder import _DecodeVarint32 as decoder
 
     while True:
@@ -74,18 +77,18 @@ def read_messages(f: typing.BinaryIO) -> typing.Generator[message_pb2.Variant, N
         if not msg_raw:
             break
 
-        msg = message_pb2.Variant()
+        msg = Variant()
         msg.ParseFromString(msg_raw)
         yield msg
 
 
 class MonitorTest(unittest.TestCase):
     LOG_PATH: Path = WORKING_DIR / "definitions.log"
-    MESSAGES: typing.List[message_pb2.Variant]
+    MESSAGES: List[Variant]
 
     @classmethod
     def setUpClass(cls):
-        run_specimen("TestDefinitions", cls.LOG_PATH)
+        run_specimen("SimpleTest", cls.LOG_PATH)
         if not cls.LOG_PATH.exists():
             raise RuntimeError("Specimen didn't run")
 
@@ -97,5 +100,41 @@ class MonitorTest(unittest.TestCase):
         cls.MESSAGES.clear()
         _delete_working_dir()
 
-    def test_test(self):
-        self.assertTrue(True)
+    def filter_messages(self, *types: MessageType) -> Generator[Variant, None, None]:
+        yield from filter(lambda m: m.type in types, self.MESSAGES)
+
+    def test_definitions(self):
+        messages = self.filter_messages(message_pb2.CLASS_DEF)
+        msg: Variant = next(messages)
+
+        # just one
+        with self.assertRaises(StopIteration):
+            next(messages)
+
+        definition = msg.class_def
+        self.assertIsNotNone(definition)
+
+        oracle = {
+            'name': 'specimens.SimpleTest',
+            'classType': 'class',
+            'visibility': 'package',
+            'superClass': 'java.lang.Object',
+            'fields': [
+                {'name': 'anInt', 'type': 'I', 'visibility': 'private', 'static': True},
+                {'name': 'aString', 'type': 'Ljava/lang/String;', 'visibility': 'private'},
+                {'name': 'anObject', 'type': 'Ljava/lang/Object;', 'visibility': 'public'}
+            ],
+            'methods': [
+                {'name': '<init>', 'signature': '()V', 'visibility': 'package'},
+                {'name': 'a', 'signature': '()V', 'visibility': 'private'},
+                {'name': 'b', 'signature': '(I)I', 'visibility': 'private'},
+                {'name': 'c',
+                 'signature': '(Ljava/lang/String;Ljava/lang/Long;[[I)Ljava/lang/String;',
+                 'visibility': 'private'
+                 },
+                {'name': 'd', 'signature': '()V', 'visibility': 'public', 'static': True},
+                {'name': 'main', 'signature': '([Ljava/lang/String;)V', 'visibility': 'public',
+                 'static': True}
+            ]
+        }
+        self.assertEqual(MessageToDict(definition), oracle)

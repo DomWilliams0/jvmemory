@@ -1,6 +1,6 @@
 package specimens;
 
-class TestDefinitions {
+class SimpleTest {
 
 	private static int anInt;
 	private String aString;
@@ -11,10 +11,12 @@ class TestDefinitions {
 	}
 
 	private int b(int x) {
+		a();
 		return x;
 	}
 
 	private String c(String a, Long b, int[][] c) {
+		b(10);
 		return null;
 	}
 
@@ -23,6 +25,7 @@ class TestDefinitions {
 	}
 
 	public static void main(String[] args) {
-		// for completeness
+		d();
+		new SimpleTest().c(null, 20L, null);
 	}
 }
