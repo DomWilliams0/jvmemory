@@ -103,9 +103,26 @@ class MonitorTest(unittest.TestCase):
         cls.MESSAGES.clear()
         _delete_working_dir()
 
-    def filter_messages(self, *types: MessageType) -> List[Message]:
+    def filter_messages(self, *types: MessageType, methods: List[str] = None) -> List[Message]:
         def gen_messages():
-            for variant in filter(lambda m: m.type in types, self.MESSAGES):
+            callstack = []
+            # for variant in filter(lambda m: m.type in types, self.MESSAGES):
+            for variant in self.MESSAGES:
+                if variant.type == message_pb2.METHOD_ENTER:
+                    callstack.append(variant.method_enter.method)
+                elif variant.type == message_pb2.METHOD_EXIT:
+                    callstack.pop()
+
+                if variant.type not in types:
+                    continue
+
+                if methods:
+                    if not callstack:
+                        continue
+
+                    if callstack[-1] not in methods:
+                        continue
+
                 which = variant.WhichOneof("payload")
                 self.assertIsNotNone(which)
                 payload = getattr(variant, which)
