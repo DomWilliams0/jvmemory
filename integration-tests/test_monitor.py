@@ -87,7 +87,7 @@ def read_messages(f: BinaryIO) -> Generator[Variant, None, None]:
 
 
 class MonitorTest(unittest.TestCase):
-    LOG_PATH: Path = WORKING_DIR / "definitions.log"
+    LOG_PATH: Path = WORKING_DIR / "monitor_output.log"
     MESSAGES: List[Variant]
 
     maxDiff = None
