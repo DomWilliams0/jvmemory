@@ -5,11 +5,12 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
-from typing import BinaryIO, Generator, List
+from typing import BinaryIO, Generator, List, Tuple
 
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import Message
 
+import oracles
 from pb import message_pb2
 from pb.message_pb2 import Variant, MessageType
 
@@ -105,7 +106,7 @@ class MonitorTest(unittest.TestCase):
         cls.MESSAGES.clear()
         _delete_working_dir()
 
-    def filter_messages(self, *types: MessageType, methods: List[str] = None) -> List[Message]:
+    def filter_messages(self, *types: MessageType, method: str = None) -> List[Tuple[str, Message]]:
         def gen_messages():
             callstack = []
             # for variant in filter(lambda m: m.type in types, self.MESSAGES):
@@ -118,60 +119,62 @@ class MonitorTest(unittest.TestCase):
                 if variant.type not in types:
                     continue
 
-                if methods:
-                    if not callstack:
-                        continue
-
-                    if callstack[-1] not in methods:
+                if method:
+                    if method not in callstack:
                         continue
 
                 which = variant.WhichOneof("payload")
                 self.assertIsNotNone(which)
                 payload = getattr(variant, which)
                 self.assertIsNotNone(payload)
-                yield MessageToDict(payload, including_default_value_fields=True)
+                yield which, MessageToDict(payload, including_default_value_fields=True)
 
         return list(gen_messages())
 
     def test_definitions(self):
-        messages = self.filter_messages(message_pb2.CLASS_DEF)
-        self.assertEqual(len(messages), 1)
-        oracle = {'name': 'specimens.SimpleTest',
-                  'classType': 'class', 'visibility': 'package', 'superClass': 'java.lang.Object',
-                  'fields': [{'name': 'anInt', 'type': 'I', 'visibility': 'private', 'static': True},
-                             {'name': 'aString', 'type': 'Ljava/lang/String;', 'visibility': 'private', 'static': False},
-                             {'name': 'anObject', 'type': 'Ljava/lang/Object;', 'visibility': 'public', 'static': False}
-                             ],
-                  'methods': [
-                      {'name': '<init>', 'signature': '()V', 'visibility': 'package', 'static': False, 'localVars': []},
-                      {'name': 'a', 'signature': '()V', 'visibility': 'private', 'static': False, 'localVars': []},
-                      {'name': 'b', 'signature': '(I)I', 'visibility': 'private', 'static': False, 'localVars': []},
-                      {'name': 'c', 'signature': '(Ljava/lang/String;Ljava/lang/Long;[[I)Ljava/lang/String;', 'visibility': 'private', 'static': False, 'localVars': []},
-                      {'name': 'd', 'signature': '()V', 'visibility': 'public', 'static': True, 'localVars': []},
-                      {'name': 'main', 'signature': '([Ljava/lang/String;)V', 'visibility': 'public', 'static': True, 'localVars': []}
-                  ],
-                  'interfaces': []
-                  }
+        msgs = self.filter_messages(message_pb2.CLASS_DEF)
+        self.assertEqual(len(msgs), 1)
 
-        # self.assertEqual(messages[0], oracle)
+        self.assertEqual(msgs[0], oracles.definitions)
 
-    def test_callstack(self):
-        messages = self.filter_messages(message_pb2.METHOD_ENTER, message_pb2.METHOD_EXIT)
-        oracle = [
-            {'class': 'specimens.SimpleTest', 'method': 'main'}, {'class': 'specimens.SimpleTest', 'method': 'd'},
-            {},
-            {'class': 'specimens.SimpleTest', 'method': '<init>'},
-            {},
-            {'class': 'specimens.SimpleTest', 'method': 'c'}, {'class': 'specimens.SimpleTest', 'method': 'b'},
-            {'class': 'specimens.SimpleTest', 'method': 'a'},
-            {},
-            {},
-            {},
-            {}
-        ]
-
-        # self.assertEqual(messages, oracle)
+    def test_allocations(self):
+        msgs = self.filter_messages(
+            message_pb2.ALLOC_OBJECT, message_pb2.ALLOC_ARRAY,
+            method="testAllocations"
+        )
+        self.assertEqual(msgs, oracles.allocations)
 
     def test_deallocations(self):
-        messages = self.filter_messages(message_pb2.DEALLOC)
-        print(messages)
+        msgs = self.filter_messages(message_pb2.DEALLOC)
+        # ensure at least some dealloc events were emitted
+        self.assertGreater(len(msgs), 16)
+
+    def test_callstack(self):
+        msgs = self.filter_messages(message_pb2.METHOD_ENTER, message_pb2.METHOD_EXIT, method="testMethodCalls")
+        self.assertEqual(msgs, oracles.callstack)
+
+    def test_getfield(self):
+        msgs = self.filter_messages(
+            message_pb2.GETFIELD,
+            method="testGetField"
+        )
+        self.assertEqual(msgs, oracles.getfield)
+
+    def test_putfield(self):
+        msgs = self.filter_messages(
+            message_pb2.PUTFIELD_PRIMITIVE, message_pb2.PUTFIELD_OBJECT,
+            method="<init>"
+        )
+        self.assertEqual(msgs, oracles.putfield)
+
+    def test_local_vars(self):
+        msgs = self.filter_messages(
+            message_pb2.LOAD, message_pb2.STORE_OBJECT, message_pb2.STORE_PRIMITIVE,
+            method="testLocalVars")
+        self.assertEqual(msgs, oracles.local_vars)
+
+    def test_arrays(self):
+        msgs = self.filter_messages(
+            message_pb2.LOAD_ARRAY, message_pb2.STORE_OBJECT_IN_ARRAY, message_pb2.STORE_PRIMITIVE_IN_ARRAY,
+            method="testArrays")
+        self.assertEqual(msgs, oracles.arrays)

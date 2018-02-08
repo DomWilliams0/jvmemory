@@ -38,11 +38,13 @@ public class FullTest {
 
 	}
 
-	void testMethodCalls(int x) {
-		aStaticMethod();
+	void recursive(int x) {
 		if (x > 0)
-			testMethodCalls(x - 1);
-		aStaticMethod();
+			recursive(x - 1);
+	}
+
+	void testMethodCalls() {
+        recursive(5);
 	}
 
 	// getfield, store and load 0 (this)
@@ -56,8 +58,10 @@ public class FullTest {
 
 	// store/load
 	void testLocalVars() {
-		int primA = 5;
-		int primB = primA;
+		int smallPrimA = 5;
+		int smallPrimB = smallPrimA;
+		long doublePrimA = 2L;
+		long doublePrimB = doublePrimA;
 		Object objA = new Object();
 		Object objB = objA;
 		String constA = "gday";
@@ -84,6 +88,8 @@ public class FullTest {
 
 		i = primMulti[0][0][0];
 		primMulti[1][1][1] = 1;
+
+		int size = objSingle.length + primSingle.length + objMulti.length + primMulti.length;
 	}
 
 	// alloc obj and array
@@ -109,7 +115,7 @@ public class FullTest {
 
 	public static void main(String[] args) {
 		FullTest test = new FullTest();
-		test.testMethodCalls(3);
+		test.testMethodCalls();
 		test.testGetField();
 		test.testLocalVars();
 		test.testArrays();
