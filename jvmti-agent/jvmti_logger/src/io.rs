@@ -1,24 +1,57 @@
-use std::{io, fs, ptr};
+use std::{io, fs, ptr, thread, mem};
 use proto::message::Variant;
 use protobuf::Message;
 use libc::*;
 use std::ffi::CStr;
+use std::sync::mpsc;
 
 #[repr(C)]
 pub struct Logger {
+    buffer_thread: thread::JoinHandle<()>,
+    drainpipe: mpsc::Sender<Variant>,
     // TODO it seems that using a BufWriter here causes a panic during allocation event logging
-    writer: fs::File
+    //writer: fs::File
+}
+
+fn spawn_buffer_thread(path: &str, recv: mpsc::Receiver<Variant>) -> io::Result<thread::JoinHandle<()>> {
+    let out_file = fs::File::create(path)?;
+
+    Ok(thread::spawn(|| {
+        let pipe = recv;
+        let mut file = out_file;
+        loop {
+            let msg = match pipe.recv() {
+                Ok(msg) => msg,
+                Err(_) => break,
+            };
+
+            if let Err(e) = msg.write_length_delimited_to_writer(&mut file) {
+                eprintln!("failed to write to log file: {:?}", e);
+            }
+        }
+        println!("goodbye");
+
+        // TODO flush buffer
+    }))
 }
 
 impl Logger {
     fn new(path: &str) -> io::Result<Self> {
+        let (send, recv) = mpsc::channel();
         Ok(Self {
-            writer: fs::File::create(path)?
+            //writer: fs::File::create(path)?
+            drainpipe: send,
+            buffer_thread: spawn_buffer_thread(path, recv)?,
         })
     }
 
+    fn safe_log(&mut self, message: Variant) -> Result<(), mpsc::SendError<Variant>> {
+         self.drainpipe.send(message)?;
+         Ok(())
+    }
+
     fn log(&mut self, message: Variant) {
-        if let Err(e) = message.write_length_delimited_to_writer(&mut self.writer) {
+        if let Err(e) = self.safe_log(message) {
             eprintln!("failed to write to log: {:?}", e);
         }
     }
@@ -37,10 +70,15 @@ pub extern fn logger_init(out_file: *const c_char) -> *const Logger {
 }
 
 #[no_mangle]
-pub extern fn logger_free(logger: *mut Logger) {
-    if !logger.is_null() {
-        unsafe { Box::from_raw(logger); }
-    };
+pub extern fn logger_free(logger_ptr: *mut Logger) {
+    if !logger_ptr.is_null() {
+        let mut logger = unsafe { Box::from_raw(logger_ptr) };
+
+        let (dummy, _) = mpsc::channel();
+        let sender = mem::replace(&mut logger.drainpipe, dummy);
+        drop(sender);
+        logger.buffer_thread.join().expect("waiting on buffer thread");
+    }
 }
 
 pub fn log_message(logger: *mut Logger, message: Variant) {
