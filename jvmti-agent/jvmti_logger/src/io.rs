@@ -5,6 +5,8 @@ use libc::*;
 use std::ffi::CStr;
 use std::sync::mpsc;
 
+const BUFFER_SIZE: usize = 1024;
+
 #[repr(C)]
 pub struct Logger {
     buffer_thread: thread::JoinHandle<()>,
@@ -14,24 +16,36 @@ pub struct Logger {
 }
 
 fn spawn_buffer_thread(path: &str, recv: mpsc::Receiver<Variant>) -> io::Result<thread::JoinHandle<()>> {
+    fn flush_buffer<W: io::Write>(buffer: &mut Vec<Variant>, out: &mut W) {
+        for msg in buffer.iter() {
+            if let Err(e) = msg.write_length_delimited_to_writer(out) {
+                eprintln!("failed to write to log file: {:?}", e);
+            }
+        }
+        buffer.clear();
+    }
+
+
     let out_file = fs::File::create(path)?;
 
     Ok(thread::spawn(|| {
         let pipe = recv;
         let mut file = out_file;
+        let mut buffer = Vec::<Variant>::with_capacity(BUFFER_SIZE);
         loop {
             let msg = match pipe.recv() {
                 Ok(msg) => msg,
                 Err(_) => break,
             };
 
-            if let Err(e) = msg.write_length_delimited_to_writer(&mut file) {
-                eprintln!("failed to write to log file: {:?}", e);
-            }
-        }
-        println!("goodbye");
+            buffer.push(msg);
 
-        // TODO flush buffer
+            if buffer.len() == BUFFER_SIZE {
+                flush_buffer(&mut buffer, &mut file);
+            }
+
+        }
+        flush_buffer(&mut buffer, &mut file);
     }))
 }
 
@@ -39,7 +53,6 @@ impl Logger {
     fn new(path: &str) -> io::Result<Self> {
         let (send, recv) = mpsc::channel();
         Ok(Self {
-            //writer: fs::File::create(path)?
             drainpipe: send,
             buffer_thread: spawn_buffer_thread(path, recv)?,
         })
