@@ -87,6 +87,8 @@ class MonitorTest(unittest.TestCase):
     LOG_PATH: Path = WORKING_DIR / "definitions.log"
     MESSAGES: List[Variant]
 
+    maxDiff = None
+
     @classmethod
     def setUpClass(cls):
         run_specimen("SimpleTest", cls.LOG_PATH)
@@ -101,46 +103,38 @@ class MonitorTest(unittest.TestCase):
         cls.MESSAGES.clear()
         _delete_working_dir()
 
-    def filter_messages(self, *types: MessageType) -> Generator[Message, None, None]:
-        for variant in filter(lambda m: m.type in types, self.MESSAGES):
-            which = variant.WhichOneof("payload")
-            self.assertIsNotNone(which)
-            payload = getattr(variant, which)
-            self.assertIsNotNone(payload)
-            yield payload
+    def filter_messages(self, *types: MessageType) -> List[Message]:
+        def gen_messages():
+            for variant in filter(lambda m: m.type in types, self.MESSAGES):
+                which = variant.WhichOneof("payload")
+                self.assertIsNotNone(which)
+                payload = getattr(variant, which)
+                self.assertIsNotNone(payload)
+                yield MessageToDict(payload, including_default_value_fields=True)
+
+        return list(gen_messages())
 
     def test_definitions(self):
         messages = self.filter_messages(message_pb2.CLASS_DEF)
-        definition = next(messages)
+        self.assertEqual(len(messages), 1)
+        oracle = {'name': 'specimens.SimpleTest',
+                  'classType': 'class', 'visibility': 'package', 'superClass': 'java.lang.Object',
+                  'fields': [{'name': 'anInt', 'type': 'I', 'visibility': 'private', 'static': True},
+                             {'name': 'aString', 'type': 'Ljava/lang/String;', 'visibility': 'private', 'static': False},
+                             {'name': 'anObject', 'type': 'Ljava/lang/Object;', 'visibility': 'public', 'static': False}
+                             ],
+                  'methods': [
+                      {'name': '<init>', 'signature': '()V', 'visibility': 'package', 'static': False, 'localVars': []},
+                      {'name': 'a', 'signature': '()V', 'visibility': 'private', 'static': False, 'localVars': []},
+                      {'name': 'b', 'signature': '(I)I', 'visibility': 'private', 'static': False, 'localVars': []},
+                      {'name': 'c', 'signature': '(Ljava/lang/String;Ljava/lang/Long;[[I)Ljava/lang/String;', 'visibility': 'private', 'static': False, 'localVars': []},
+                      {'name': 'd', 'signature': '()V', 'visibility': 'public', 'static': True, 'localVars': []},
+                      {'name': 'main', 'signature': '([Ljava/lang/String;)V', 'visibility': 'public', 'static': True, 'localVars': []}
+                  ],
+                  'interfaces': []
+                  }
 
-        # just one
-        with self.assertRaises(StopIteration):
-            next(messages)
-
-        oracle = {
-            'name': 'specimens.SimpleTest',
-            'classType': 'class',
-            'visibility': 'package',
-            'superClass': 'java.lang.Object',
-            'fields': [
-                {'name': 'anInt', 'type': 'I', 'visibility': 'private', 'static': True},
-                {'name': 'aString', 'type': 'Ljava/lang/String;', 'visibility': 'private'},
-                {'name': 'anObject', 'type': 'Ljava/lang/Object;', 'visibility': 'public'}
-            ],
-            'methods': [
-                {'name': '<init>', 'signature': '()V', 'visibility': 'package'},
-                {'name': 'a', 'signature': '()V', 'visibility': 'private'},
-                {'name': 'b', 'signature': '(I)I', 'visibility': 'private'},
-                {'name': 'c',
-                 'signature': '(Ljava/lang/String;Ljava/lang/Long;[[I)Ljava/lang/String;',
-                 'visibility': 'private'
-                 },
-                {'name': 'd', 'signature': '()V', 'visibility': 'public', 'static': True},
-                {'name': 'main', 'signature': '([Ljava/lang/String;)V', 'visibility': 'public',
-                 'static': True}
-            ]
-        }
-        self.assertEqual(MessageToDict(definition), oracle)
+        self.assertEqual(messages[0], oracle)
 
     def test_callstack(self):
         messages = self.filter_messages(message_pb2.METHOD_ENTER, message_pb2.METHOD_EXIT)
@@ -157,5 +151,4 @@ class MonitorTest(unittest.TestCase):
             {}
         ]
 
-        serialised = [MessageToDict(m) for m in messages]
-        self.assertEqual(serialised, oracle)
+        self.assertEqual(messages, oracle)
