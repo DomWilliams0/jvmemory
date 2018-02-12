@@ -64,8 +64,9 @@ function setPlayButtonState(playing) {
         del = play;
         add = pause;
     }
-    playPauseButton.firstChild.classList.add(add);
-    playPauseButton.firstChild.classList.remove(del)
+    const icon = playPauseButton.node().firstChild;
+    icon.classList.add(add);
+    icon.classList.remove(del)
 }
 
 const playPauseButton = d3.select("#play-pause");
