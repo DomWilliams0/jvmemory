@@ -148,14 +148,14 @@
         <div id="stack"></div>
         <div id="controls">
             <div id="buttons">
-                <button><i class="fas fa-fast-backward"></i></button>
-                <button id="playpause" onclick="ticker.toggle()"><i class="fas fa-pause"></i></button>
-                <button><i class="fas fa-fast-forward"></i></button>
+                <button id="scrub-back"><i class="fas fa-fast-backward"></i></button>
+                <button id="play-pause"><i class="fas fa-pause"></i></button>
+                <button id="scrub-forward"><i class="fas fa-fast-forward"></i></button>
             </div>
             <div id="slider">
-                <button onclick="ticker.slowdown()"><i class="fas fa-backward"></i></button>
-                <input id="speedslider" type="range">
-                <button onclick="ticker.speedup()"><i class="fas fa-forward"></i></button>
+                <button id="slow-down"><i class="fas fa-backward"></i></button>
+                <input id="speed-slider" type="range">
+                <button id="speed-up"><i class="fas fa-forward"></i></button>
             </div>
         </div>
     </div>

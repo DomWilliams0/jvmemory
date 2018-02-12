@@ -8,7 +8,6 @@ let WINDOW_HEIGHT;
 let HEAP_CENTRE;
 
 // constants
-const SERVER = "http://localhost:52933";
 const CENTRE_PULL = 0.030;
 const NODE_REPULSION = 100;
 const LINK_LENGTH = 50;
@@ -46,7 +45,6 @@ resize();
 d3.select(window).on("resize", resize);
 
 restart();
-startTicking(SERVER);
 
 function tickSim() {
 
