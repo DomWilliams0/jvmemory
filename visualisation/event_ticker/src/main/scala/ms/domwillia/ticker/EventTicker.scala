@@ -1,6 +1,6 @@
 package ms.domwillia.ticker
 
-import ms.domwillia.jvmemory.preprocessor.protobuf.Event.EventVariant
+import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic
@@ -35,10 +35,10 @@ trait References extends js.Object {
 
 @js.native
 trait Callbacks extends js.Object {
-  val onPlayOrPause: Boolean => Unit = js.native
-  val onSetSimState: Boolean => Unit = js.native
-  val highlightLocalVar: (Long, Boolean) => Unit = js.native
-  val highlightHeapObj: (Long, String, Boolean) => Unit = js.native
+  val onPlayOrPause: js.Function1[Boolean, Unit] = js.native
+  val onSetSimState: js.Function1[Boolean, Unit] = js.native
+  val highlightLocalVar: js.Function2[Long, Boolean, Unit] = js.native
+  val highlightHeapObj: js.Function3[Long, String, Boolean, Unit] = js.native
 }
 
 object Constants {
@@ -52,6 +52,7 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
   Dynamic.global.console.log("events=%o refs=%o callbacks=%o", events, references, callbacks)
 
   var _speed = 50 // TODO placeholder
+  var playing = false
 
   @JSExport
   val speed: Int = _speed
@@ -60,5 +61,19 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
   def speed_=(value: Int): Unit = _speed = Constants.MaxSpeed max value min Constants.MinSpeed
 
   @JSExport
-  def resume(): Unit = ???
+  def resume(): Unit = {
+    println("resume")
+  }
+
+  @JSExport
+  def pause(): Unit = {
+    println("pause")
+  }
+
+  @JSExport
+  def toggle(): Unit = {
+    playing = !playing
+    callbacks.onPlayOrPause(!playing)
+    if (playing) pause() else resume()
+  }
 }
