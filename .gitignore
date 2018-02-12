@@ -11,6 +11,9 @@ gen
 venv
 integration-tests/pb
 
+# symlink
+visualisation/src/event_ticker.js
+
 ## Java
 
 *.class

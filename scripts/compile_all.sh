@@ -56,6 +56,13 @@ cp -f -r $ROOT/visualisation/src $VIS
 echo Visualisation sources copied to $VIS
 ) &
 
+# scala js
+(
+cd $ROOT/visualisation/event_ticker
+sbt fastOptJS
+cp -f target/scala-2.12/event_ticker-fastopt.js $VIS/event_ticker.js
+) &
+
 cp -f -v $ROOT/scripts/run.sh $RUN
 
 wait
