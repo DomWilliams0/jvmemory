@@ -33,7 +33,7 @@ cp -f build/libs/monitor-agent-0.1.jar $JAVA_AGENT
 echo Java agent copied to $JAVA_AGENT
 
 cp -f $JAVA_AGENT $BOOTSTRAP
-zip -d $BOOTSTRAP ms/domwillia/jvmemory/modify/*
+zip --quiet -d $BOOTSTRAP ms/domwillia/jvmemory/modify/*
 echo Bootstrap created at $BOOTSTRAP
 
 cp -f $ROOT/jvmti-agent/libagent.so $LIBAGENT
