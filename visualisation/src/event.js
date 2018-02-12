@@ -71,18 +71,16 @@ function setPlayButtonState(playing) {
 
 const playPauseButton = d3.select("#play-pause");
 
-const MIN_SPEED = 500; // ms between events
-const MAX_SPEED = 1; // ms between events
-
+const SPEED_STEP = 50;
 const SERVER = "http://localhost:52933";
 
 const speedSlider = {
     element: document.getElementById("speed-slider"),
     set: function (speed) {
-        this.element.value = MIN_SPEED - speed;
+        this.element.value = Constants.MinSpeed - speed;
     },
     get: function () {
-        return MIN_SPEED - this.element.value;
+        return Constants.MinSpeed - this.element.value;
     }
 };
 
@@ -119,14 +117,20 @@ function startTicking(events, definitions) {
     });
 
     // speed slider
-    speedSlider.element.min = MAX_SPEED;
-    speedSlider.element.max = MIN_SPEED;
+    speedSlider.element.min = Constants.MaxSpeed;
+    speedSlider.element.max = Constants.MinSpeed;
     speedSlider.element.onchange = () => ticker.speed = speedSlider.get();
     speedSlider.set(ticker.speed);
 
     // speed buttons
-    d3.select("#slow-down").on("click", ticker.slowDown);
-    d3.select("#speed-up").on("click", ticker.speedUp);
+    function changeSpeed(delta) {
+        return function() {
+            speedSlider.element.value = parseInt(speedSlider.element.value) + (delta * SPEED_STEP)
+            speedSlider.element.onchange();
+        }
+    }
+    d3.select("#slow-down").on("click", changeSpeed(-1));
+    d3.select("#speed-up").on("click", changeSpeed(1));
 
     // and awaay we go
     ticker.resume();
