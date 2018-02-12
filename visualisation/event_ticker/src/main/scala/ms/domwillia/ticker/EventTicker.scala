@@ -4,7 +4,7 @@ import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import scala.scalajs.js.annotation.{JSExport, JSExportAll, JSExportTopLevel}
 
 
 @js.native
@@ -41,6 +41,8 @@ trait Callbacks extends js.Object {
   val highlightHeapObj: js.Function3[Long, String, Boolean, Unit] = js.native
 }
 
+@JSExportTopLevel("Constants")
+@JSExportAll
 object Constants {
   // ms between events
   val MaxSpeed = 1
