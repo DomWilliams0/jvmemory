@@ -77,7 +77,7 @@ const MAX_SPEED = 1; // ms between events
 const SERVER = "http://localhost:52933";
 
 const speedSlider = {
-    element: d3.select("#speed-slider"),
+    element: document.getElementById("speed-slider"),
     set: function (speed) {
         this.element.value = MIN_SPEED - speed;
     },
@@ -121,7 +121,7 @@ function startTicking(events, definitions) {
     // speed slider
     speedSlider.element.min = MAX_SPEED;
     speedSlider.element.max = MIN_SPEED;
-    speedSlider.element.on("change", () => ticker.speed = speedSlider.get());
+    speedSlider.element.onchange = () => ticker.speed = speedSlider.get();
     speedSlider.set(ticker.speed);
 
     // speed buttons

@@ -55,7 +55,7 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
   var playing = false
 
   @JSExport
-  val speed: Int = _speed
+  def speed: Int = _speed
 
   @JSExport
   def speed_=(value: Int): Unit = _speed = Constants.MaxSpeed max value min Constants.MinSpeed
