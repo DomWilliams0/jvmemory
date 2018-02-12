@@ -1,3 +1,8 @@
+
+const TEST = new Ticker();
+TEST.doNothing();
+
+
 function generateRandomPersistentColour(className, isSystem) {
     const classNameWithoutArray = className.replace(/\[\]/g, "");
     let rand = new Math.seedrandom(classNameWithoutArray)() * 360;
