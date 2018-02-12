@@ -111,7 +111,7 @@ function startTicking(events, definitions) {
     //                     (always just onRestartSim, will unpause)
 
     // play/pause
-    playPauseButton.on("click", ticker.toggle);
+    playPauseButton.on("click", () => ticker.toggle());
     d3.select("body").on("keydown", () => {
         // space when not on button
         if (d3.event.target !== playPauseButton && d3.event.keyCode === 32)
