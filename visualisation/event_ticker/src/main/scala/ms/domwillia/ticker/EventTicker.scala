@@ -1,13 +1,11 @@
 package ms.domwillia.ticker
 
+import ms.domwillia.jvmemory.preprocessor.protobuf.Event.EventVariant
+
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 
-@js.native
-trait Event extends js.Object
-
-// TODO protobuf
 
 @js.native
 trait Node extends js.Object {
@@ -50,8 +48,8 @@ object Constants {
 }
 
 @JSExportTopLevel("EventTicker")
-class EventTicker(val events: js.Array[Event], val references: References, val callbacks: Callbacks) {
-  Dynamic.global.console.log("events.length=%d refs=%o callbacks=%o", events.length, references, callbacks)
+class EventTicker(val events: js.Array[EventVariant], val references: References, val callbacks: Callbacks) {
+  Dynamic.global.console.log("events=%o refs=%o callbacks=%o", events, references, callbacks)
 
   var _speed = 50 // TODO placeholder
 
