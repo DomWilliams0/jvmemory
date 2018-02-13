@@ -47,15 +47,16 @@ object Constants {
   // ms between events
   val MaxSpeed = 1
   val MinSpeed = 500
+  val DefaultSpeed = 50
 }
 
 @JSExportTopLevel("EventTicker")
 class EventTicker(val events: js.Array[EventVariant], val references: References, val callbacks: Callbacks) {
   Dynamic.global.console.log("events=%o refs=%o callbacks=%o", events, references, callbacks)
 
-  var currentEvent = 0 // TODO placeholder
-  var _speed = 50 // TODO placeholder
-  var playing = false
+  private var currentEvent = 0 // TODO placeholder
+  private var _speed = Constants.DefaultSpeed
+  private var playing = false
 
   @JSExport
   def speed: Int = _speed
