@@ -72,6 +72,7 @@ function setPlayButtonState(playing) {
 const playPauseButton = d3.select("#play-pause");
 
 const SPEED_STEP = 50;
+const SCRUB_STEP = 5;
 const SERVER = "http://localhost:52933";
 
 const speedSlider = {
@@ -124,13 +125,18 @@ function startTicking(events, definitions) {
 
     // speed buttons
     function changeSpeed(delta) {
-        return function() {
-            speedSlider.element.value = parseInt(speedSlider.element.value) + (delta * SPEED_STEP)
+        return function () {
+            speedSlider.element.value = parseInt(speedSlider.element.value) + (delta * SPEED_STEP);
             speedSlider.element.onchange();
         }
     }
+
     d3.select("#slow-down").on("click", changeSpeed(-1));
     d3.select("#speed-up").on("click", changeSpeed(1));
+
+    // scrub buttons
+    d3.select("#scrub-back").on("click", () => ticker.scrubToRelative(-SCRUB_STEP));
+    d3.select("#scrub-forward").on("click", () => ticker.scrubToRelative(SCRUB_STEP));
 
     // and awaay we go
     ticker.resume();
