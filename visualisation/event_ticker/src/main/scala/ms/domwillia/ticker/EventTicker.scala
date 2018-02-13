@@ -35,8 +35,8 @@ trait References extends js.Object {
 
 @js.native
 trait Callbacks extends js.Object {
-  val onPlayOrPause: js.Function1[Boolean, Unit] = js.native
-  val onSetSimState: js.Function1[Boolean, Unit] = js.native
+  val setPlayButtonState: js.Function1[Boolean, Unit] = js.native
+  val setSimulationState: js.Function1[Boolean, Unit] = js.native
   val highlightLocalVar: js.Function2[Long, Boolean, Unit] = js.native
   val highlightHeapObj: js.Function3[Long, String, Boolean, Unit] = js.native
 }
@@ -76,7 +76,7 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
   @JSExport
   def toggle(): Unit = {
     playing = !playing
-    callbacks.onPlayOrPause(!playing)
+    callbacks.setPlayButtonState(!playing)
     if (playing) pause() else resume()
   }
 

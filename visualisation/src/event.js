@@ -94,20 +94,11 @@ function startTicking(events, definitions) {
             stackFrames,
         },
         callbacks = {
-            onPlayOrPause: setPlayButtonState,
-            onSetSimState: (state) => state ? sim.restart() : sim.stop(),
+            setPlayButtonState,
+            setSimulationState: (state) => state ? sim.restart() : sim.stop(),
             highlightLocalVar: highlightLocalVar,
             highlightHeapObj: highlightHeapObj,
         });
-    // TODO args:
-    //      onPlayOrPause(state) -> { set pause button state; }
-    //      onStopSim() -> sim.stop
-    //      onRestartSim(graphChanged) -> restart
-    //
-
-    // toggle -> play/pause -> will emit both events
-    // scrub to event X -> ticker.scrub(x) which will simulate up/back to that event and update sim at end
-    //                     (always just onRestartSim, will unpause)
 
     // play/pause
     playPauseButton.on("click", () => ticker.toggle());
