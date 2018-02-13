@@ -53,6 +53,7 @@ object Constants {
 class EventTicker(val events: js.Array[EventVariant], val references: References, val callbacks: Callbacks) {
   Dynamic.global.console.log("events=%o refs=%o callbacks=%o", events, references, callbacks)
 
+  var currentEvent = 0 // TODO placeholder
   var _speed = 50 // TODO placeholder
   var playing = false
 
@@ -77,5 +78,14 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
     playing = !playing
     callbacks.onPlayOrPause(!playing)
     if (playing) pause() else resume()
+  }
+
+  @JSExport
+  def scrubToRelative(delta: Int): Unit = scrubTo(currentEvent + delta)
+
+  @JSExport
+  def scrubTo(eventIndex: Int): Unit = {
+    println(s"scrubbing from $currentEvent to $eventIndex")
+    currentEvent = eventIndex
   }
 }
