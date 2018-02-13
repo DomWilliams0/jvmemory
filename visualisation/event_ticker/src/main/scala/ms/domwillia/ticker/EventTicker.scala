@@ -5,6 +5,7 @@ import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic
 import scala.scalajs.js.annotation.{JSExport, JSExportAll, JSExportTopLevel}
+import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout}
 
 
 @js.native
@@ -57,6 +58,7 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
   private var currentEvent = 0 // TODO placeholder
   private var _speed = Constants.DefaultSpeed
   private var playing = false
+  private var handle: Option[SetTimeoutHandle] = None
 
   @JSExport
   def speed: Int = _speed
@@ -65,14 +67,10 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
   def speed_=(value: Int): Unit = _speed = Constants.MaxSpeed max value min Constants.MinSpeed
 
   @JSExport
-  def resume(): Unit = {
-    println("resume")
-  }
+  def resume(): Unit = startTickLoop()
 
   @JSExport
-  def pause(): Unit = {
-    println("pause")
-  }
+  def pause(): Unit = stopTickLoop()
 
   @JSExport
   def toggle(): Unit = {
@@ -88,5 +86,26 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
   def scrubTo(eventIndex: Int): Unit = {
     println(s"scrubbing from $currentEvent to $eventIndex")
     currentEvent = eventIndex
+  }
+
+  private def handle(event: EventVariant): Unit = println(s"handling an event ${event.`type`}")
+
+  private def tick(): Unit = println(s"tick ${currentEvent += 1; currentEvent}")
+
+  private def stopTickLoop(): Unit = {
+    handle.foreach(clearTimeout)
+    handle = None
+    println("stop!")
+  }
+
+  private def startTickLoop(): Unit = {
+    def loopTheLoop(): Unit = {
+      tick()
+      handle = Some(setTimeout(_speed) {
+        loopTheLoop()
+      })
+    }
+
+    loopTheLoop()
   }
 }
