@@ -63,11 +63,11 @@ class Handler(val goodyBag: GoodyBag) {
   }
 
   private def handleImpl(value: PopMethodFrame): HandleResult = {
-    goodyBag.callStack.pop()
+    val popped = goodyBag.callStack.pop()
 
     // TODO remove stack links
 
-    HandleResult.NoGraphChange
+    HandleResult.ChangedStackOnly
   }
 
   private def findNode(id: Long): Node = goodyBag.nodes.find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
