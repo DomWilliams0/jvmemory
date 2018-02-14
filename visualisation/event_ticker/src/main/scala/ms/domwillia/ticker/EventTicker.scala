@@ -1,11 +1,9 @@
 package ms.domwillia.ticker
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.ByteArrayInputStream
 
-import com.google.protobuf.CodedInputStream
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 
-import scala.io.Source
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportAll, JSExportTopLevel}
 import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout}
@@ -90,10 +88,22 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: Reference
 
   @JSExport
   def scrubTo(eventIndex: Int): Unit = {
-    val step = if (eventIndex < currentEvent) -1 else 1
+    val (step, source, undo) = if (eventIndex < currentEvent)
+      (-1, currentEvent - 1, true)
+    else (1, currentEvent, false)
+
     val target = clampIndex(eventIndex)
-    (currentEvent to target by step).foreach(handle(_, step < 0))
-    currentEvent = eventIndex
+
+    if (target == currentEvent)
+      return
+
+    (source to target by step).foreach(handle(_, undo))
+
+    currentEvent = clampIndex(target + (if (undo) 0 else 1))
+
+    // dont repeat the last event
+    if (eventIndex >= events.length)
+      currentEvent = events.length
   }
 
   def parseEvents(bytes: js.typedarray.Uint8Array): Array[EventVariant] = {
@@ -102,7 +112,7 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: Reference
   }
 
 
-  private def clampIndex(index: Int): Int = clamp(0, events.length, index)
+  private def clampIndex(index: Int): Int = clamp(0, events.length - 1, index)
 
   private def isEventInRange: Boolean = events.indices contains currentEvent
 
@@ -113,25 +123,30 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: Reference
     // TODO
   }
 
-  private def tick(): Unit = {
+  private def tick(): Boolean = {
     if (isEventInRange) {
       handle(currentEvent)
       currentEvent += 1
+      return true
     }
+
+    playing = false
+    callbacks.setPlayButtonState(false)
+    false
   }
 
   private def stopTickLoop(): Unit = {
     handle.foreach(clearTimeout)
     handle = None
-    println("stop!")
   }
 
   private def startTickLoop(): Unit = {
     def loopTheLoop(): Unit = {
-      tick()
-      handle = Some(setTimeout(_speed) {
-        loopTheLoop()
-      })
+      if (tick()) {
+        handle = Some(setTimeout(_speed) {
+          loopTheLoop()
+        })
+      }
     }
 
     loopTheLoop()
