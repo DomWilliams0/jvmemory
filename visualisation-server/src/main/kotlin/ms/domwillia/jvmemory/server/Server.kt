@@ -49,7 +49,8 @@ object Server {
             ctx.param("id")!!.toLongOrNull()?.let { threadId ->
                 val evts = events.getEventsForThread(threadId)
                 if (evts.isNotEmpty()) {
-                    ctx.json(evts)
+                    val out = ctx.response().outputStream
+                    evts.forEach { it.writeDelimitedTo(out) }
                     return@get
                 }
             }
