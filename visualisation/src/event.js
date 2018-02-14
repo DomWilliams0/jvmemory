@@ -78,19 +78,14 @@ const speedSlider = {
     }
 };
 
-function startTicking(events, definitions) {
-    let ticker = new EventTicker(events, references = {
-            definitions,
-            heapObjects,
-            heapLinks,
-            callstack
-        },
-        callbacks = {
-            setPlayButtonState,
-            setSimulationState: (state) => state ? sim.restart() : sim.stop(),
-            highlightLocalVar: highlightLocalVar,
-            highlightHeapObj: highlightHeapObj,
-        });
+function startTicking(events) {
+    const callbacks = {
+        setPlayButtonState,
+        setSimulationState: (state) => state ? sim.restart() : sim.stop(),
+        highlightLocalVar: highlightLocalVar,
+        highlightHeapObj: highlightHeapObj,
+    };
+    let ticker = new EventTicker(events, callbacks, callstack, definitions);
 
     // play/pause
     playPauseButton.on("click", () => ticker.toggle());
@@ -137,7 +132,7 @@ fetch(SERVER + "/definitions").then(resp => resp.arrayBuffer()).then(defs => {
         return threads[0];
     }).then(thread_id => {
         fetch(SERVER + "/thread/" + thread_id).then(resp => resp.arrayBuffer())
-            .then((events) => startTicking(new Uint8Array(events), defs));
+            .then((events) => startTicking(new Uint8Array(events)));
     });
 });
 

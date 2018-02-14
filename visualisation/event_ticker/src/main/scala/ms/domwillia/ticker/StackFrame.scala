@@ -1,13 +1,13 @@
 package ms.domwillia.ticker
 
 import ms.domwillia.jvmemory.protobuf.definitions
-import ms.domwillia.jvmemory.protobuf.definitions.{ClassDefinition, MethodDefinition}
+import ms.domwillia.jvmemory.protobuf.definitions.MethodDefinition
 
 import scala.collection.mutable
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.UndefOr
 import scala.scalajs.js.annotation.JSExportTopLevel
-import scala.scalajs.js.{Iterator, UndefOr}
 import scala.util.Try
 
 
@@ -17,8 +17,8 @@ object StackFrame {
 
 class LocalVar(name: String, `type`: String, index: Int) extends js.Object
 
-class StackFrame(clazz: ClassDefinition, method: MethodDefinition) extends js.Object {
-  val clazzLong: String = clazz.name
+class StackFrame(clazz: String, method: MethodDefinition) extends js.Object {
+  val clazzLong: String = clazz
   val clazzShort: String = s"Short($clazzLong)" // TODO
   val name: String = method.name
   val signature: String = method.signature
@@ -44,7 +44,6 @@ class CallStack extends js.Object {
   def push(frame: StackFrame): Unit = {
     callstack.push(frame)
     frameMap.put(frame.uuid, frame)
-    println(s"push ${frame.toString}")
   }
 
   def pop(): UndefOr[StackFrame] =

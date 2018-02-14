@@ -25,14 +25,6 @@ trait Link extends js.Object {
 }
 
 @js.native
-trait References extends js.Object {
-  val definitions: Definitions = js.native
-  val heapObjects: js.Array[Node] = js.native
-  val heapLinks: js.Array[Link] = js.native
-  val callstack: CallStack = js.native
-}
-
-@js.native
 trait Callbacks extends js.Object {
   val setPlayButtonState: js.Function1[Boolean, Unit] = js.native
   val setSimulationState: js.Function1[Boolean, Unit] = js.native
@@ -50,13 +42,17 @@ object Constants {
 }
 
 @JSExportTopLevel("EventTicker")
-class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: References, val callbacks: Callbacks) {
+class EventTicker(rawEvents: js.typedarray.Uint8Array,
+                  val callbacks: Callbacks,
+                  callStack: CallStack,
+                  definitions: Definitions) {
   private val events: Array[EventVariant] = Utils.parseEvents(rawEvents)
   private var currentEvent = 0
   private var _speed = Constants.DefaultSpeed
   private var playing = false
   private var handle: Option[SetTimeoutHandle] = None
 
+  private val handler = new Handler(callStack, definitions)
 
   def clamp(min: Int, max: Int, value: Int): Int = min.max(value).min(max) // teehee
 
@@ -109,8 +105,8 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: Reference
   private def handle(index: Int, undo: Boolean = false): Unit = {
     val e = events(index)
     val action = if (undo) "undoing" else "handling"
-    println(s"$action event $index: ${e.payload}")
-    Handler.handle(e.payload)
+    println(s"$action event $index: ${e.`type`}")
+    handler.handle(e.payload)
   }
 
   private def tick(): Boolean = {
