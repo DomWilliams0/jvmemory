@@ -119,8 +119,8 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: Reference
   private def handle(index: Int, undo: Boolean = false): Unit = {
     val e = events(index)
     val action = if (undo) "undoing" else "handling"
-    println(s"$action event $index: ${e.`type`}")
-    // TODO
+    println(s"$action event $index: ${e.payload}")
+    Handler.handle(e.payload)
   }
 
   private def tick(): Boolean = {
