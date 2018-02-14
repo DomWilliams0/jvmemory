@@ -59,7 +59,8 @@ object Server {
         }
 
         app.get("/definitions") { ctx ->
-            ctx.json(events.definitions)
+            val out = ctx.response().outputStream
+            events.definitions.forEach { it.writeDelimitedTo(out) }
         }
     }
 }

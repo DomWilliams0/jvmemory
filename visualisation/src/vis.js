@@ -2,7 +2,6 @@
 let heapObjects = [];
 let heapLinks = [];
 const callstack = [];
-const definitions = {};
 
 let WINDOW_HEIGHT;
 let HEAP_CENTRE;

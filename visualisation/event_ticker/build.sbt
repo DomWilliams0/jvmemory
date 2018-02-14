@@ -13,8 +13,12 @@ PB.targets in Compile := Seq(
   scalapb.gen() -> (sourceManaged in Compile).value
 )
 
-PB.protoSources in Compile := Seq(file("../../protobufs/vis"))
+PB.protoSources in Compile := Seq(
+  file("../../protobufs/monitor"),
+  file("../../protobufs/vis"),
+)
 
+scalacOptions += "-P:scalajs:sjsDefinedByDefault"
 
 libraryDependencies ++= Seq(
   "com.trueaccord.scalapb" %%% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion,
