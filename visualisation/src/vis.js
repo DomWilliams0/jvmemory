@@ -1,7 +1,7 @@
 // data
 let heapObjects = []; // [Node]
 let heapLinks = []; // [Link]
-const callstack = new CallStack();
+const callStack = new CallStack();
 
 let WINDOW_HEIGHT;
 let HEAP_CENTRE;
@@ -50,14 +50,14 @@ function tickSim() {
             let thisY = FRAME_PADDING + (i * (FRAME_BASE_SIZE + FRAME_PADDING)) + callstackCurrentHeight;
             let yInverse = WINDOW_HEIGHT - FRAME_PADDING - localsHeight - thisY;
 
-            callstack.getFrame(d.uuid).y = yInverse;
+            callStack.getFrame(d.uuid).y = yInverse;
             callstackCurrentHeight += localsHeight;
 
             return "translate(0, " + yInverse + ")";
         });
 
     function getStackLinkPos(stackData) {
-        let y = callstack.getFrame(stackData.frameUuid).y;
+        let y = callStack.getFrame(stackData.frameUuid).y;
         y += (FRAME_BASE_SIZE + LOCAL_VAR_SLOT_PRE_PAD + (stackData.index * LOCAL_VAR_SLOT_HEIGHT));
         y -= STACK_NODE_RADIUS;
         return y;
@@ -184,7 +184,7 @@ function restart(changedGraph) {
     linkLabel = linkLabel.merge(labelText);
 
     // stack
-    stackFrame = stackFrame.data(callstack.getCallStack());
+    stackFrame = stackFrame.data(callStack.getCallStack());
     stackFrame.exit().remove();
 
     let stackFrameEnter = stackFrame.enter().append("g")

@@ -8,12 +8,17 @@ import scala.scalajs.js.annotation.{JSExport, JSExportAll, JSExportTopLevel}
 import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout}
 
 @js.native
-trait Callbacks extends js.Object {
+trait GoodyBag extends js.Object {
   val setPlayButtonState: js.Function1[Boolean, Unit] = js.native
   val restartSim: js.Function1[Boolean, Unit] = js.native
   val setSimState: js.Function1[Boolean, Unit] = js.native
   val highlightLocalVar: js.Function2[Long, Boolean, Unit] = js.native
   val highlightHeapObj: js.Function3[Long, String, Boolean, Unit] = js.native
+
+  val callStack: CallStack = js.native
+  val definitions: Definitions = js.native
+  val nodes: js.Array[Node] = js.native
+  val links: js.Array[Link] = js.native
 }
 
 @JSExportTopLevel("Constants")
@@ -26,12 +31,7 @@ object Constants {
 }
 
 @JSExportTopLevel("EventTicker")
-class EventTicker(rawEvents: js.typedarray.Uint8Array,
-                  val callbacks: Callbacks,
-                  callStack: CallStack,
-                  definitions: Definitions,
-                  nodes: js.Array[Node],
-                  links: js.Array[Link]) {
+class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
   // TODO use scala seq instead of js array, to have better functionality
   private val events: Array[EventVariant] = Utils.parseEvents(rawEvents)
   private var currentEvent = 0
@@ -39,7 +39,7 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array,
   private var playing = false
   private var handle: Option[SetTimeoutHandle] = None
 
-  private val handler = new Handler(callStack, definitions, nodes, links)
+  private val handler = new Handler(goodyBag)
 
   def clamp(min: Int, max: Int, value: Int): Int = min.max(value).min(max) // teehee
 
@@ -51,20 +51,20 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array,
 
   @JSExport
   def resume(): Unit = {
-    callbacks.setSimState(true)
+    goodyBag.setSimState(true)
     startTickLoop()
   }
 
   @JSExport
   def pause(): Unit = {
-    callbacks.setSimState(false)
+    goodyBag.setSimState(false)
     stopTickLoop()
   }
 
   @JSExport
   def toggle(): Unit = {
     playing = !playing
-    callbacks.setPlayButtonState(!playing)
+    goodyBag.setPlayButtonState(!playing)
     if (playing) pause() else resume()
   }
 
@@ -104,11 +104,10 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array,
   }
 
   private def refreshSimulation(result: HandleResult): Unit = result match {
-      case HandleResult.ChangedGraph => callbacks.restartSim(true)
-      case HandleResult.ChangedStackOnly => callbacks.restartSim(false)
-      case _ =>
-    }
-
+    case HandleResult.ChangedGraph => goodyBag.restartSim(true)
+    case HandleResult.ChangedStackOnly => goodyBag.restartSim(false)
+    case _ =>
+  }
 
   private def tick(): Boolean = {
     if (isEventInRange) {
@@ -118,7 +117,7 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array,
     }
 
     playing = false
-    callbacks.setPlayButtonState(false)
+    goodyBag.setPlayButtonState(false)
     false
   }
 

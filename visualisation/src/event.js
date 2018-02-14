@@ -79,14 +79,18 @@ const speedSlider = {
 };
 
 function startTicking(events) {
-    const callbacks = {
+    const goodyBag = {
         setPlayButtonState,
         restartSim: restart,
         setSimState: (state) => state ? sim.restart() : sim.stop(),
         highlightLocalVar: highlightLocalVar,
         highlightHeapObj: highlightHeapObj,
+        callStack,
+        definitions,
+        nodes: heapObjects,
+        links: heapLinks
     };
-    let ticker = new EventTicker(events, callbacks, callstack, definitions, heapObjects, heapLinks);
+    let ticker = new EventTicker(events, goodyBag);
 
     // play/pause
     playPauseButton.on("click", () => ticker.toggle());
