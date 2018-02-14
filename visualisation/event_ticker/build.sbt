@@ -18,8 +18,5 @@ PB.protoSources in Compile := Seq(file("../../protobufs/vis"))
 
 libraryDependencies ++= Seq(
   "com.trueaccord.scalapb" %%% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion,
-"com.trueaccord.scalapb" %%% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion % "protobuf"
+  "com.trueaccord.scalapb" %%% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion % "protobuf"
 )
-
-//sourceDirectory in ProtobufConfig := file("../../protobufs/vis")
-//sourceDirectories in ProtobufConfig += (protobufExternalIncludePath in ProtobufConfig).value
