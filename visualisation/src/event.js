@@ -155,8 +155,8 @@ fetch(SERVER + "/definitions").then(resp => resp.json()).then(defs => {
         if (threads.length === 0) throw "no events";
         return threads[0];
     }).then(thread_id => {
-        fetch(SERVER + "/thread/" + thread_id).then(resp => resp.json())
-            .then((events) => startTicking(events, defs));
+        fetch(SERVER + "/thread/" + thread_id).then(resp => resp.arrayBuffer())
+            .then((events) => startTicking(new Uint8Array(events), defs));
     });
 });
 
