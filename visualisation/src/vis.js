@@ -184,7 +184,7 @@ function restart(changedGraph) {
     linkLabel = linkLabel.merge(labelText);
 
     // stack
-    stackFrame = stackFrame.data(callStack.getCallStack());
+    stackFrame = stackFrame.data(callStack.callstack);
     stackFrame.exit().remove();
 
     let stackFrameEnter = stackFrame.enter().append("g")

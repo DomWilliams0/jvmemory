@@ -15,14 +15,14 @@ object StackFrame {
   var nextFrameUuid = 100
 }
 
-class LocalVar(name: String, `type`: String, index: Int) extends js.Object
+class LocalVar(val name: String, val `type`: String, val index: Int) extends js.Object
 
 class StackFrame(clazz: String, method: MethodDefinition) extends js.Object {
   val clazzLong: String = clazz
   val clazzShort: String = s"Short($clazzLong)" // TODO
   val name: String = method.name
   val signature: String = method.signature
-  val localVars: Seq[LocalVar] = method.localVars.map(convertLocalVar)
+  val localVars: js.Array[LocalVar] = method.localVars.map(convertLocalVar).toJSArray
   val y: Int = 0
 
   val uuid: Int = {
@@ -36,24 +36,23 @@ class StackFrame(clazz: String, method: MethodDefinition) extends js.Object {
 
 @JSExportTopLevel("CallStack")
 class CallStack extends js.Object {
-  private val callstack = mutable.Stack[StackFrame]()
+  private val _callstack = js.Array[StackFrame]()
   private val frameMap = mutable.Map[Int, StackFrame]()
 
-  def top(): js.UndefOr[StackFrame] = Try(callstack.top).toOption.orUndefined
+  def top(): js.UndefOr[StackFrame] = _callstack.lastOption.orUndefined
 
   def push(frame: StackFrame): Unit = {
-    callstack.push(frame)
+    _callstack.push(frame)
     frameMap.put(frame.uuid, frame)
   }
 
   def pop(): UndefOr[StackFrame] =
     (for {
-      top <- Try(callstack.pop()).toOption
+      top <- Try(_callstack.pop()).toOption
       _ <- frameMap.remove(top.uuid)
     } yield top).orUndefined
 
   def getFrame(uuid: Int): UndefOr[StackFrame] = frameMap.get(uuid).orUndefined
 
-
-  def getCallStack(): js.Iterable[StackFrame] = callstack.toJSIterable
+  def callstack: js.Array[StackFrame] = _callstack
 }
