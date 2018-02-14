@@ -32,6 +32,7 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array,
                   definitions: Definitions,
                   nodes: js.Array[Node],
                   links: js.Array[Link]) {
+  // TODO use scala seq instead of js array, to have better functionality
   private val events: Array[EventVariant] = Utils.parseEvents(rawEvents)
   private var currentEvent = 0
   private var _speed = Constants.DefaultSpeed

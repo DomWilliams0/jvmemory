@@ -39,7 +39,18 @@ class Handler(val callStack: CallStack,
 
   private def handleImpl(value: DelHeapObject): HandleResult = HandleResult.ChangedGraph
 
-  private def handleImpl(value: SetIntraHeapLink): HandleResult = HandleResult.ChangedGraph
+  private def handleImpl(value: SetIntraHeapLink): HandleResult = {
+    val deleting = value.dstId == 0
+
+    val existingIndex = links.indexWhere(l => l.source.id == value.srcId && l.name == value.fieldName)
+
+    if (existingIndex >= 0) {
+      if (deleting) links.remove(existingIndex) // delete existing
+      else links(existingIndex).target = findNode(value.dstId) // update existing
+    } else if (!deleting) links.push(new Link(findNode(value.srcId), findNode(value.dstId), value.fieldName)) // add new
+
+    HandleResult.ChangedGraph
+  }
 
   private def handleImpl(value: SetLocalVarLink): HandleResult = HandleResult.ChangedGraph
 
@@ -62,4 +73,6 @@ class Handler(val callStack: CallStack,
 
     HandleResult.NoGraphChange
   }
+
+  private def findNode(id: Long): Node = nodes.find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
 }
