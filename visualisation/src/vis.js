@@ -1,6 +1,6 @@
 // data
-let heapObjects = [];
-let heapLinks = [];
+let heapObjects = []; // [Node]
+let heapLinks = []; // [Link]
 const callstack = new CallStack();
 
 let WINDOW_HEIGHT;
