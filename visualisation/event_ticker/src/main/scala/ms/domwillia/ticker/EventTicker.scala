@@ -28,7 +28,7 @@ trait Link extends js.Object {
 
 @js.native
 trait References extends js.Object {
-  val definitions: js.Array[js.Dynamic] = js.native
+  val definitions: Definitions = js.native
   val heapObjects: js.Array[Node] = js.native
   val heapLinks: js.Array[Link] = js.native
   val callstack: js.Array[js.Dynamic] = js.native
@@ -54,8 +54,7 @@ object Constants {
 
 @JSExportTopLevel("EventTicker")
 class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: References, val callbacks: Callbacks) {
-
-  private val events: Array[EventVariant] = parseEvents(rawEvents)
+  private val events: Array[EventVariant] = Utils.parseEvents(rawEvents)
   private var currentEvent = 0
   private var _speed = Constants.DefaultSpeed
   private var playing = false
@@ -105,12 +104,6 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: Reference
     if (eventIndex >= events.length)
       currentEvent = events.length
   }
-
-  def parseEvents(bytes: js.typedarray.Uint8Array): Array[EventVariant] = {
-    val stream = new ByteArrayInputStream(bytes.map(_.toByte).toArray)
-    EventVariant.streamFromDelimitedInput(stream).toArray
-  }
-
 
   private def clampIndex(index: Int): Int = clamp(0, events.length - 1, index)
 

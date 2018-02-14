@@ -1,11 +1,4 @@
-function generateRandomPersistentColour(className, isSystem) {
-    const classNameWithoutArray = className.replace(/\[\]/g, "");
-    let rand = new Math.seedrandom(classNameWithoutArray)() * 360;
-    if (!isSystem)
-        return "hsl(" + rand + ", 70%, 70%)";
-    else
-        return "hsl(" + rand + ", 60%, 40%)";
-}
+let definitions;
 
 function highlight(selection, wat, read) {
     let first = selection.node();
@@ -133,22 +126,11 @@ function startTicking(events, definitions) {
     ticker.resume();
 }
 
-fetch(SERVER + "/definitions").then(resp => resp.json()).then(defs => {
-    let main;
-    for (let cls of defs) {
-        cls.colour = generateRandomPersistentColour(cls.name);
-        definitions[cls.name] = cls;
-
-        // bit of a hack
-        if (!main &&
-            cls.methods.find(m => m.static && m.name === "main" && m.signature === "([Ljava/lang/String;)V")) {
-            main = cls.name;
-        }
-    }
-
-    if (main) {
+fetch(SERVER + "/definitions").then(resp => resp.arrayBuffer()).then(defs => {
+    definitions = new Definitions(new Uint8Array(defs));
+    let main = definitions.findMainClass();
+    if (main)
         document.title = "JVMemory - " + main;
-    }
 
     fetch(SERVER + "/thread").then(resp => resp.json()).then(threads => {
         console.log("%d thread(s) available: %s", threads.length, threads);
