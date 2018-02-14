@@ -83,8 +83,7 @@ function startTicking(events, definitions) {
             definitions,
             heapObjects,
             heapLinks,
-            callstack,
-            stackFrames,
+            callstack
         },
         callbacks = {
             setPlayButtonState,

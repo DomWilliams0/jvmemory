@@ -1,7 +1,5 @@
 package ms.domwillia.ticker
 
-import java.io.ByteArrayInputStream
-
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 
 import scala.scalajs.js
@@ -31,8 +29,7 @@ trait References extends js.Object {
   val definitions: Definitions = js.native
   val heapObjects: js.Array[Node] = js.native
   val heapLinks: js.Array[Link] = js.native
-  val callstack: js.Array[js.Dynamic] = js.native
-  val stackFrames: js.Dictionary[js.Dynamic] = js.native
+  val callstack: CallStack = js.native
 }
 
 @js.native
