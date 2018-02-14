@@ -6,10 +6,10 @@ import ms.domwillia.ticker.HandleResult.HandleResult
 
 object HandleResult extends Enumeration {
   type HandleResult = Value
-  val NoChange, ChangedStackOnly, ChangedGraph = Value
+  val NoGraphChange, ChangedStackOnly, ChangedGraph = Value
 }
 
-object Handler {
+class Handler(val callStack: CallStack, val definitions: Definitions) {
   def handle(payload: Payload): HandleResult = payload match {
     case Payload.AddHeapObject(value) => handleImpl(value)
     case Payload.DelHeapObject(value) => handleImpl(value)
@@ -19,7 +19,7 @@ object Handler {
     case Payload.ShowHeapObjectAccess(value) => handleImpl(value)
     case Payload.PushMethodFrame(value) => handleImpl(value)
     case Payload.PopMethodFrame(value) => handleImpl(value)
-    case x => println(s"unknown event: $x"); HandleResult.NoChange
+    case x => println(s"unknown event: $x"); HandleResult.NoGraphChange
   }
 
   private def handleImpl(value: AddHeapObject): HandleResult = HandleResult.ChangedGraph
@@ -34,7 +34,19 @@ object Handler {
 
   private def handleImpl(value: ShowHeapObjectAccess): HandleResult = HandleResult.ChangedGraph
 
-  private def handleImpl(value: PushMethodFrame): HandleResult = HandleResult.ChangedGraph
+  private def handleImpl(value: PushMethodFrame): HandleResult = {
+    definitions.getMethodDefinition(value.owningClass, value.name, value.signature)
+      .map(new StackFrame(value.owningClass, _))
+      .foreach(callStack.push)
 
-  private def handleImpl(value: PopMethodFrame): HandleResult = HandleResult.ChangedGraph
+    HandleResult.NoGraphChange
+  }
+
+  private def handleImpl(value: PopMethodFrame): HandleResult = {
+    callStack.pop()
+
+    // TODO remove stack links
+
+    HandleResult.NoGraphChange
+  }
 }
