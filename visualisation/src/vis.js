@@ -1,7 +1,7 @@
 // data
 let heapObjects = [];
 let heapLinks = [];
-const callstack = [];
+const callstack = new CallStack();
 
 let WINDOW_HEIGHT;
 let HEAP_CENTRE;
@@ -36,10 +36,6 @@ let linkPath = heapSvg.selectAll(".linkPath");
 let linkLabel = heapSvg.selectAll(".linkLabel");
 let stackFrame = stackSvg.selectAll(".stackFrame");
 
-// frame uuid -> frame
-const stackFrames = {};
-let nextUniqueFrameId = 1000;
-
 resize();
 d3.select(window).on("resize", resize);
 
@@ -50,17 +46,18 @@ function tickSim() {
     let callstackCurrentHeight = 0;
     stackFrame
         .attr("transform", (d, i) => {
+            const localsHeight = d.localVars.length * LOCAL_VAR_SLOT_HEIGHT;
             let thisY = FRAME_PADDING + (i * (FRAME_BASE_SIZE + FRAME_PADDING)) + callstackCurrentHeight;
-            let yInverse = WINDOW_HEIGHT - FRAME_PADDING - d.localsHeight - thisY;
+            let yInverse = WINDOW_HEIGHT - FRAME_PADDING - localsHeight - thisY;
 
-            stackFrames[d.uuid].y = yInverse;
-            callstackCurrentHeight += d.localsHeight;
+            callstack.getFrame(d.uuid).y = yInverse;
+            callstackCurrentHeight += localsHeight;
 
             return "translate(0, " + yInverse + ")";
         });
 
     function getStackLinkPos(stackData) {
-        let y = stackFrames[stackData.frameUuid].y;
+        let y = callstack.getFrame(stackData.frameUuid).y;
         y += (FRAME_BASE_SIZE + LOCAL_VAR_SLOT_PRE_PAD + (stackData.index * LOCAL_VAR_SLOT_HEIGHT));
         y -= STACK_NODE_RADIUS;
         return y;
@@ -187,31 +184,31 @@ function restart(changedGraph) {
     linkLabel = linkLabel.merge(labelText);
 
     // stack
-    stackFrame = stackFrame.data(callstack);
+    stackFrame = stackFrame.data(callstack.getCallStack());
     stackFrame.exit().remove();
 
     let stackFrameEnter = stackFrame.enter().append("g")
         .attr("width", "100%");
     stackFrameEnter.append("rect")
         .attr("width", "100%")
-        .attr("height", (d) => d.localsHeight + FRAME_BASE_SIZE)
+        .attr("height", d => (d.localVars.length * LOCAL_VAR_SLOT_HEIGHT) + FRAME_BASE_SIZE)
         .attr("fill", () => "steelblue");
     stackFrameEnter.append("text")
         .attr("text-anchor", "middle")
         .attr("x", "50%")
         .attr("y", 10)
         .attr("fill", "white")
-        .text(d => d.methodDefinition.clazzShort + ":" + d.methodDefinition.name)
+        .text(d => d.clazzShort + ":" + d.name)
         .append("title")
-        .text(d => d.methodDefinition.clazzLong + ":" + d.methodDefinition.name + d.methodDefinition.signature);
+        .text(d => d.clazzLong + ":" + d.name + d.signature);
     stackFrame = stackFrame.merge(stackFrameEnter);
 
     stackFrame = stackFrame.each(function (d) {
-        if (!d.spankingNew) return;
-        d.spankingNew = false;
+        if (d.rendered) return;
+        d.rendered = true;
 
         let self = d3.select(this);
-        d.methodDefinition.localVars.forEach((local, j) => {
+        d.localVars.forEach((local, j) => {
             const shortType = shortenClassName(local.type);
             self.append("text")
                 .attr("text-anchor", "middle")
