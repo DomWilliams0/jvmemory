@@ -1,33 +1,17 @@
 package ms.domwillia.ticker
 
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
+import ms.domwillia.ticker.HandleResult.HandleResult
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportAll, JSExportTopLevel}
 import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout}
 
-
-@js.native
-trait Node extends js.Object {
-  val id: Long = js.native
-  val clazz: String = js.native
-  val array: js.Dynamic = js.native
-  val fill: String = js.native
-  val x: Double = js.native
-  val y: Double = js.native
-}
-
-@js.native
-trait Link extends js.Object {
-  val source: Long = js.native
-  val target: Long = js.native
-  val name: String = js.native
-}
-
 @js.native
 trait Callbacks extends js.Object {
   val setPlayButtonState: js.Function1[Boolean, Unit] = js.native
-  val setSimulationState: js.Function1[Boolean, Unit] = js.native
+  val restartSim: js.Function1[Boolean, Unit] = js.native
+  val setSimState: js.Function1[Boolean, Unit] = js.native
   val highlightLocalVar: js.Function2[Long, Boolean, Unit] = js.native
   val highlightHeapObj: js.Function3[Long, String, Boolean, Unit] = js.native
 }
@@ -45,14 +29,16 @@ object Constants {
 class EventTicker(rawEvents: js.typedarray.Uint8Array,
                   val callbacks: Callbacks,
                   callStack: CallStack,
-                  definitions: Definitions) {
+                  definitions: Definitions,
+                  nodes: js.Array[Node],
+                  links: js.Array[Link]) {
   private val events: Array[EventVariant] = Utils.parseEvents(rawEvents)
   private var currentEvent = 0
   private var _speed = Constants.DefaultSpeed
   private var playing = false
   private var handle: Option[SetTimeoutHandle] = None
 
-  private val handler = new Handler(callStack, definitions)
+  private val handler = new Handler(callStack, definitions, nodes, links)
 
   def clamp(min: Int, max: Int, value: Int): Int = min.max(value).min(max) // teehee
 
@@ -63,10 +49,16 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array,
   def speed_=(value: Int): Unit = _speed = clamp(Constants.MaxSpeed, Constants.MinSpeed, value)
 
   @JSExport
-  def resume(): Unit = startTickLoop()
+  def resume(): Unit = {
+    callbacks.setSimState(true)
+    startTickLoop()
+  }
 
   @JSExport
-  def pause(): Unit = stopTickLoop()
+  def pause(): Unit = {
+    callbacks.setSimState(false)
+    stopTickLoop()
+  }
 
   @JSExport
   def toggle(): Unit = {
@@ -89,6 +81,7 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array,
     if (target == currentEvent)
       return
 
+    // TODO use handle results
     (source to target by step).foreach(handle(_, undo))
 
     currentEvent = clampIndex(target + (if (undo) 0 else 1))
@@ -102,16 +95,23 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array,
 
   private def isEventInRange: Boolean = events.indices contains currentEvent
 
-  private def handle(index: Int, undo: Boolean = false): Unit = {
+  private def handle(index: Int, undo: Boolean = false): HandleResult = {
     val e = events(index)
     val action = if (undo) "undoing" else "handling"
     println(s"$action event $index: ${e.`type`}")
     handler.handle(e.payload)
   }
 
+  private def refreshSimulation(result: HandleResult): Unit = result match {
+      case HandleResult.ChangedGraph => callbacks.restartSim(true)
+      case HandleResult.ChangedStackOnly => callbacks.restartSim(false)
+      case _ =>
+    }
+
+
   private def tick(): Boolean = {
     if (isEventInRange) {
-      handle(currentEvent)
+      refreshSimulation(handle(currentEvent))
       currentEvent += 1
       return true
     }

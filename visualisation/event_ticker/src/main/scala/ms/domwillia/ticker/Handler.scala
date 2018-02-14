@@ -4,12 +4,18 @@ import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant._
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event._
 import ms.domwillia.ticker.HandleResult.HandleResult
 
+import scala.scalajs.js
+import scala.scalajs.js.JSConverters._
+
 object HandleResult extends Enumeration {
   type HandleResult = Value
   val NoGraphChange, ChangedStackOnly, ChangedGraph = Value
 }
 
-class Handler(val callStack: CallStack, val definitions: Definitions) {
+class Handler(val callStack: CallStack,
+              val definitions: Definitions,
+              val nodes: js.Array[Node],
+              val links: js.Array[Link]) {
   def handle(payload: Payload): HandleResult = payload match {
     case Payload.AddHeapObject(value) => handleImpl(value)
     case Payload.DelHeapObject(value) => handleImpl(value)
@@ -22,7 +28,14 @@ class Handler(val callStack: CallStack, val definitions: Definitions) {
     case x => println(s"unknown event: $x"); HandleResult.NoGraphChange
   }
 
-  private def handleImpl(value: AddHeapObject): HandleResult = HandleResult.ChangedGraph
+  private def handleImpl(value: AddHeapObject): HandleResult = {
+    val colour = definitions.getRandomColour(value._class)
+    val array = ArrayMeta(value.arraySize, value._class)
+    val node = new Node(value.id, value._class, array.orUndefined, None.orUndefined, colour)
+    nodes.push(node)
+
+    HandleResult.ChangedGraph
+  }
 
   private def handleImpl(value: DelHeapObject): HandleResult = HandleResult.ChangedGraph
 
