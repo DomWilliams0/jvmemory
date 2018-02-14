@@ -1,9 +1,12 @@
 package ms.domwillia.ticker
 
+import java.io.{ByteArrayInputStream, InputStream}
+
+import com.google.protobuf.CodedInputStream
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 
+import scala.io.Source
 import scala.scalajs.js
-import scala.scalajs.js.Dynamic
 import scala.scalajs.js.annotation.{JSExport, JSExportAll, JSExportTopLevel}
 import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout}
 
@@ -52,19 +55,22 @@ object Constants {
 }
 
 @JSExportTopLevel("EventTicker")
-class EventTicker(val events: js.Array[EventVariant], val references: References, val callbacks: Callbacks) {
-  Dynamic.global.console.log("events=%o refs=%o callbacks=%o", events, references, callbacks)
+class EventTicker(rawEvents: js.typedarray.Uint8Array, val references: References, val callbacks: Callbacks) {
 
-  private var currentEvent = 0 // TODO placeholder
+  private val events: Array[EventVariant] = parseEvents(rawEvents)
+  private var currentEvent = 0
   private var _speed = Constants.DefaultSpeed
   private var playing = false
   private var handle: Option[SetTimeoutHandle] = None
+
+
+  def clamp(min: Int, max: Int, value: Int): Int = min.max(value).min(max) // teehee
 
   @JSExport
   def speed: Int = _speed
 
   @JSExport
-  def speed_=(value: Int): Unit = _speed = Constants.MaxSpeed max value min Constants.MinSpeed
+  def speed_=(value: Int): Unit = _speed = clamp(Constants.MaxSpeed, Constants.MinSpeed, value)
 
   @JSExport
   def resume(): Unit = startTickLoop()
@@ -84,13 +90,35 @@ class EventTicker(val events: js.Array[EventVariant], val references: References
 
   @JSExport
   def scrubTo(eventIndex: Int): Unit = {
-    println(s"scrubbing from $currentEvent to $eventIndex")
+    val step = if (eventIndex < currentEvent) -1 else 1
+    val target = clampIndex(eventIndex)
+    (currentEvent to target by step).foreach(handle(_, step < 0))
     currentEvent = eventIndex
   }
 
-  private def handle(event: EventVariant): Unit = println(s"handling an event ${event.`type`}")
+  def parseEvents(bytes: js.typedarray.Uint8Array): Array[EventVariant] = {
+    val stream = new ByteArrayInputStream(bytes.map(_.toByte).toArray)
+    EventVariant.streamFromDelimitedInput(stream).toArray
+  }
 
-  private def tick(): Unit = println(s"tick ${currentEvent += 1; currentEvent}")
+
+  private def clampIndex(index: Int): Int = clamp(0, events.length, index)
+
+  private def isEventInRange: Boolean = events.indices contains currentEvent
+
+  private def handle(index: Int, undo: Boolean = false): Unit = {
+    val e = events(index)
+    val action = if (undo) "undoing" else "handling"
+    println(s"$action event $index: ${e.`type`}")
+    // TODO
+  }
+
+  private def tick(): Unit = {
+    if (isEventInRange) {
+      handle(currentEvent)
+      currentEvent += 1
+    }
+  }
 
   private def stopTickLoop(): Unit = {
     handle.foreach(clearTimeout)
