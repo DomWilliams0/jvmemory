@@ -4,6 +4,8 @@ import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 import ms.domwillia.ticker.HandleResult.HandleResult
 
 import scala.scalajs.js
+import scala.language.implicitConversions
+
 import scala.scalajs.js.annotation.{JSExport, JSExportAll, JSExportTopLevel}
 import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout}
 
@@ -96,11 +98,11 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
 
   private def isEventInRange: Boolean = events.indices contains currentEvent
 
-  private def handle(index: Int, undo: Boolean = false): HandleResult = {
+  private def handle(index: Int, undo: Boolean = false): (Boolean, HandleResult) = {
     val e = events(index)
     val action = if (undo) "undoing" else "handling"
     println(s"$action event $index: ${e.`type`}")
-    handler.handle(e.payload)
+    (e.continuous, handler.handle(e.payload))
   }
 
   private def refreshSimulation(result: HandleResult): Unit = result match {
@@ -109,16 +111,39 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
     case _ =>
   }
 
-  private def tick(): Boolean = {
+  implicit def bool2int(b: Boolean): Int = if (b) 1 else 0
+
+  // TODO can this be made tail recursive?
+  // @tailrec
+  private def tick(graphChanges: Int = 0, simChanges: Int = 0): Boolean = {
+    var reachedEnd = true
+    var gc = graphChanges
+    var sc = simChanges
+
     if (isEventInRange) {
-      refreshSimulation(handle(currentEvent))
+      val (cont, result) = handle(currentEvent)
       currentEvent += 1
-      return true
+
+      // update change counters
+      gc += (result == HandleResult.ChangedGraph)
+      sc += (result != HandleResult.NoGraphChange)
+
+      // keep going
+      if (cont) return tick(gc, sc)
+
+      reachedEnd = false
     }
 
-    playing = false
-    goodyBag.setPlayButtonState(false)
-    false
+    // refresh sim if necessary
+    if (sc > 0) goodyBag.restartSim(gc > 0)
+
+    // end reached
+    if (reachedEnd) {
+      playing = false
+      goodyBag.setPlayButtonState(false)
+    }
+
+    !reachedEnd
   }
 
   private def stopTickLoop(): Unit = {

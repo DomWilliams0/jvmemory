@@ -33,7 +33,7 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.ChangedGraph
   }
 
-  private def handleImpl(value: DelHeapObject): HandleResult = HandleResult.ChangedGraph
+  private def handleImpl(value: DelHeapObject): HandleResult = HandleResult.NoGraphChange
 
   private def handleImpl(value: SetIntraHeapLink): HandleResult = {
     val deleting = value.dstId == 0
@@ -48,11 +48,11 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.ChangedGraph
   }
 
-  private def handleImpl(value: SetLocalVarLink): HandleResult = HandleResult.ChangedGraph
+  private def handleImpl(value: SetLocalVarLink): HandleResult = HandleResult.NoGraphChange
 
-  private def handleImpl(value: ShowLocalVarAccess): HandleResult = HandleResult.ChangedGraph
+  private def handleImpl(value: ShowLocalVarAccess): HandleResult = HandleResult.NoGraphChange
 
-  private def handleImpl(value: ShowHeapObjectAccess): HandleResult = HandleResult.ChangedGraph
+  private def handleImpl(value: ShowHeapObjectAccess): HandleResult = HandleResult.NoGraphChange
 
   private def handleImpl(value: PushMethodFrame): HandleResult = {
     goodyBag.definitions.getMethodDefinition(value.owningClass, value.name, value.signature)
