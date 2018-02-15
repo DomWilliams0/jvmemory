@@ -32,7 +32,7 @@ object Constants {
   // ms between events
   val MaxSpeed = 1
   val MinSpeed = 500
-  val DefaultSpeed = 50
+  val DefaultSpeed = 250
 }
 
 @JSExportTopLevel("EventTicker")
