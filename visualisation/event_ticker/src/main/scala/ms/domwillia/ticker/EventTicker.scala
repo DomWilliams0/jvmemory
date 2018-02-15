@@ -2,7 +2,7 @@ package ms.domwillia.ticker
 
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 import ms.domwillia.ticker.HandleResult.HandleResult
-import ms.domwillia.ticker.Types.StackFrameUuid
+import ms.domwillia.ticker.Types.{InternalObjectId, StackFrameUuid}
 
 import scala.language.implicitConversions
 import scala.scalajs.js
@@ -17,6 +17,7 @@ trait GoodyBag extends js.Object {
   val highlightLocalVar: js.Function2[String, Boolean, Unit] = js.native
   val highlightHeapObj: js.Function3[String, String, Boolean, Unit] = js.native
   val removeStackNodes: js.Function1[StackFrameUuid, Unit] = js.native
+  val removeHeapNode: js.Function1[InternalObjectId, Unit] = js.native
 
   val callStack: CallStack = js.native
   val definitions: Definitions = js.native

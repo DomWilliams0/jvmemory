@@ -37,7 +37,10 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.ChangedGraph
   }
 
-  private def handleImpl(value: DelHeapObject): HandleResult = HandleResult.NoGraphChange
+  private def handleImpl(value: DelHeapObject): HandleResult = {
+    goodyBag.removeHeapNode(value.id)
+    HandleResult.ChangedGraph
+  }
 
   private def handleImpl(value: SetIntraHeapLink): HandleResult = updateLink(
     l => l.source.id == implicitly[VisualObjectId](value.srcId) && l.name == value.fieldName,
