@@ -14,6 +14,7 @@ import scala.util.Try
 
 object StackFrame {
   var nextFrameUuid: StackFrameUuid = 100
+
   def allocateFrameUuid(): StackFrameUuid = {
     val uuid = nextFrameUuid
     nextFrameUuid += 1
@@ -43,18 +44,22 @@ class CallStack extends js.Object {
   private val _callstack = js.Array[StackFrame]()
   private val frameMap = mutable.Map[StackFrameUuid, StackFrame]()
 
-  def top(): js.UndefOr[StackFrame] = _callstack.lastOption.orUndefined
+  def topPerhaps(): js.UndefOr[StackFrame] = _callstack.lastOption.orUndefined
+
+  def top(): StackFrame = topPerhaps().getOrElse(throw new IllegalStateException("callstack is empty"))
 
   def push(frame: StackFrame): Unit = {
     _callstack.push(frame)
     frameMap.put(frame.uuid, frame)
   }
 
-  def pop(): UndefOr[StackFrame] =
+  def popPerhaps(): UndefOr[StackFrame] =
     (for {
       top <- Try(_callstack.pop()).toOption
       _ <- frameMap.remove(top.uuid)
     } yield top).orUndefined
+
+  def pop(): StackFrame = popPerhaps().getOrElse(throw new IllegalStateException("callstack is empty"))
 
   def getFrame(uuid: StackFrameUuid): UndefOr[StackFrame] = frameMap.get(uuid).orUndefined
 

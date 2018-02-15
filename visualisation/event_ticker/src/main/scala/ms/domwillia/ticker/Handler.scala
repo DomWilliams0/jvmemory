@@ -56,7 +56,7 @@ class Handler(val goodyBag: GoodyBag) {
 
     val deleting = value.dstId == 0
     val (uuid, localVar) = (for {
-      frame <- goodyBag.callStack.top().toOption
+      frame <- goodyBag.callStack.topPerhaps().toOption
       localVar <- frame.localVars.find(_.index == value.varIndex)
     } yield (frame.uuid, localVar)).getOrElse(return bail())
 
@@ -79,7 +79,7 @@ class Handler(val goodyBag: GoodyBag) {
   }
 
   private def handleImpl(value: ShowLocalVarAccess): HandleResult = {
-    val frame = goodyBag.callStack.top().getOrElse(throw new IllegalStateException("empty callstack"))
+    val frame = goodyBag.callStack.top()
     val nodeId = getStackNodeId(frame.uuid, value.varIndex)
 
     goodyBag.highlightLocalVar(nodeId, value.read)
@@ -100,8 +100,7 @@ class Handler(val goodyBag: GoodyBag) {
   }
 
   private def handleImpl(value: PopMethodFrame): HandleResult = {
-    val popped = goodyBag.callStack.pop().getOrElse(throw new IllegalStateException("no method to pop"))
-
+    val popped = goodyBag.callStack.pop()
     goodyBag.removeStackNodes(popped.uuid)
 
     HandleResult.ChangedStackOnly
