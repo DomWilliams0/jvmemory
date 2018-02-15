@@ -14,7 +14,7 @@ object HandleResult extends Enumeration {
 }
 
 class Handler(val goodyBag: GoodyBag) {
-  implicit def id2int(id: InternalObjectId): VisualObjectId = Math.toIntExact(id)
+  implicit def id2int(id: InternalObjectId): VisualObjectId = id.toString
 
   def handle(payload: Payload): HandleResult = payload match {
     case Payload.AddHeapObject(value) => handleImpl(value)
@@ -31,7 +31,7 @@ class Handler(val goodyBag: GoodyBag) {
   private def handleImpl(value: AddHeapObject): HandleResult = {
     val colour = goodyBag.definitions.getRandomColour(value._class)
     val array = ArrayMeta(value.arraySize, value._class)
-    val node = new Node(value.id, value._class, array.orUndefined, None.orUndefined, colour)
+    val node = new Node(value.id, value._class, array = array.orUndefined, fill = colour)
     goodyBag.nodes.push(node)
 
     HandleResult.ChangedGraph
@@ -39,22 +39,49 @@ class Handler(val goodyBag: GoodyBag) {
 
   private def handleImpl(value: DelHeapObject): HandleResult = HandleResult.NoGraphChange
 
-  private def handleImpl(value: SetIntraHeapLink): HandleResult = {
+  private def handleImpl(value: SetIntraHeapLink): HandleResult = updateLink(
+    l => l.source.id == implicitly[VisualObjectId](value.srcId) && l.name == value.fieldName,
+    value.dstId,
+    new Link(findNode(value.srcId), findNode(value.dstId), value.fieldName)
+  )
+
+  private def handleImpl(value: SetLocalVarLink): HandleResult = {
+    def bail(): HandleResult.Value = {
+      println(s"bad local var ${value.varIndex} while setting local var link")
+      HandleResult.NoGraphChange
+    }
+
     val deleting = value.dstId == 0
+    val (uuid, localVar) = (for {
+      frame <- goodyBag.callStack.top().toOption
+      localVar <- frame.localVars.find(_.index == value.varIndex)
+    } yield (frame.uuid, localVar)).getOrElse(return bail())
 
-    val existingIndex = goodyBag.links.indexWhere(l => l.source.id == value.srcId && l.name == value.fieldName)
+    val stackMeta = new StackMeta(uuid, value.varIndex)
+    val nodeId = getStackNodeId(uuid, value.varIndex)
 
-    if (existingIndex >= 0) {
-      if (deleting) goodyBag.links.remove(existingIndex) // delete existing
-      else goodyBag.links(existingIndex).target = findNode(value.dstId) // update existing
-    } else if (!deleting) goodyBag.links.push(new Link(findNode(value.srcId), findNode(value.dstId), value.fieldName)) // add new
+    // add stack node if doesn't already exist
+    if (!deleting) {
+      if (!goodyBag.nodes.exists(_.id == nodeId))
+        goodyBag.nodes.push(new Node(nodeId, "", stack = stackMeta))
+    }
 
-    HandleResult.ChangedGraph
+    updateLink(
+      _.stack
+        .map(s => s.frameUuid == uuid && s.index == value.varIndex)
+        .getOrElse(false),
+      value.dstId,
+      new Link(findNode(nodeId), findNode(value.dstId), localVar.name, stackMeta)
+    )
   }
 
-  private def handleImpl(value: SetLocalVarLink): HandleResult = HandleResult.NoGraphChange
+  private def handleImpl(value: ShowLocalVarAccess): HandleResult = {
+    val frame = goodyBag.callStack.top().getOrElse(throw new IllegalStateException("empty callstack"))
+    val nodeId = getStackNodeId(frame.uuid, value.varIndex)
 
-  private def handleImpl(value: ShowLocalVarAccess): HandleResult = HandleResult.NoGraphChange
+    goodyBag.highlightLocalVar(nodeId, value.read)
+    HandleResult.NoGraphChange
+  }
 
   private def handleImpl(value: ShowHeapObjectAccess): HandleResult = {
     goodyBag.highlightHeapObj(value.objId, value.fieldName, value.read)
@@ -70,12 +97,25 @@ class Handler(val goodyBag: GoodyBag) {
   }
 
   private def handleImpl(value: PopMethodFrame): HandleResult = {
-    val popped = goodyBag.callStack.pop()
+    val popped = goodyBag.callStack.pop().getOrElse(throw new IllegalStateException("no method to pop"))
 
-    // TODO remove stack links
+    goodyBag.removeStackNodes(popped.uuid)
 
     HandleResult.ChangedStackOnly
   }
 
-  private def findNode(id: InternalObjectId): Node = goodyBag.nodes.find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
+  private def findNode(id: VisualObjectId): Node = goodyBag.nodes.find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
+
+  private def updateLink(which: Link => Boolean, dstNode: InternalObjectId, newLink: => Link): HandleResult = {
+    val existingIndex = goodyBag.links.indexWhere(which)
+    val deleting = dstNode == 0
+    if (existingIndex >= 0) {
+      if (deleting) goodyBag.links.remove(existingIndex) // delete existing
+      else goodyBag.links(existingIndex).target = findNode(dstNode) // update existing
+    } else if (!deleting) goodyBag.links.push(newLink) // add new
+
+    HandleResult.ChangedGraph
+  }
+
+  private def getStackNodeId(uuid: StackFrameUuid, index: Int) = s"stack-$uuid-$index"
 }

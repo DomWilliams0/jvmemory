@@ -67,6 +67,11 @@ function setPlayButtonState(playing) {
     icon.classList.remove(del)
 }
 
+function removeStackNodes(frameUuid) {
+    heapLinks = heapLinks.filter(d => !d.stack || d.stack.frameUuid !== frameUuid);
+    heapObjects = heapObjects.filter(d => !d.stack || d.stack.frameUuid !== frameUuid);
+}
+
 const playPauseButton = d3.select("#play-pause");
 
 const SPEED_STEP = 50;
@@ -90,6 +95,7 @@ function startTicking(events) {
         setSimState: (state) => state ? sim.restart() : sim.stop(),
         highlightLocalVar: highlightLocalVar,
         highlightHeapObj: highlightHeapObj,
+        removeStackNodes,
         callStack,
         definitions,
         nodes: heapObjects,

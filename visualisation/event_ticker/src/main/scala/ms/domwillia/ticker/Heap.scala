@@ -22,12 +22,12 @@ class StackMeta(val frameUuid: StackFrameUuid, val index: Int) extends js.Object
 @JSExportTopLevel("Node")
 class Node(val id: VisualObjectId,
            val clazz: TypeName,
-           val array: UndefOr[ArrayMeta],
-           val stack: UndefOr[StackMeta],
-           val fill: NodeColour)
+           val array: UndefOr[ArrayMeta] = js.undefined,
+           val stack: UndefOr[StackMeta] = js.undefined,
+           val fill: NodeColour = "none")
   extends js.Object
 
 // TODO stackmeta
 
 @JSExportTopLevel("Link")
-class Link(val source: Node, var target: Node, val name: String) extends js.Object
+class Link(val source: Node, var target: Node, val name: String, val stack: UndefOr[StackMeta] = js.undefined) extends js.Object
