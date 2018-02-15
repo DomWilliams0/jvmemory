@@ -2,6 +2,7 @@ package ms.domwillia.ticker
 
 
 import ms.domwillia.jvmemory.protobuf.definitions.{ClassDefinition, MethodDefinition}
+import ms.domwillia.ticker.Types.{TypeName, MethodName, NodeColour}
 
 import scala.collection.mutable
 import scala.scalajs.js
@@ -13,7 +14,7 @@ import scala.util.Random
 object Definitions {
   private val random = new Random()
 
-  def generateRandomPersistentColour(clazz: String, isSystem: Boolean = false): String = {
+  def generateRandomPersistentColour(clazz: TypeName, isSystem: Boolean = false): NodeColour = {
     val clazzSansArray = clazz.replace("[]", "")
     random.setSeed(clazzSansArray.hashCode)
     val hue = random.nextFloat() * 360.0
@@ -26,28 +27,28 @@ object Definitions {
 
 @JSExportTopLevel("Definitions")
 class Definitions(rawDefinitions: Uint8Array) extends js.Object {
-  private val definitions: mutable.Map[String, (ClassDefinition, String)] = {
+  private val definitions: mutable.Map[TypeName, (ClassDefinition, NodeColour)] = {
     val defs = Utils.parseDefinitions(rawDefinitions)
     mutable.Map() ++ defs.map(d => (d.name, (d, Definitions.generateRandomPersistentColour(d.name))))
   }
 
-  private def createClassDef(clazz: String): (ClassDefinition, String) =
+  private def createClassDef(clazz: TypeName): (ClassDefinition, NodeColour) =
     (new ClassDefinition(name = clazz), Definitions.generateRandomPersistentColour(clazz))
 
-  def getRandomColour(clazz: String): String = definitions.getOrElseUpdate(clazz, createClassDef(clazz))._2
+  def getRandomColour(clazz: TypeName): NodeColour = definitions.getOrElseUpdate(clazz, createClassDef(clazz))._2
 
-  def getClassDefinition(clazz: String): js.UndefOr[ClassDefinition] =
+  def getClassDefinition(clazz: TypeName): js.UndefOr[ClassDefinition] =
     definitions.get(clazz)
       .map(_._1)
       .orUndefined
 
-  def getMethodDefinition(clazz: String, name: String, signature: String): js.UndefOr[MethodDefinition] =
+  def getMethodDefinition(clazz: TypeName, name: MethodName, signature: String): js.UndefOr[MethodDefinition] =
     for {
       clazz <- getClassDefinition(clazz)
       method <- clazz.methods.find(m => m.name == name && m.signature == signature).orUndefined
     } yield method
 
-  def findMainClass(): js.UndefOr[String] =
+  def findMainClass(): js.UndefOr[TypeName] =
     definitions.values
       .map(_._1)
       .find(_.methods.exists(m => m.name == "main" && m.signature == "([Ljava/lang/String;)V"))

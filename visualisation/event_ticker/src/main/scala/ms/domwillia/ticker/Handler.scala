@@ -3,6 +3,7 @@ package ms.domwillia.ticker
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant._
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event._
 import ms.domwillia.ticker.HandleResult.HandleResult
+import ms.domwillia.ticker.Types._
 
 import scala.language.implicitConversions
 import scala.scalajs.js.JSConverters._
@@ -13,7 +14,7 @@ object HandleResult extends Enumeration {
 }
 
 class Handler(val goodyBag: GoodyBag) {
-  implicit def id2int(id: Long): Int = Math.toIntExact(id)
+  implicit def id2int(id: InternalObjectId): VisualObjectId = Math.toIntExact(id)
 
   def handle(payload: Payload): HandleResult = payload match {
     case Payload.AddHeapObject(value) => handleImpl(value)
@@ -76,5 +77,5 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.ChangedStackOnly
   }
 
-  private def findNode(id: Long): Node = goodyBag.nodes.find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
+  private def findNode(id: InternalObjectId): Node = goodyBag.nodes.find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
 }
