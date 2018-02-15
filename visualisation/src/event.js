@@ -72,6 +72,14 @@ function removeStackNodes(frameUuid) {
     heapObjects = heapObjects.filter(d => !d.stack || d.stack.frameUuid !== frameUuid);
 }
 
+function removeHeapNode(id) {
+    const index = heapObjects.findIndex((x) => x.id === id);
+    if (index < 0) throw "cant dealloc missing heap object " + id;
+
+    heapObjects.splice(index, 1);
+    heapLink = heapLinks.filter(x => x.source.id !== id && x.target.id !== id);
+}
+
 const playPauseButton = d3.select("#play-pause");
 
 const SPEED_STEP = 50;
@@ -96,6 +104,7 @@ function startTicking(events) {
         highlightLocalVar: highlightLocalVar,
         highlightHeapObj: highlightHeapObj,
         removeStackNodes,
+        removeHeapNode,
         callStack,
         definitions,
         nodes: heapObjects,
