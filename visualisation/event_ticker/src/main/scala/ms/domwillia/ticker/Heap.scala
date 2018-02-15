@@ -22,10 +22,14 @@ class StackMeta(val frameUuid: StackFrameUuid, val index: Int) extends js.Object
 @JSExportTopLevel("Node")
 class Node(val id: VisualObjectId,
            val clazz: TypeName,
+           pos: (Float, Float),
            val array: UndefOr[ArrayMeta] = js.undefined,
            val stack: UndefOr[StackMeta] = js.undefined,
            val fill: NodeColour = "none")
-  extends js.Object
+  extends js.Object {
+  val x: Float = pos._1
+  val y: Float = pos._2
+}
 
 // TODO stackmeta
 

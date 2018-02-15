@@ -105,6 +105,7 @@ function startTicking(events) {
         highlightHeapObj: highlightHeapObj,
         removeStackNodes,
         removeHeapNode,
+        getHeapCentre: () => HEAP_CENTRE,
         callStack,
         definitions,
         nodes: heapObjects,
