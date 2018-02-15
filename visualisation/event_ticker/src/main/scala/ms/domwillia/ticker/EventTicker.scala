@@ -14,8 +14,8 @@ trait GoodyBag extends js.Object {
   val setPlayButtonState: js.Function1[Boolean, Unit] = js.native
   val restartSim: js.Function1[Boolean, Unit] = js.native
   val setSimState: js.Function1[Boolean, Unit] = js.native
-  val highlightLocalVar: js.Function2[Long, Boolean, Unit] = js.native
-  val highlightHeapObj: js.Function3[Long, String, Boolean, Unit] = js.native
+  val highlightLocalVar: js.Function2[Int, Boolean, Unit] = js.native
+  val highlightHeapObj: js.Function3[Int, String, Boolean, Unit] = js.native
 
   val callStack: CallStack = js.native
   val definitions: Definitions = js.native

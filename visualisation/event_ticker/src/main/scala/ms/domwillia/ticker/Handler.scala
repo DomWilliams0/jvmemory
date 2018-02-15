@@ -4,6 +4,7 @@ import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant._
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event._
 import ms.domwillia.ticker.HandleResult.HandleResult
 
+import scala.language.implicitConversions
 import scala.scalajs.js.JSConverters._
 
 object HandleResult extends Enumeration {
@@ -12,6 +13,8 @@ object HandleResult extends Enumeration {
 }
 
 class Handler(val goodyBag: GoodyBag) {
+  implicit def id2int(id: Long): Int = Math.toIntExact(id)
+
   def handle(payload: Payload): HandleResult = payload match {
     case Payload.AddHeapObject(value) => handleImpl(value)
     case Payload.DelHeapObject(value) => handleImpl(value)
@@ -52,7 +55,10 @@ class Handler(val goodyBag: GoodyBag) {
 
   private def handleImpl(value: ShowLocalVarAccess): HandleResult = HandleResult.NoGraphChange
 
-  private def handleImpl(value: ShowHeapObjectAccess): HandleResult = HandleResult.NoGraphChange
+  private def handleImpl(value: ShowHeapObjectAccess): HandleResult = {
+    goodyBag.highlightHeapObj(value.objId, value.fieldName, value.read)
+    HandleResult.NoGraphChange
+  }
 
   private def handleImpl(value: PushMethodFrame): HandleResult = {
     goodyBag.definitions.getMethodDefinition(value.owningClass, value.name, value.signature)
