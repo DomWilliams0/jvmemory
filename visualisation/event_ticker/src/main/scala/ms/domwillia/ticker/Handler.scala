@@ -31,7 +31,7 @@ class Handler(val goodyBag: GoodyBag) {
   private def handleImpl(value: AddHeapObject): HandleResult = {
     val colour = goodyBag.definitions.getRandomColour(value._class)
     val array = ArrayMeta(value.arraySize, value._class)
-    val node = new Node(value.id, value._class, array = array.orUndefined, fill = colour)
+    val node = new Node(value.id, value._class, heapCentre, array = array.orUndefined, fill = colour)
     goodyBag.nodes.push(node)
 
     HandleResult.ChangedGraph
@@ -66,7 +66,7 @@ class Handler(val goodyBag: GoodyBag) {
     // add stack node if doesn't already exist
     if (!deleting) {
       if (!goodyBag.nodes.exists(_.id == nodeId))
-        goodyBag.nodes.push(new Node(nodeId, "", stack = stackMeta))
+        goodyBag.nodes.push(new Node(nodeId, "", heapCentre, stack = stackMeta))
     }
 
     updateLink(
@@ -120,4 +120,9 @@ class Handler(val goodyBag: GoodyBag) {
   }
 
   private def getStackNodeId(uuid: StackFrameUuid, index: Int) = s"stack-$uuid-$index"
+
+  private def heapCentre: (Float, Float) = goodyBag.getHeapCentre() match {
+    case arr if arr.length == 2 => (arr(0), arr(1))
+    case _ => throw new IllegalStateException("heap centre must be [x, y]")
+  }
 }
