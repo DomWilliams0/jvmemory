@@ -16,7 +16,7 @@ class ArrayMeta(val size: Int, `type`: String) extends js.Object {
 }
 
 @JSExportTopLevel("Node")
-class Node(val id: Long, val clazz: String, val array: UndefOr[ArrayMeta], val stack: UndefOr[Any], val fill: String)
+class Node(val id: Int, val clazz: String, val array: UndefOr[ArrayMeta], val stack: UndefOr[Any], val fill: String)
   extends js.Object
 
 // TODO stackmeta
