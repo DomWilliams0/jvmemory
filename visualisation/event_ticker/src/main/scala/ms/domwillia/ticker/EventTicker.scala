@@ -3,9 +3,8 @@ package ms.domwillia.ticker
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
 import ms.domwillia.ticker.HandleResult.HandleResult
 
-import scala.scalajs.js
 import scala.language.implicitConversions
-
+import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportAll, JSExportTopLevel}
 import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout}
 
