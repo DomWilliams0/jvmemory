@@ -70,6 +70,8 @@ class RawMessageHandler {
         classDefinitions[classDef.name] = classDef
     }
 
+    private fun arrayIndexField(index: Int) = "[$index]"
+
     private fun enterMethod(msg: Flow.MethodEnter, threadId: ThreadID): EmittedEvents {
         val type = msg.class_
         val methodName = msg.method
@@ -128,7 +130,7 @@ class RawMessageHandler {
                         it.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
                             srcId = alloc.srcArrayId
                             dstId = alloc.id
-                            fieldName = alloc.srcIndex.toString()
+                            fieldName = arrayIndexField(alloc.srcIndex)
                         }.build()
                     })
             )
@@ -209,7 +211,7 @@ class RawMessageHandler {
             it.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
                 srcId = store.id
                 dstId = checkObjectIsNotImplicit(store.valueId)
-                fieldName = store.index.toString()
+                fieldName = arrayIndexField(store.index)
             }.build()
         })
     }
@@ -238,7 +240,7 @@ class RawMessageHandler {
                 objId = load.id
                 read = true
                 if (load.hasField(Access.LoadFromArray.getDescriptor().findFieldByNumber(Access.LoadFromArray.INDEX_FIELD_NUMBER)))
-                    fieldName = load.index.toString()
+                    fieldName = arrayIndexField(load.index)
             }.build()
         }, continuous = true)
     }
