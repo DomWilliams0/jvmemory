@@ -8,12 +8,17 @@ function highlight(selection, wat, read) {
     const expected = prefix + (read ? "R" : "W");
     const pat = new RegExp("^" + prefix + "[R|W|RW]$");
     let rw = false;
+    let rwReplaces = null;
     for (let cls of first.classList) {
         if (cls.match(pat)) {
             rw = cls !== expected;
+            if (rw)
+                rwReplaces = cls;
             break;
         }
     }
+
+    if (rwReplaces) selection.classed(rwReplaces, false);
 
     let highlightClass = prefix + (rw ? "RW" : (read ? "R" : "W"));
     selection.classed(highlightClass, true);
