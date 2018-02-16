@@ -16,15 +16,15 @@ object HandleResult extends Enumeration {
 class Handler(val goodyBag: GoodyBag) {
   implicit def id2int(id: InternalObjectId): VisualObjectId = id.toString
 
-  def handle(payload: Payload): HandleResult = payload match {
-    case Payload.AddHeapObject(value) => handleImpl(value)
-    case Payload.DelHeapObject(value) => handleImpl(value)
-    case Payload.SetIntraHeapLink(value) => handleImpl(value)
-    case Payload.SetLocalVarLink(value) => handleImpl(value)
-    case Payload.ShowLocalVarAccess(value) => handleImpl(value)
-    case Payload.ShowHeapObjectAccess(value) => handleImpl(value)
-    case Payload.PushMethodFrame(value) => handleImpl(value)
-    case Payload.PopMethodFrame(value) => handleImpl(value)
+  def handle(payload: Payload, forwards: Boolean): HandleResult = payload match {
+    case Payload.AddHeapObject(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.DelHeapObject(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.SetIntraHeapLink(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.SetLocalVarLink(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.ShowLocalVarAccess(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.ShowHeapObjectAccess(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.PushMethodFrame(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.PopMethodFrame(value) => if (forwards) handleImpl(value) else undoImpl(value)
     case x => println(s"unknown event: $x"); HandleResult.NoGraphChange
   }
 
@@ -37,9 +37,17 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.ChangedGraph
   }
 
+  private def undoImpl(value: AddHeapObject): HandleResult = {
+    HandleResult.NoGraphChange
+  }
+
   private def handleImpl(value: DelHeapObject): HandleResult = {
     goodyBag.removeHeapNode(value.id)
     HandleResult.ChangedGraph
+  }
+
+  private def undoImpl(value: DelHeapObject): HandleResult = {
+    HandleResult.NoGraphChange
   }
 
   private def handleImpl(value: SetIntraHeapLink): HandleResult = updateLink(
@@ -47,6 +55,10 @@ class Handler(val goodyBag: GoodyBag) {
     value.dstId,
     new Link(findNode(value.srcId), findNode(value.dstId), value.fieldName)
   )
+
+  private def undoImpl(value: SetIntraHeapLink): HandleResult = {
+    HandleResult.NoGraphChange
+  }
 
   private def handleImpl(value: SetLocalVarLink): HandleResult = {
     def bail(): HandleResult.Value = {
@@ -78,6 +90,10 @@ class Handler(val goodyBag: GoodyBag) {
     )
   }
 
+  private def undoImpl(value: SetLocalVarLink): HandleResult = {
+    HandleResult.NoGraphChange
+  }
+
   private def handleImpl(value: ShowLocalVarAccess): HandleResult = {
     val frame = goodyBag.callStack.top()
     val nodeId = getStackNodeId(frame.uuid, value.varIndex)
@@ -86,8 +102,16 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.NoGraphChange
   }
 
+  private def undoImpl(value: ShowLocalVarAccess): HandleResult = {
+    HandleResult.NoGraphChange
+  }
+
   private def handleImpl(value: ShowHeapObjectAccess): HandleResult = {
     goodyBag.highlightHeapObj(value.objId, value.fieldName, value.read)
+    HandleResult.NoGraphChange
+  }
+
+  private def undoImpl(value: ShowHeapObjectAccess): HandleResult = {
     HandleResult.NoGraphChange
   }
 
@@ -99,11 +123,19 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.NoGraphChange
   }
 
+  private def undoImpl(value: PushMethodFrame): HandleResult = {
+    HandleResult.NoGraphChange
+  }
+
   private def handleImpl(value: PopMethodFrame): HandleResult = {
     val popped = goodyBag.callStack.pop()
     goodyBag.removeStackNodes(popped.uuid)
 
     HandleResult.ChangedStackOnly
+  }
+
+  private def undoImpl(value: PopMethodFrame): HandleResult = {
+    HandleResult.NoGraphChange
   }
 
   private def findNode(id: VisualObjectId): Node = goodyBag.nodes.find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
