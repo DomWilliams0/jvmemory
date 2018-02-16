@@ -87,8 +87,11 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
     if (target == currentEvent)
       return
 
-    // TODO use handle results
-    (source to target by step).foreach(handle(_, undo))
+    val results = (source to target by step).map(handle(_, undo))
+    refreshSimulation(
+      results.count(_._2 == HandleResult.ChangedGraph),
+      results.count(_._2 != HandleResult.NoGraphChange)
+    )
 
     currentEvent = clampIndex(target + (if (undo) 0 else 1))
 
@@ -105,14 +108,12 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
     val e = events(index)
     val action = if (undo) "undoing" else "handling"
     println(s"$action event $index: ${e.`type`}")
-    (e.continuous, handler.handle(e.payload))
+    (e.continuous, handler.handle(e.payload, forwards = !undo))
   }
 
-  private def refreshSimulation(result: HandleResult): Unit = result match {
-    case HandleResult.ChangedGraph => goodyBag.restartSim(true)
-    case HandleResult.ChangedStackOnly => goodyBag.restartSim(false)
-    case _ =>
-  }
+  private def refreshSimulation(graphChanges: Int, simChanges: Int): Unit =
+    if (simChanges > 0)
+      goodyBag.restartSim(graphChanges > 0)
 
   implicit def bool2int(b: Boolean): Int = if (b) 1 else 0
 
@@ -138,7 +139,7 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
     }
 
     // refresh sim if necessary
-    if (sc > 0) goodyBag.restartSim(gc > 0)
+    refreshSimulation(gc, sc)
 
     // end reached
     if (reachedEnd) {
