@@ -128,9 +128,7 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.NoGraphChange
   }
 
-  private def undoImpl(value: ShowHeapObjectAccess): HandleResult = {
-    HandleResult.NoGraphChange
-  }
+  private def undoImpl(value: ShowHeapObjectAccess): HandleResult = HandleResult.NoGraphChange
 
   private def handleImpl(value: PushMethodFrame): HandleResult = {
     goodyBag.definitions.getMethodDefinition(value.owningClass, value.name, value.signature)
@@ -140,9 +138,7 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.NoGraphChange
   }
 
-  private def undoImpl(value: PushMethodFrame): HandleResult = {
-    HandleResult.NoGraphChange
-  }
+  private def undoImpl(value: PushMethodFrame): HandleResult = HandleResult.NoGraphChange
 
   private def handleImpl(value: PopMethodFrame): HandleResult = {
     val popped = goodyBag.callStack.pop()

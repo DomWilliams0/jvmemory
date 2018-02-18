@@ -74,7 +74,18 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
   }
 
   @JSExport
-  def scrubToRelative(delta: Int): Unit = scrubTo(currentEvent + delta)
+  def scrubToRelative(delta: Int): Unit = {
+    def shouldSkip(e: EventVariant): Boolean = e.`type` match {
+      case EventType.SHOW_LOCAL_VAR_ACCESS |
+           EventType.SHOW_HEAP_OBJECT_ACCESS => false
+      case _ => true
+    }
+
+    scrubTo(
+      if (delta > 0) events.indexWhere(shouldSkip, currentEvent + delta.signum)
+      else events.lastIndexWhere(shouldSkip, currentEvent + delta.signum)
+    )
+  }
 
   @JSExport
   def scrubTo(eventIndex: Int): Unit = {
