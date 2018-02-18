@@ -76,8 +76,8 @@ function removeHeapNode(id) {
     const index = heapObjects.findIndex((x) => x.id === id);
     if (index < 0) throw "cant dealloc missing heap object " + id;
 
+    heapLinks = heapLinks.filter(x => x.source.id !== id && x.target.id !== id);
     heapObjects.splice(index, 1);
-    heapLink = heapLinks.filter(x => x.source.id !== id && x.target.id !== id);
 }
 
 const playPauseButton = d3.select("#play-pause");
@@ -108,8 +108,8 @@ function startTicking(events) {
         getHeapCentre: () => HEAP_CENTRE,
         callStack,
         definitions,
-        nodes: heapObjects,
-        links: heapLinks
+        nodes: () => heapObjects,
+        links: () => heapLinks
     };
     let ticker = new EventTicker(events, goodyBag);
 

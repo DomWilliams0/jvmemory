@@ -17,13 +17,13 @@ trait GoodyBag extends js.Object {
   val highlightLocalVar: js.Function2[String, Boolean, Unit] = js.native
   val highlightHeapObj: js.Function3[String, String, Boolean, Unit] = js.native
   val removeStackNodes: js.Function1[StackFrameUuid, Unit] = js.native
-  val removeHeapNode: js.Function1[InternalObjectId, Unit] = js.native
+  val removeHeapNode: js.Function1[VisualObjectId, Unit] = js.native
   val getHeapCentre: js.Function0[js.Array[Float]] = js.native
 
   val callStack: CallStack = js.native
   val definitions: Definitions = js.native
-  val nodes: js.Array[Node] = js.native
-  val links: js.Array[Link] = js.native
+  val nodes: js.Function0[js.Array[Node]] = js.native
+  val links: js.Function0[js.Array[Link]] = js.native
 }
 
 @JSExportTopLevel("Constants")
