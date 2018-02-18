@@ -1,8 +1,8 @@
 package ms.domwillia.ticker
 
-import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant
+import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.{EventType, EventVariant}
 import ms.domwillia.ticker.HandleResult.HandleResult
-import ms.domwillia.ticker.Types.{InternalObjectId, StackFrameUuid}
+import ms.domwillia.ticker.Types.{StackFrameUuid, VisualObjectId}
 
 import scala.language.implicitConversions
 import scala.scalajs.js
