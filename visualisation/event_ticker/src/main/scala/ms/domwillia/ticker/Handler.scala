@@ -2,6 +2,7 @@ package ms.domwillia.ticker
 
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event.EventVariant._
 import ms.domwillia.jvmemory.preprocessor.protobuf.vis_event._
+import ms.domwillia.jvmemory.protobuf.definitions.MethodDefinition
 import ms.domwillia.ticker.HandleResult.HandleResult
 import ms.domwillia.ticker.Types._
 
@@ -19,6 +20,7 @@ class Handler(val goodyBag: GoodyBag) {
 
   // state keeping for rewinding time
   private val linkHistory = mutable.HashMap[(InternalObjectId, String), mutable.ArrayStack[InternalObjectId]]()
+  private val stackHistory = mutable.ArrayStack[(MethodName, MethodDefinition)]()
 
   def handle(payload: Payload, forwards: Boolean): HandleResult = payload match {
     case Payload.AddHeapObject(value) => if (forwards) handleImpl(value) else undoImpl(value)
@@ -138,17 +140,21 @@ class Handler(val goodyBag: GoodyBag) {
     HandleResult.NoGraphChange
   }
 
-  private def undoImpl(value: PushMethodFrame): HandleResult = HandleResult.NoGraphChange
-
-  private def handleImpl(value: PopMethodFrame): HandleResult = {
-    val popped = goodyBag.callStack.pop()
-    goodyBag.removeStackNodes(popped.uuid)
-
+  private def undoImpl(value: PushMethodFrame): HandleResult = {
+    popStackFrame()
     HandleResult.ChangedStackOnly
   }
 
+  private def handleImpl(value: PopMethodFrame): HandleResult = {
+    val frame = popStackFrame()
+    stackHistory.push((frame.clazzLong, frame.method))
+    HandleResult.ChangedGraph
+  }
+
   private def undoImpl(value: PopMethodFrame): HandleResult = {
-    HandleResult.NoGraphChange
+    val history = stackHistory.pop()
+    pushStackFrame(history)
+    HandleResult.ChangedGraph
   }
 
   private def findNode(id: VisualObjectId): Node = goodyBag.nodes().find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
@@ -169,5 +175,13 @@ class Handler(val goodyBag: GoodyBag) {
   private def heapCentre: (Float, Float) = goodyBag.getHeapCentre() match {
     case arr if arr.length == 2 => (arr(0), arr(1))
     case _ => throw new IllegalStateException("heap centre must be [x, y]")
+  }
+
+  private def pushStackFrame(args: (MethodName, MethodDefinition)): Unit = goodyBag.callStack.push(new StackFrame(args._1, args._2))
+
+  private def popStackFrame(): StackFrame = {
+    val frame = goodyBag.callStack.pop()
+    goodyBag.removeStackNodes(frame.uuid)
+    frame
   }
 }

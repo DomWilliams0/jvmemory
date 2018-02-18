@@ -25,7 +25,7 @@ object StackFrame {
 
 class LocalVar(val name: String, val `type`: TypeName, val index: Int) extends js.Object
 
-class StackFrame(clazz: TypeName, method: MethodDefinition) extends js.Object {
+class StackFrame(clazz: TypeName, val method: MethodDefinition) extends js.Object {
   val clazzLong: TypeName = clazz
   val clazzShort: TypeName = s"Short($clazzLong)" // TODO
   val name: MethodName = method.name
