@@ -75,16 +75,25 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
 
   @JSExport
   def scrubToRelative(delta: Int): Unit = {
-    def shouldSkip(e: EventVariant): Boolean = e.`type` match {
+    def shouldSkip(e: EventVariant): Int = e.`type` match {
       case EventType.SHOW_LOCAL_VAR_ACCESS |
-           EventType.SHOW_HEAP_OBJECT_ACCESS => false
-      case _ => true
+           EventType.SHOW_HEAP_OBJECT_ACCESS => 0
+      case _ => 1
     }
 
-    val index = if (delta > 0) events.indexWhere(shouldSkip, currentEvent + delta.signum)
-    else events.lastIndexWhere(shouldSkip, currentEvent + delta.signum)
-    if (index >= 0)
-      scrubTo(index)
+    import scala.util.control.Breaks._
+
+    val step = delta.signum
+    var left = delta.abs
+    var index = currentEvent
+    while (left > 0) {
+      index += step
+      left -= shouldSkip(events(index))
+      if (clampIndex(index) != index) {
+        break
+      }
+    }
+    scrubTo(index)
   }
 
   @JSExport
@@ -94,9 +103,6 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
     else (1, currentEvent, false)
 
     val target = clampIndex(eventIndex)
-
-    if (target == currentEvent)
-      return
 
     val results = (source to target by step).map(handle(_, undo))
     refreshSimulation(
