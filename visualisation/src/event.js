@@ -83,7 +83,7 @@ function removeHeapNode(id) {
 const playPauseButton = d3.select("#play-pause");
 
 const SPEED_STEP = 50;
-const SCRUB_STEP = 5;
+const SCRUB_STEP = 1;
 const SERVER = "http://localhost:52933";
 
 const speedSlider = {
