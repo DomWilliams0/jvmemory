@@ -81,10 +81,10 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
       case _ => true
     }
 
-    scrubTo(
-      if (delta > 0) events.indexWhere(shouldSkip, currentEvent + delta.signum)
-      else events.lastIndexWhere(shouldSkip, currentEvent + delta.signum)
-    )
+    val index = if (delta > 0) events.indexWhere(shouldSkip, currentEvent + delta.signum)
+    else events.lastIndexWhere(shouldSkip, currentEvent + delta.signum)
+    if (index >= 0)
+      scrubTo(index)
   }
 
   @JSExport
