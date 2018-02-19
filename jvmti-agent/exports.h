@@ -105,6 +105,25 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    primeForSystemMethod
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_primeForSystemMethod
+		(JNIEnv *,
+		 jclass);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    enterSystemMethod
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterSystemMethod
+		(JNIEnv *,
+		 jclass,
+		 jstring);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onGetField
  * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
  */

@@ -134,6 +134,37 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
 	on_exit_method(logger, get_thread_id(jnienv));
 }
 
+static jboolean primed = JNI_FALSE;
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    primeForSystemMethod
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_primeForSystemMethod(
+		JNIEnv *jnienv,
+		jclass klass)
+{
+	primed = JNI_TRUE;
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    enterSystemMethod
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterSystemMethod(
+		JNIEnv *jnienv,
+		jclass klass,
+		jstring method)
+{
+	if (primed == JNI_TRUE)
+	{
+		primed = JNI_FALSE;
+		DEBUG_PRINT_STRING(jnienv, method, "called from the outside world");
+	}
+}
+
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onGetField
