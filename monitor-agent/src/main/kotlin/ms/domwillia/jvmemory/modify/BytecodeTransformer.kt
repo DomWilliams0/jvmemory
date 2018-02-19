@@ -1,6 +1,7 @@
 package ms.domwillia.jvmemory.modify
 
 import ms.domwillia.jvmemory.modify.visitor.ClassLoaderClassVisitor
+import ms.domwillia.jvmemory.modify.visitor.CollectionsClassVisitor
 import ms.domwillia.jvmemory.modify.visitor.ObjectClassVisitor
 import ms.domwillia.jvmemory.modify.visitor.UserClassVisitor
 import org.objectweb.asm.ClassReader
@@ -29,6 +30,9 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
     // system
         className == "java/lang/Object" -> ::ObjectClassVisitor
         className == "java/lang/ClassLoader" -> ::ClassLoaderClassVisitor
+
+    // special
+        className == "java/util/ArrayList" -> ::CollectionsClassVisitor
 
     // no need to instrument any other classes
         else -> null
@@ -93,6 +97,8 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             inst.addTransformer(BytecodeTransformer(classes), true)
             inst.retransformClasses(java.lang.Object::class.java)
             inst.retransformClasses(java.lang.ClassLoader::class.java)
+
+            inst.retransformClasses(java.util.ArrayList::class.java)
         }
     }
 }

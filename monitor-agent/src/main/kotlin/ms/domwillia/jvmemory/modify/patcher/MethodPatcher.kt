@@ -254,6 +254,16 @@ class MethodPatcher(
         }
     }
 
+    override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
+        if (opcode != Opcodes.INVOKESTATIC) {
+            // TODO don't hardcode this like a savage
+            if (owner == "java/util/ArrayList") {
+                callMonitor(Monitor::primeForSystemMethod)
+            }
+        }
+        super.visitMethodInsn(opcode, owner, name, desc, itf)
+    }
+
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {
         // TODO what if no debugging symbols? is desc null
         definition.registerLocalVariable(name, desc, index)

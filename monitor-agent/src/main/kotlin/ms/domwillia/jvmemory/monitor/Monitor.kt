@@ -23,6 +23,10 @@ object Monitor {
 
     @JvmStatic external fun exitMethod()
 
+    @JvmStatic external fun primeForSystemMethod()
+
+    @JvmStatic external fun enterSystemMethod(method: String)
+
     @JvmStatic external fun onGetField(obj: Any, field: String)
 
     /**
