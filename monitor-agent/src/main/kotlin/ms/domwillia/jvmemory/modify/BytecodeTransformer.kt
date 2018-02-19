@@ -42,14 +42,13 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
                            classBeingRedefined: Class<*>?, protectionDomain: ProtectionDomain?,
                            classfileBuffer: ByteArray): ByteArray? {
 
-        return createVisitor(className)?.run {
+        return createVisitor(className)?.let { visitor ->
 
             val reader = ClassReader(classfileBuffer)
             val writer = ClassWriter(reader, ClassWriter.COMPUTE_FRAMES)
 
             try {
-                // teehee
-                reader.accept(this(apiVersion, writer), ClassReader.EXPAND_FRAMES)
+                reader.accept(visitor(apiVersion, writer), ClassReader.EXPAND_FRAMES)
             } catch (e: RuntimeException) {
                 e.printStackTrace()
             }
