@@ -47,6 +47,8 @@
     (*jnienv)->ReleaseStringUTFChars(jnienv, str, chars);\
 } while (0)
 
+#define DEALLOCATE(p) (*env)->Deallocate(env, (unsigned char *)(p))
+
 
 long get_thread_id(JNIEnv *jnienv);
 
