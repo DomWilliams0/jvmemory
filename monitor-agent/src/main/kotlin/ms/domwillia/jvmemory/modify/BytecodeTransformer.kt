@@ -4,10 +4,7 @@ import ms.domwillia.jvmemory.modify.visitor.ClassLoaderClassVisitor
 import ms.domwillia.jvmemory.modify.visitor.CollectionsClassVisitor
 import ms.domwillia.jvmemory.modify.visitor.ObjectClassVisitor
 import ms.domwillia.jvmemory.modify.visitor.UserClassVisitor
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.Opcodes
+import org.objectweb.asm.*
 import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
@@ -27,13 +24,12 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
     // user classes
         isUserClass(className) -> ::UserClassVisitor
 
-    // system
+    // special system
         className == "java/lang/Object" -> ::ObjectClassVisitor
         className == "java/lang/ClassLoader" -> ::ClassLoaderClassVisitor
 
-    // special
-        className == "java/util/ArrayList" -> ::CollectionsClassVisitor
-        className == "java/util/Arrays" -> ::CollectionsClassVisitor
+    // system
+        systemClassesDescriptors.contains(className) -> ::CollectionsClassVisitor
 
     // no need to instrument any other classes
         else -> null
@@ -70,6 +66,18 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
     }
 
     companion object {
+        private val systemClasses = arrayOf(
+                java.util.ArrayList::class.java,
+                java.util.Arrays::class.java
+        )
+
+        val systemClassesDescriptors: Set<String> by lazy {
+            // if not lazy, LinkageError ooer
+            systemClasses.map { Type.getType(it).internalName }
+                    .toHashSet()
+        }
+
+
         private fun bail(msg: String = ""): Nothing {
             if (msg.isNotEmpty())
                 System.err.println("ERROR: $msg")
@@ -98,8 +106,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             inst.retransformClasses(java.lang.Object::class.java)
             inst.retransformClasses(java.lang.ClassLoader::class.java)
 
-            inst.retransformClasses(java.util.ArrayList::class.java)
-            inst.retransformClasses(java.util.Arrays::class.java)
+            inst.retransformClasses(*systemClasses)
         }
     }
 }
