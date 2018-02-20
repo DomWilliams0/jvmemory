@@ -21,6 +21,7 @@
 #define EXCEPTION_CHECK(env) do {\
     if ((*env)->ExceptionCheck(env) == JNI_TRUE) {\
         (*env)->ExceptionDescribe(env);\
+        fflush(stderr);\
         exit(99);\
     }\
 } while (0)
