@@ -33,6 +33,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
 
     // special
         className == "java/util/ArrayList" -> ::CollectionsClassVisitor
+        className == "java/util/Arrays" -> ::CollectionsClassVisitor
 
     // no need to instrument any other classes
         else -> null
@@ -98,6 +99,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             inst.retransformClasses(java.lang.ClassLoader::class.java)
 
             inst.retransformClasses(java.util.ArrayList::class.java)
+            inst.retransformClasses(java.util.Arrays::class.java)
         }
     }
 }
