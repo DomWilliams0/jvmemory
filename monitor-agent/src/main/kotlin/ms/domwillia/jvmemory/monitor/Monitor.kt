@@ -25,7 +25,7 @@ object Monitor {
 
     @JvmStatic external fun primeForSystemMethod()
 
-    @JvmStatic external fun enterSystemMethod(method: String)
+    @JvmStatic external fun enterSystemMethod(o: Any)
 
     @JvmStatic external fun onGetField(obj: Any, field: String)
 

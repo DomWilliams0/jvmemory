@@ -115,12 +115,12 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_primeForSystem
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    enterSystemMethod
- * Signature: (Ljava/lang/String;)V
+ * Signature: (Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterSystemMethod
 		(JNIEnv *,
 		 jclass,
-		 jstring);
+		 jobject);
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
