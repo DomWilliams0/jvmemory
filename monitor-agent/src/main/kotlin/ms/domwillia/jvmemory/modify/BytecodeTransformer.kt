@@ -12,6 +12,8 @@ import java.security.ProtectionDomain
 import java.util.jar.JarFile
 import kotlin.system.exitProcess
 
+typealias VisitorConstructor = ((Int, ClassWriter) -> ClassVisitor)
+
 class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFileTransformer {
 
     private val apiVersion = Opcodes.ASM6
@@ -20,7 +22,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
         return userClassPrefixes.find { className.startsWith(it) } != null
     }
 
-    private fun createVisitor(className: String): ((Int, ClassWriter) -> ClassVisitor)? = when {
+    private fun createVisitor(className: String): VisitorConstructor? = when {
     // user classes
         isUserClass(className) -> ::UserClassVisitor
 
@@ -29,7 +31,10 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
         className == "java/lang/ClassLoader" -> ::ClassLoaderClassVisitor
 
     // system
-        systemClassesDescriptors.contains(className) -> ::CollectionsClassVisitor
+        systemClassesDescriptors.containsKey(className) -> {
+            systemClassesDescriptors[className]
+        }
+
 
     // no need to instrument any other classes
         else -> null
@@ -66,17 +71,17 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
     }
 
     companion object {
-        private val systemClasses = arrayOf(
-                java.util.ArrayList::class.java,
-                java.util.Arrays::class.java
+        private val systemClasses = mapOf(
+                java.util.ArrayList::class.java to ::CollectionsClassVisitor,
+                java.util.Arrays::class.java to ::CollectionsClassVisitor
         )
 
-        val systemClassesDescriptors: Set<String> by lazy {
+        private val systemClassesDescriptors: Map<String, VisitorConstructor> by lazy {
             // if not lazy, LinkageError ooer
-            systemClasses.map { Type.getType(it).internalName }
-                    .toHashSet()
+            systemClasses.mapKeys { Type.getType(it.key).internalName }
         }
 
+        fun isSpecialSystemClass(clazz: String): Boolean = systemClassesDescriptors.containsKey(clazz)
 
         private fun bail(msg: String = ""): Nothing {
             if (msg.isNotEmpty())
@@ -106,7 +111,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             inst.retransformClasses(java.lang.Object::class.java)
             inst.retransformClasses(java.lang.ClassLoader::class.java)
 
-            inst.retransformClasses(*systemClasses)
+            systemClasses.keys.forEach { inst.retransformClasses(it) }
         }
     }
 }

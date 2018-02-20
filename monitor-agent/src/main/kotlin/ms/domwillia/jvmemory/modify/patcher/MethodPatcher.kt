@@ -255,9 +255,9 @@ class MethodPatcher(
         }
     }
 
-    override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
+    override fun visitMethodInsn(opcode: Int, owner: String, name: String?, desc: String?, itf: Boolean) {
         if (opcode != Opcodes.INVOKESTATIC &&
-                BytecodeTransformer.systemClassesDescriptors.contains(owner))
+                BytecodeTransformer.isSpecialSystemClass(owner))
             callMonitor(Monitor::primeForSystemMethod)
 
         super.visitMethodInsn(opcode, owner, name, desc, itf)
