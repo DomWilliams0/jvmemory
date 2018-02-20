@@ -6,6 +6,7 @@ mod cstr;
 
 mod proto;
 mod io;
+mod fields;
 
 use libc::*;
 use std::ffi::CStr;
@@ -14,6 +15,7 @@ use proto::message::{Variant, MessageType};
 use io::Logger;
 
 pub use io::{logger_init, logger_free};
+pub use fields::*;
 
 type Long = i64;
 type Int = i32;
