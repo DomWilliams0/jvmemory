@@ -4,6 +4,7 @@
 #include "agent.h"
 #include "exports.h"
 #include "alloc.h"
+#include "fields.h"
 #include "util.h"
 
 #define DEALLOCATE(p) (*env)->Deallocate(env, (unsigned char *)(p))
@@ -164,7 +165,12 @@ static jint JNICALL callback_heap_ref(
 
 	if (reference_kind == JVMTI_HEAP_REFERENCE_FIELD)
 	{
-		printf("field ref %d, tagged from %lu, length %d\n", reference_info->field.index, *referrer_tag_ptr, length);
+		printf(
+				"%lu: field %d, tagged from %lu, length %d\n",
+				*tag_ptr,
+				reference_info->field.index,
+				*referrer_tag_ptr,
+				length);
 		return JVMTI_VISIT_OBJECTS;
 	}
 
@@ -176,44 +182,38 @@ static const jvmtiHeapCallbacks heap_callbacks = {
 };
 
 
-static void print_fields(JNIEnv *jnienv,
-                         jclass cls,
-                         int *acc)
+static void discover_fields(jclass cls,
+                            fields_discovery_p discover)
 {
 	jint field_count;
 	jfieldID *fields;
-	DO_SAFE((*env)->GetClassFields(env, cls, &field_count, &fields), "get fields");
+	DO_SAFE((*env)->GetClassFields(env, cls, &field_count, &fields), "get class fields");
 	for (int i = 0; i < field_count; ++i)
 	{
 		jfieldID fid = fields[i];
 		char *name;
 		char *sig;
 		DO_SAFE((*env)->GetFieldName(env, cls, fid, &name, &sig, NULL), "get field name");
-
-		printf("field %d called '%s' of type %s \n", (*acc)++, name, sig);
+		fields_discovery_register(discover, name, sig);
 		DEALLOCATE(name);
 		DEALLOCATE(sig);
 	}
 	DEALLOCATE(fields);
 }
 
-static void print_all_fields(JNIEnv *jnienv,
-                             jclass cls,
-                             int *acc)
+static void discover_all_fields(JNIEnv *jnienv,
+                                jclass cls,
+                                fields_discovery_p discover)
 {
-	// TODO use a rust hashset to track visited classes instead of a second cleanup phase
-	int cleanup = acc == NULL;
-
-	if (!cleanup)
 	{
-		long tag;
-		DO_SAFE((*env)->GetTag(env, cls, &tag), "get class tag");
-		if (tag != 0)
+		char *cls_name;
+		DO_SAFE((*env)->GetClassSignature(env, cls, &cls_name, NULL), "get class sig");
+		int check = fields_discovery_check(discover, cls_name);
+		DEALLOCATE(cls_name);
+
+		if (check)
 			return;
-
-		DO_SAFE((*env)->SetTag(env, cls, 1), "set class tag");
 	}
-
 
 	jint count;
 	jclass *interfaces;
@@ -222,7 +222,7 @@ static void print_all_fields(JNIEnv *jnienv,
 	for (int i = 0; i < count; ++i)
 	{
 		jclass iface = interfaces[i];
-		print_all_fields(jnienv, iface, acc);
+		discover_all_fields(jnienv, iface, discover);
 		(*jnienv)->DeleteLocalRef(jnienv, iface);
 	}
 	DEALLOCATE(interfaces);
@@ -230,13 +230,10 @@ static void print_all_fields(JNIEnv *jnienv,
 	jclass super = cls;
 	while ((super = (*jnienv)->GetSuperclass(jnienv, super)) != NULL)
 	{
-		print_all_fields(jnienv, super, acc);
+		discover_all_fields(jnienv, super, discover);
 	}
 
-	if (!cleanup)
-		print_fields(jnienv, cls, acc);
-	else
-		DO_SAFE((*env)->SetTag(env, cls, 0), "set class tag");
+	discover_fields(cls, discover);
 }
 
 /*
@@ -254,15 +251,21 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterSystemMet
 		primed = JNI_FALSE;
 
 		jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
+		char *cls_name;
+		DO_SAFE((*env)->GetClassSignature(env, cls, &cls_name, NULL), "get class sig");
 
-		// TODO calculate and cache fields once for each class
-		int acc = 0;
-		print_all_fields(jnienv, cls, &acc);
-		print_all_fields(jnienv, cls, NULL); // horrendous
-		puts("######");
+		int field_count = 0;
+		fields_p fields = fields_get(fields_map, cls_name, &field_count);
+		if (fields == NULL)
+		{
+			fields_discovery_p discover = fields_discovery_init();
+			discover_all_fields(jnienv, cls, discover);
+			fields_discovery_finish(discover, fields_map, cls_name);
+		}
 
+		DEALLOCATE(cls_name);
 
-		// TODO pass in this array of fields as user_data
+		// TODO pass in this array of fields_map as user_data
 		DO_SAFE((*env)->FollowReferences(
 				env,
 				0,
