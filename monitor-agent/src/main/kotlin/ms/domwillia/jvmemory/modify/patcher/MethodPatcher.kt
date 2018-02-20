@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.modify.patcher
 
+import ms.domwillia.jvmemory.modify.BytecodeTransformer
 import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.MethodDefinition
 import org.objectweb.asm.Label
@@ -255,12 +256,10 @@ class MethodPatcher(
     }
 
     override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
-        if (opcode != Opcodes.INVOKESTATIC) {
-            // TODO don't hardcode this like a savage
-            if (owner == "java/util/ArrayList") {
-                callMonitor(Monitor::primeForSystemMethod)
-            }
-        }
+        if (opcode != Opcodes.INVOKESTATIC &&
+                BytecodeTransformer.systemClassesDescriptors.contains(owner))
+            callMonitor(Monitor::primeForSystemMethod)
+
         super.visitMethodInsn(opcode, owner, name, desc, itf)
     }
 
