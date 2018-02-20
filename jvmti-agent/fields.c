@@ -26,7 +26,7 @@ static jint JNICALL callback_heap_ref(
 				reference_info->field.index,
 				*referrer_tag_ptr,
 				length);
-		return JVMTI_VISIT_OBJECTS;
+		return 0;
 	}
 
 	return 0;
