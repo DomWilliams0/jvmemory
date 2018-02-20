@@ -6,6 +6,8 @@
 #include "alloc.h"
 #include "util.h"
 
+#define DEALLOCATE(p) (*env)->Deallocate(env, (unsigned char *)(p))
+
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    setProgramInProgress
@@ -148,6 +150,95 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_primeForSystem
 	primed = JNI_TRUE;
 }
 
+static jint JNICALL callback_heap_ref(
+		jvmtiHeapReferenceKind reference_kind,
+		const jvmtiHeapReferenceInfo *reference_info,
+		jlong class_tag,
+		jlong referrer_class_tag,
+		jlong size,
+		jlong *tag_ptr,
+		jlong *referrer_tag_ptr,
+		jint length,
+		void *user_data)
+{
+
+	if (reference_kind == JVMTI_HEAP_REFERENCE_FIELD)
+	{
+		printf("field ref %d, tagged from %lu, length %d\n", reference_info->field.index, *referrer_tag_ptr, length);
+		return JVMTI_VISIT_OBJECTS;
+	}
+
+	return 0;
+}
+
+static const jvmtiHeapCallbacks heap_callbacks = {
+		.heap_reference_callback = callback_heap_ref
+};
+
+
+static void print_fields(JNIEnv *jnienv,
+                         jclass cls,
+                         int *acc)
+{
+	jint field_count;
+	jfieldID *fields;
+	DO_SAFE((*env)->GetClassFields(env, cls, &field_count, &fields), "get fields");
+	for (int i = 0; i < field_count; ++i)
+	{
+		jfieldID fid = fields[i];
+		char *name;
+		char *sig;
+		DO_SAFE((*env)->GetFieldName(env, cls, fid, &name, &sig, NULL), "get field name");
+
+		printf("field %d called '%s' of type %s \n", (*acc)++, name, sig);
+		DEALLOCATE(name);
+		DEALLOCATE(sig);
+	}
+	DEALLOCATE(fields);
+}
+
+static void print_all_fields(JNIEnv *jnienv,
+                             jclass cls,
+                             int *acc)
+{
+	// TODO use a rust hashset to track visited classes instead of a second cleanup phase
+	int cleanup = acc == NULL;
+
+	if (!cleanup)
+	{
+		long tag;
+		DO_SAFE((*env)->GetTag(env, cls, &tag), "get class tag");
+		if (tag != 0)
+			return;
+
+		DO_SAFE((*env)->SetTag(env, cls, 1), "set class tag");
+	}
+
+
+	jint count;
+	jclass *interfaces;
+	DO_SAFE((*env)->GetImplementedInterfaces(env, cls, &count, &interfaces), "get interfaces");
+
+	for (int i = 0; i < count; ++i)
+	{
+		jclass iface = interfaces[i];
+		print_all_fields(jnienv, iface, acc);
+		(*jnienv)->DeleteLocalRef(jnienv, iface);
+	}
+	DEALLOCATE(interfaces);
+
+	jclass super = cls;
+	while ((super = (*jnienv)->GetSuperclass(jnienv, super)) != NULL)
+	{
+		print_all_fields(jnienv, super, acc);
+	}
+
+	if (!cleanup)
+		print_fields(jnienv, cls, acc);
+	else
+		DO_SAFE((*env)->SetTag(env, cls, 0), "set class tag");
+}
+
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    enterSystemMethod
@@ -156,12 +247,31 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_primeForSystem
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterSystemMethod(
 		JNIEnv *jnienv,
 		jclass klass,
-		jstring method)
+		jobject obj)
 {
 	if (primed == JNI_TRUE)
 	{
 		primed = JNI_FALSE;
-		DEBUG_PRINT_STRING(jnienv, method, "called from the outside world");
+
+		jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
+
+		// TODO calculate and cache fields once for each class
+		int acc = 0;
+		print_all_fields(jnienv, cls, &acc);
+		print_all_fields(jnienv, cls, NULL); // horrendous
+		puts("######");
+
+
+		// TODO pass in this array of fields as user_data
+		DO_SAFE((*env)->FollowReferences(
+				env,
+				0,
+				NULL,
+				obj,
+				&heap_callbacks,
+				NULL
+		), "following refs");
+		puts("=======");
 	}
 }
 

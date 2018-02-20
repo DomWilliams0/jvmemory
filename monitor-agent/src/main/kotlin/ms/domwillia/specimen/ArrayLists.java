@@ -6,11 +6,7 @@ public class ArrayLists implements Specimen {
 
 	@Override
 	public void go() {
-		ArrayList<Object> list = new ArrayList<>();
-		list.add(new Object());
-		list.add(new Object());
-		list.add(new Object());
-		list.add(new Object());
+		ArrayList<Object> list = new ArrayList<>(7);
 		list.add(new Object());
 		int x = list.size();
 	}
