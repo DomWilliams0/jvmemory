@@ -86,6 +86,17 @@ JNIEXPORT jobject JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_newArrayWra
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    multiNewArrayWrapper
+ * Signature: (Ljava/lang/Class;[Ljava/lang/Integer;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_multiNewArrayWrapper
+		(JNIEnv *,
+		 jclass,
+		 jclass,
+		 jobjectArray);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    getTag
  * Signature: (Ljava/lang/Object;)J
  */

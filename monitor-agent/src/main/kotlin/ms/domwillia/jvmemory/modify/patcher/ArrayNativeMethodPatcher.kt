@@ -4,7 +4,7 @@ import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
-class ArrayNativeMethodPatcher(api: Int, mv: MethodVisitor) : MethodVisitor(api, mv) {
+class ArrayNativeMethodPatcher(api: Int, mv: MethodVisitor, multiDim: Boolean) : MethodVisitor(api, mv) {
 
     init {
         // visitCode() is never actually called because the original method is native
@@ -12,7 +12,7 @@ class ArrayNativeMethodPatcher(api: Int, mv: MethodVisitor) : MethodVisitor(api,
         super.visitCode()
         super.visitVarInsn(Opcodes.ALOAD, 0)
         super.visitVarInsn(Opcodes.ALOAD, 1)
-        callMonitor(Monitor::newArrayWrapper)
+        callMonitor(if (multiDim) Monitor::multiNewArrayWrapper else Monitor::newArrayWrapper)
         super.visitInsn(Opcodes.ARETURN)
     }
 }

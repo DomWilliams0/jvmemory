@@ -1,8 +1,6 @@
 package ms.domwillia.jvmemory.modify.visitor
 
 import ms.domwillia.jvmemory.modify.patcher.ArrayNativeMethodPatcher
-import ms.domwillia.jvmemory.modify.patcher.callMonitor
-import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
@@ -19,12 +17,15 @@ class ArrayNativeClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api,
     ): MethodVisitor? {
 
         // TODO multidim too
-        if (name != "newArray")
-            return super.visitMethod(access, name, desc, signature, exceptions)
+        val multiDim = when (name) {
+            "newArray" -> false
+            "multiNewArray" -> true
+            else -> return super.visitMethod(access, name, desc, signature, exceptions)
+        }
 
         val newAccess = access.and(Opcodes.ACC_NATIVE.inv())
         val mv = super.visitMethod(newAccess, name, desc, signature, exceptions)
-        return ArrayNativeMethodPatcher(api, mv)
+        return ArrayNativeMethodPatcher(api, mv, multiDim)
     }
 
 }
