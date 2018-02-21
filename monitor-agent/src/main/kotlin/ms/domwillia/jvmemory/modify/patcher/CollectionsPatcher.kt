@@ -3,7 +3,6 @@ package ms.domwillia.jvmemory.modify.patcher
 import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
 class CollectionsPatcher(
