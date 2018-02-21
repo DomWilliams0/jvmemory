@@ -78,7 +78,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
  * Method:    newArrayWrapper
  * Signature: (Ljava/lang/Class;I)Ljava/lang/Object;
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_newArrayWrapper
+JNIEXPORT jobject JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_newArrayWrapper
 		(JNIEnv *,
 		 jclass,
 		 jclass,
