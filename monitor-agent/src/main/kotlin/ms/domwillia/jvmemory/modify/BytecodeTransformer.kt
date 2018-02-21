@@ -1,13 +1,11 @@
 package ms.domwillia.jvmemory.modify
 
-import ms.domwillia.jvmemory.modify.visitor.ClassLoaderClassVisitor
-import ms.domwillia.jvmemory.modify.visitor.CollectionsClassVisitor
-import ms.domwillia.jvmemory.modify.visitor.ObjectClassVisitor
-import ms.domwillia.jvmemory.modify.visitor.UserClassVisitor
+import ms.domwillia.jvmemory.modify.visitor.*
 import org.objectweb.asm.*
 import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
+import java.lang.reflect.Array
 import java.security.ProtectionDomain
 import java.util.jar.JarFile
 import kotlin.system.exitProcess
@@ -73,7 +71,8 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
     companion object {
         private val systemClasses = mapOf(
                 java.util.ArrayList::class.java to ::CollectionsClassVisitor,
-                java.util.Arrays::class.java to ::CollectionsClassVisitor
+                java.util.Arrays::class.java to ::CollectionsClassVisitor,
+                java.lang.reflect.Array::class.java to ::ArrayNativeClassVisitor
         )
 
         private val systemClassesDescriptors: Map<String, VisitorConstructor> by lazy {

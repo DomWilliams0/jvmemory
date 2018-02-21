@@ -17,6 +17,8 @@ object Monitor {
 
     @JvmStatic external fun allocateTagForConstant(o: Any, clazz: String)
 
+    @JvmStatic external fun newArrayWrapper(type: Class<out Any>, len: Int): Any
+
     @JvmStatic external fun getTag(o: Any): Long
 
     @JvmStatic external fun enterMethod(clazz: String, method: String)
@@ -25,7 +27,7 @@ object Monitor {
 
     @JvmStatic external fun primeForSystemMethod()
 
-    @JvmStatic external fun enterSystemMethod(o: Any)
+    @JvmStatic external fun enterSystemMethod(o: Any) // TODO rename because its not actually on enter
 
     @JvmStatic external fun onGetField(obj: Any, field: String)
 
