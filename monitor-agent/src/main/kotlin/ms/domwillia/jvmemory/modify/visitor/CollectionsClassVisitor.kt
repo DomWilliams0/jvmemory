@@ -18,7 +18,7 @@ class CollectionsClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api,
 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
-        if (access.and(Opcodes.ACC_STATIC) == 0 && access.and(Opcodes.ACC_PRIVATE) == 0)
+        if (access.and(Opcodes.ACC_PRIVATE) == 0)
             mv = CollectionsPatcher(api, mv, access, name, desc)
 
         return mv
