@@ -21,8 +21,10 @@ class CollectionsPatcher(
 ) {
 
     override fun onMethodExit(opcode: Int) {
-        super.visitVarInsn(Opcodes.ALOAD, 0)
-        callMonitor(Monitor::enterSystemMethod)
+        if (methodAccess.and(Opcodes.ACC_STATIC) == 0) {
+            super.visitVarInsn(Opcodes.ALOAD, 0)
+            callMonitor(Monitor::enterSystemMethod)
+        }
     }
 
     override fun visitMultiANewArrayInsn(desc: String, dims: Int) {

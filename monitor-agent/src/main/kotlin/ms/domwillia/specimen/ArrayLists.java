@@ -2,16 +2,14 @@ package ms.domwillia.specimen;
 
 import ms.domwillia.jvmemory.monitor.Monitor;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Arrays;
 
 public class ArrayLists implements Specimen {
 
 	@Override
 	public void go() {
-		ArrayList<Object> list = new ArrayList<>(1);
-		list.add(new Object());
-		list.add(new Object());
-		int x = list.size();
+		int[] arr = new int[20];
+		int[] other = Arrays.copyOf(arr, 20);
+		System.out.printf("%d -> %d\n", Monitor.getTag(arr), Monitor.getTag(other));
 	}
 }
