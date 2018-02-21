@@ -43,7 +43,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTag(
 		jstring clazz,
 		jobject obj)
 {
-	allocate_object_tag(jnienv, obj, clazz);
+	struct any_string s = ALLOC_STRING_JSTRING(clazz);
+	allocate_object_tag(jnienv, obj, &s);
 }
 
 /*
@@ -58,7 +59,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
 		jobject array,
 		jstring clazz)
 {
-	allocate_array_tag(jnienv, array, size, clazz);
+	struct any_string s = ALLOC_STRING_JSTRING(clazz);
+	allocate_array_tag(jnienv, array, size, &s);
 }
 
 /*
@@ -73,7 +75,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
 		jint dims,
 		jstring clazz)
 {
-	allocate_tags_for_multidim_array(jnienv, array, dims, clazz);
+	struct any_string s = ALLOC_STRING_JSTRING(clazz);
+	allocate_tags_for_multidim_array(jnienv, array, dims, &s);
 }
 
 /*
@@ -87,8 +90,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
 		jobject obj,
 		jstring clazz)
 {
-	if (get_tag(obj) == 0)
-		allocate_object_tag(jnienv, obj, clazz);
+	if (get_tag(obj) == 0) {
+		struct any_string s = ALLOC_STRING_JSTRING(clazz);
+		allocate_object_tag(jnienv, obj, &s);
+	}
 }
 
 /*
