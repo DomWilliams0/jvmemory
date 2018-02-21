@@ -82,6 +82,11 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
 
         fun isSpecialSystemClass(clazz: String): Boolean = systemClassesDescriptors.containsKey(clazz)
 
+        private fun forceLoadSystemClasses() {
+            // the native method multiNewArray isn't automatically loaded without this? bizarre
+            java.lang.reflect.Array.newInstance(Int::class.java, 1, 1)
+        }
+
         private fun bail(msg: String = ""): Nothing {
             if (msg.isNotEmpty())
                 System.err.println("ERROR: $msg")
@@ -110,6 +115,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             inst.retransformClasses(java.lang.Object::class.java)
             inst.retransformClasses(java.lang.ClassLoader::class.java)
 
+            forceLoadSystemClasses()
             systemClasses.keys.forEach { inst.retransformClasses(it) }
         }
     }

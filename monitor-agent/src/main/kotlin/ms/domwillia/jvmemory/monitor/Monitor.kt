@@ -19,6 +19,9 @@ object Monitor {
 
     @JvmStatic external fun newArrayWrapper(type: Class<out Any>, len: Int): Any
 
+    @JvmStatic
+    external fun multiNewArrayWrapper(type: Class<out Any>, dims: Array<Int>): Any
+
     @JvmStatic external fun getTag(o: Any): Long
 
     @JvmStatic external fun enterMethod(clazz: String, method: String)
