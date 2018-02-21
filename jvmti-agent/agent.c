@@ -2,7 +2,7 @@
 #include <jni.h>
 #include <jvmti.h>
 
-#include "array.h"
+#include "id_array.h"
 #include "util.h"
 #include "logger.h"
 #include "fields.h"
@@ -16,7 +16,7 @@ jvmtiEnv *env = NULL;
 logger_p logger = NULL;
 fields_map_p fields_map = NULL;
 
-static struct array freed_objects;
+static struct id_array freed_objects;
 static jrawMonitorID free_lock;
 
 static jvmtiError add_capabilities()
@@ -92,7 +92,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm,
 	DO_SAFE(register_callbacks(), "registering callbacks");
 
 	// init list
-	DO_SAFE_COND(array_init(&freed_objects) == 0, "initialising freed objects array");
+	DO_SAFE_COND(id_array_init(&freed_objects) == 0, "initialising freed objects id_array");
 
 	// create free thread lock
 	DO_SAFE((*env)->CreateRawMonitor(env, "free_lock", &free_lock), "creating raw monitor");
@@ -109,7 +109,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm,
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm)
 {
 	DO_SAFE((*env)->RawMonitorEnter(env, free_lock), "entering free monitor");
-	array_free(&freed_objects);
+	id_array_free(&freed_objects);
 	logger_free(logger);
 	logger = NULL;
 	fields_free(fields_map);
@@ -125,7 +125,7 @@ static void flush_queued_frees(JNIEnv *jnienv)
 		on_dealloc(logger, freed_objects.data[i]);
 	}
 
-	array_clear(&freed_objects);
+	id_array_clear(&freed_objects);
 
 }
 
@@ -155,7 +155,7 @@ static void JNICALL callback_dealloc(jvmtiEnv *env,
                                      jlong tag)
 {
 	// no JVMTI or JNI functions can be called in this callback
-	array_add(&freed_objects, tag);
+	id_array_add(&freed_objects, tag);
 }
 
 static void JNICALL callback_vm_init(jvmtiEnv *env,
