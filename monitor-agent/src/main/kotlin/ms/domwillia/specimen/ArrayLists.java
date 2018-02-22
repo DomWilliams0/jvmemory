@@ -51,6 +51,8 @@ public class ArrayLists implements Specimen {
 		list.contains(null);
 		set.contains(null);
 
+		list.clear();
+
 
 	}
 }
