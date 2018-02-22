@@ -39,7 +39,7 @@ static const jvmtiHeapCallbacks heap_callbacks = {
 		.heap_reference_callback = callback_heap_ref
 };
 
-
+/*
 static void discover_fields(jclass cls,
                             fields_discovery_p discover)
 {
@@ -94,6 +94,7 @@ void discover_all_fields(JNIEnv *jnienv,
 	discover_fields(cls, discover);
 
 }
+ */
 
 void follow_references(heap_explorer_p explorer,
                        jobject obj)

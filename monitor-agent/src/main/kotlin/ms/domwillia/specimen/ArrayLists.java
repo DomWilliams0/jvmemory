@@ -42,5 +42,15 @@ public class ArrayLists implements Specimen {
 		map.put(new Object(), new Object());
 		map.put(new Object(), new Object());
 		map.put(new Object(), new Object());
+
+		int x;
+		x = map.size();
+		x = list.size();
+		x = set.size();
+		map.containsValue(null);
+		list.contains(null);
+		set.contains(null);
+
+
 	}
 }

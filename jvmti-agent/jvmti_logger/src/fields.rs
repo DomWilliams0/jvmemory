@@ -7,8 +7,10 @@ use std::io::Write;
 type ObjectId = i64;
 type Index = i32;
 
-pub struct FieldsMap {
-    fields: HashMap<CString, Vec<DeclaredField>>,
+#[derive(Default)]
+pub struct ExploreCache {
+    last_refs: HashMap<ObjectId, Vec<Access>>,
+    // fields: HashMap<CString, Vec<DeclaredField>>,
 }
 
 pub struct FieldDiscovery {
@@ -21,13 +23,23 @@ pub struct DeclaredField {
     clazz: CString,
 }
 
+#[derive(Eq, PartialEq, Debug)]
 enum Access {
-    Field { from: ObjectId, to: ObjectId, index: Index },
-    Array { from: ObjectId, to: ObjectId, index: Index },
+    Field {
+        from: ObjectId,
+        to: ObjectId,
+        index: Index,
+    },
+    Array {
+        from: ObjectId,
+        to: ObjectId,
+        index: Index,
+    },
 }
 
 #[derive(Default)]
 pub struct HeapExplorer {
+    src_obj: ObjectId,
     tags: HashSet<ObjectId>,
     accesses: Vec<Access>,
 }
@@ -43,16 +55,14 @@ impl HeapExplorer {
 }
 
 #[no_mangle]
-pub extern "C" fn fields_init() -> *const FieldsMap {
-    Box::into_raw(Box::new(FieldsMap {
-        fields: HashMap::new(),
-    }))
+pub extern "C" fn explore_cache_init() -> *const ExploreCache {
+    Box::into_raw(Box::new(ExploreCache::default()))
 }
 
 #[no_mangle]
-pub extern "C" fn fields_free(ptr: *mut FieldsMap) {
+pub extern "C" fn explore_cache_free(cache: *mut ExploreCache) {
     unsafe {
-        Box::from_raw(ptr);
+        Box::from_raw(cache);
     }
 }
 
@@ -61,6 +71,7 @@ pub extern "C" fn heap_explore_init(tag: ObjectId) -> *const HeapExplorer {
     let mut e = Box::new(HeapExplorer::default());
     if tag != 0 {
         e.tags.insert(tag);
+        e.src_obj = tag;
     }
 
     Box::into_raw(e)
@@ -102,13 +113,29 @@ pub extern "C" fn heap_explore_visit_field(
     });
 }
 
+fn is_same(explorer: &HeapExplorer, cache: &ExploreCache) -> bool {
+    cache
+        .last_refs
+        .get(&explorer.src_obj)
+        .map(|last| last == &explorer.accesses)
+        .unwrap_or(false)
+}
+
 #[no_mangle]
-pub extern "C" fn heap_explore_finish(explorer: *mut HeapExplorer) {
+pub extern "C" fn heap_explore_finish(explorer: *mut HeapExplorer, cache: *mut ExploreCache) {
     let e = unsafe { Box::from_raw(explorer) };
-    e.accesses.iter().for_each(|a| match a {
-        &Access::Array { from, to, index } => println!("array {}[{}] = {}", from, index, to),
-        &Access::Field { from, to, index } => println!("field {}.{} = {}", from, index, to),
-    });
+    let c = unsafe { &mut *cache };
+
+    if is_same(&e, &c) {
+        println!("same!")
+    } else {
+        e.accesses.iter().for_each(|a| match a {
+            &Access::Array { from, to, index } => println!("array {}[{}] = {}", from, index, to),
+            &Access::Field { from, to, index } => println!("field {}.{} = {}", from, index, to),
+        });
+    }
+
+    c.last_refs.insert(e.src_obj, e.accesses);
     println!("=====");
 }
 
@@ -154,18 +181,18 @@ pub extern "C" fn fields_discovery_register(
 #[no_mangle]
 pub extern "C" fn fields_discovery_finish(
     discover: *mut FieldDiscovery,
-    map: *mut FieldsMap,
+    map: *mut ExploreCache,
     clazz: *const c_char,
 ) {
     let mut d = unsafe { Box::from_raw(discover) };
-    let f = unsafe { &mut *map };
+    // let f = unsafe { &mut *map };
     let fields = mem::replace(&mut d.fields, Vec::new());
     println!("fields for {:?}:", copy_str(clazz));
     for (i, f) in fields.iter().enumerate() {
         println!("{}: {:?} {:?}", i, f.clazz, f.name);
     }
     ::std::io::stdout().flush().expect("flush");
-    f.fields.insert(copy_str(clazz), fields);
+    // TODO f.fields.insert(copy_str(clazz), fields);
 }
 
 /*
