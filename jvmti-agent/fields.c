@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <jvmti.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "fields.h"
 #include "agent.h"
@@ -11,6 +12,11 @@ struct fields
 	fields_p fields;
 	jint count;
 };
+
+static inline jboolean is_primitive(struct field *f)
+{
+	return (jboolean) (strlen(f->clazz) == 1 ? JNI_TRUE : JNI_FALSE);
+}
 
 static jint JNICALL callback_heap_ref(
 		jvmtiHeapReferenceKind reference_kind,
@@ -33,13 +39,16 @@ static jint JNICALL callback_heap_ref(
 		else
 		{
 			struct field f = fields->fields[index];
-			printf(
-					"%lu.%s (%s) has tag %lu and %d len\n",
-					*referrer_tag_ptr,
-					f.name,
-					f.clazz,
-					*tag_ptr,
-					length);
+			if (!is_primitive(&f)) // ignore primitive fields
+			{
+				printf(
+						"%lu.%s (%s) has tag %lu and %d len\n",
+						*referrer_tag_ptr,
+						f.name,
+						f.clazz,
+						*tag_ptr,
+						length);
+			}
 		}
 		return JVMTI_VISIT_OBJECTS;
 	}
