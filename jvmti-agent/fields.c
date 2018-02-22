@@ -19,43 +19,16 @@ static jint JNICALL callback_heap_ref(
 {
 	heap_explorer_p explorer = (heap_explorer_p) user_data;
 
-	if (!heap_explore_should_explore(explorer, *referrer_tag_ptr))
+	if (heap_explore_should_explore(explorer, *referrer_tag_ptr) != JNI_TRUE)
 		return 0;
 
 	if (reference_kind == JVMTI_HEAP_REFERENCE_FIELD)
 	{
-		heap_explore_add(explorer, *tag_ptr);
-
-		char *name = NULL, *clazz = NULL;
-		heap_explore_get_field(explorer, *tag_ptr, reference_info->field.index, &name, &clazz);
-		if (name != NULL)
-		{
-			printf(
-					"%lu.%s (%s) has tag %lu and %d len\n",
-					*referrer_tag_ptr,
-					name,
-					clazz,
-					*tag_ptr,
-					length);
-		} else
-		{
-			printf(
-					"skipped field %lu.%d == %lu len %d\n",
-					*referrer_tag_ptr,
-					reference_info->field.index,
-					*tag_ptr,
-					length);
-		}
+		heap_explore_visit_field(explorer, *referrer_tag_ptr, *tag_ptr, reference_info->field.index);
 		return JVMTI_VISIT_OBJECTS;
 	} else if (reference_kind == JVMTI_HEAP_REFERENCE_ARRAY_ELEMENT)
 	{
-		heap_explore_add(explorer, *tag_ptr);
-		jint index = reference_info->array.index;
-		printf(
-				"%lu[%d] = %lu\n",
-				*referrer_tag_ptr,
-				index,
-				*tag_ptr);
+		heap_explore_visit_array_element(explorer, *referrer_tag_ptr, *tag_ptr, reference_info->array.index);
 		return JVMTI_VISIT_OBJECTS;
 	}
 
