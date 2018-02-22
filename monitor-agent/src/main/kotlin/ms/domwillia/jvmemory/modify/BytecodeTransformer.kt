@@ -5,9 +5,9 @@ import org.objectweb.asm.*
 import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
-import java.lang.reflect.Array
 import java.security.ProtectionDomain
 import java.util.jar.JarFile
+import kotlin.coroutines.experimental.buildSequence
 import kotlin.system.exitProcess
 
 typealias VisitorConstructor = ((Int, ClassWriter) -> ClassVisitor)
@@ -69,11 +69,33 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
     }
 
     companion object {
-        private val systemClasses = mapOf(
-                java.util.ArrayList::class.java to ::CollectionsClassVisitor,
-                java.util.Arrays::class.java to ::CollectionsClassVisitor,
-                java.lang.reflect.Array::class.java to ::ArrayNativeClassVisitor
-        )
+        private val systemClasses: Map<Class<out Any>, VisitorConstructor> = run {
+            val baseClasses = mapOf(
+                    java.util.ArrayList::class.java to ::CollectionsClassVisitor,
+                    java.util.HashSet::class.java to ::CollectionsClassVisitor,
+                    java.util.LinkedHashMap::class.java to ::CollectionsClassVisitor,
+                    java.util.Arrays::class.java to ::CollectionsClassVisitor,
+                    java.lang.reflect.Array::class.java to ::ArrayNativeClassVisitor
+            )
+
+            fun getSuperClasses(clazz: Class<out Any>) = buildSequence {
+                var c: Class<out Any> = clazz
+                while (c != java.lang.Object::class.java) {
+                    yield(c)
+                    c.superclass.let { sup ->
+                        c = (sup ?: return@buildSequence)
+                    }
+                }
+            }
+
+            // collects all superclasses of system classes and associates them with the same
+            // VisitorConstructor as the listed subclass
+            baseClasses
+                    .map { getSuperClasses(it.key) to it.value } // -> [([supers], value)]
+                    .flatMap { it.first.map { c -> c to it.second }.asIterable() } // -> [(cls, value)]
+                    .toMap()
+        }
+
 
         private val systemClassesDescriptors: Map<String, VisitorConstructor> by lazy {
             // if not lazy, LinkageError ooer
