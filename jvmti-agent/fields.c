@@ -1,22 +1,10 @@
 #include <jni.h>
 #include <jvmti.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "fields.h"
 #include "agent.h"
 #include "util.h"
-
-struct fields
-{
-	fields_p fields;
-	jint count;
-};
-
-static inline jboolean is_primitive(struct field *f)
-{
-	return (jboolean) (strlen(f->clazz) == 1 ? JNI_TRUE : JNI_FALSE);
-}
 
 static jint JNICALL callback_heap_ref(
 		jvmtiHeapReferenceKind reference_kind,
@@ -29,31 +17,49 @@ static jint JNICALL callback_heap_ref(
 		jint length,
 		void *user_data)
 {
+	heap_explorer_p explorer = (heap_explorer_p) user_data;
+
+	if (!heap_explore_should_explore(explorer, *referrer_tag_ptr))
+		return 0;
 
 	if (reference_kind == JVMTI_HEAP_REFERENCE_FIELD)
 	{
-		struct fields *fields = (struct fields *) user_data;
-		jint index = reference_info->field.index;
-		if (index < 0 || index >= fields->count)
-			fprintf(stderr, "bad field index %d when there are %d\n", index, fields->count);
-		else
+		heap_explore_add(explorer, *tag_ptr);
+
+		char *name = NULL, *clazz = NULL;
+		heap_explore_get_field(explorer, *tag_ptr, reference_info->field.index, &name, &clazz);
+		if (name != NULL)
 		{
-			struct field f = fields->fields[index];
-			if (!is_primitive(&f)) // ignore primitive fields
-			{
-				printf(
-						"%lu.%s (%s) has tag %lu and %d len\n",
-						*referrer_tag_ptr,
-						f.name,
-						f.clazz,
-						*tag_ptr,
-						length);
-			}
+			printf(
+					"%lu.%s (%s) has tag %lu and %d len\n",
+					*referrer_tag_ptr,
+					name,
+					clazz,
+					*tag_ptr,
+					length);
+		} else
+		{
+			printf(
+					"skipped field %lu.%d == %lu len %d\n",
+					*referrer_tag_ptr,
+					reference_info->field.index,
+					*tag_ptr,
+					length);
 		}
+		return JVMTI_VISIT_OBJECTS;
+	} else if (reference_kind == JVMTI_HEAP_REFERENCE_ARRAY_ELEMENT)
+	{
+		heap_explore_add(explorer, *tag_ptr);
+		jint index = reference_info->array.index;
+		printf(
+				"%lu[%d] = %lu\n",
+				*referrer_tag_ptr,
+				index,
+				*tag_ptr);
 		return JVMTI_VISIT_OBJECTS;
 	}
 
-	return 0;
+	return JVMTI_VISIT_OBJECTS;
 }
 
 static const jvmtiHeapCallbacks heap_callbacks = {
@@ -116,23 +122,17 @@ void discover_all_fields(JNIEnv *jnienv,
 
 }
 
-void follow_references(jobject obj,
-                       fields_p fields,
-                       jint count)
+void follow_references(heap_explorer_p explorer,
+                       jobject obj)
 {
-
-	struct fields container = {
-			.fields = fields,
-			.count = count
-	};
 
 	DO_SAFE((*env)->FollowReferences(
 			env,
-			0,
+			JVMTI_HEAP_FILTER_UNTAGGED,
 			NULL,
 			obj,
 			&heap_callbacks,
-			&container
+			explorer
 	), "following refs");
 
 }

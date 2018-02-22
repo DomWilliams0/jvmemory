@@ -167,22 +167,25 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterSystemMet
 	{
 		primed = JNI_FALSE;
 
+		jlong tag = get_tag(obj);
 		jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
 		char *cls_name;
 		DO_SAFE((*env)->GetClassSignature(env, cls, &cls_name, NULL), "get class sig");
 
-		int field_count = 0;
-		fields_p fields = fields_get(fields_map, cls_name, &field_count);
-		if (fields == NULL)
+		heap_explorer_p explorer = heap_explore_init(fields_map, cls_name, tag);
+		if (explorer == NULL)
 		{
 			fields_discovery_p discover = fields_discovery_init();
 			discover_all_fields(jnienv, cls, discover);
 			fields_discovery_finish(discover, fields_map, cls_name);
+			explorer = heap_explore_init(fields_map, cls_name, tag);
+			// TODO could it fail?
 		}
 
 		DEALLOCATE(cls_name);
 
-		follow_references(obj, fields, field_count);
+		follow_references(explorer, obj);
+		heap_explore_finish(explorer);
 		puts("=======");
 	}
 }

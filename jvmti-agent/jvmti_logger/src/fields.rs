@@ -13,10 +13,14 @@ pub struct FieldDiscovery {
     fields: Vec<DeclaredField>,
 }
 
-#[repr(C)]
 pub struct DeclaredField {
-    name: *mut c_char,
-    clazz: *mut c_char,
+    name: CString,
+    clazz: CString,
+}
+
+pub struct HeapExplorer<'a> {
+    fields: &'a Vec<DeclaredField>,
+    tags: HashSet<i64>,
 }
 
 #[no_mangle]
@@ -32,16 +36,59 @@ pub extern fn fields_free(ptr: *mut FieldsMap) {
 }
 
 #[no_mangle]
-pub extern fn fields_get(ptr: *mut FieldsMap, cls: *const c_char, count: *mut usize) -> *const DeclaredField {
+pub extern fn heap_explore_init<'a>(ptr: *mut FieldsMap, cls: *const c_char, tag: i64) -> *const HeapExplorer<'a> {
     let f = unsafe { &mut *ptr };
     let cls_str = unsafe { CStr::from_ptr(cls) };
-    let (vec, n) = match f.fields.get(cls_str) {
-        None => (ptr::null(), 0),
-        Some(v) => (v.as_ptr(), v.len()),
-    };
+    match f.fields.get(cls_str) {
+        None => ptr::null(),
+        Some(v) => Box::into_raw(Box::new(HeapExplorer {
+            fields: v,
+            tags: {
+                let mut tags = HashSet::new();
+                if tag != 0 {
+                    println!("exploriting {}", tag);
+                    tags.insert(tag);
+                }
+                tags
+            },
+        }))
+    }
+}
 
-    unsafe { *count = n };
-    vec
+#[no_mangle]
+pub extern fn heap_explore_should_explore<'a>(explorer: *mut HeapExplorer<'a>, tag: i64) -> i8 {
+    let e = unsafe { &mut *explorer };
+    if (e.tags.contains(&tag)) {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+pub extern fn heap_explore_add<'a>(explorer: *mut HeapExplorer<'a>, tag: i64) {
+    let e = unsafe { &mut *explorer };
+    e.tags.insert(tag);
+}
+
+#[no_mangle]
+pub extern fn heap_explore_get_field<'a>(explorer: *mut HeapExplorer<'a>, tag: i64, index: usize, name: *mut *const c_char, clazz: *mut *const c_char) {
+    let e = unsafe { &mut *explorer };
+
+    if let Some(field) = e.fields.get(index) {
+        if field.clazz.to_bytes().len() > 1 {
+            e.tags.insert(tag);
+            unsafe {
+                *name = field.name.as_ptr();
+                *clazz = field.clazz.as_ptr();
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern fn heap_explore_finish<'a>(explorer: *mut HeapExplorer<'a>) {
+    unsafe { Box::from_raw(explorer); }
 }
 
 #[no_mangle]
@@ -71,8 +118,8 @@ fn copy_str(ptr: *const c_char) -> CString {
 pub extern fn fields_discovery_register(discover: *mut FieldDiscovery, name: *const c_char, clazz: *const c_char) {
     let d = unsafe { &mut *discover };
     d.fields.push(DeclaredField {
-        name: copy_str(name).into_raw(),
-        clazz: copy_str(clazz).into_raw(),
+        name: copy_str(name),
+        clazz: copy_str(clazz),
     })
 }
 
@@ -83,12 +130,13 @@ pub extern fn fields_discovery_finish(discover: *mut FieldDiscovery, map: *mut F
     let fields = mem::replace(&mut d.fields, Vec::new());
     println!("fields for {:?}:", copy_str(clazz));
     for (i, f) in fields.iter().enumerate() {
-        println!("{}: {:?} {:?}", i, unsafe { CStr::from_ptr(f.clazz) }, unsafe { CStr::from_ptr(f.name) });
+        println!("{}: {:?} {:?}", i, f.clazz, f.name);
     }
     ::std::io::stdout().flush().expect("flush");
     f.fields.insert(copy_str(clazz), fields);
 }
 
+/*
 impl Drop for DeclaredField {
     fn drop(&mut self) {
         unsafe {
@@ -97,3 +145,4 @@ impl Drop for DeclaredField {
         }
     }
 }
+*/
