@@ -4,6 +4,9 @@ use libc::*;
 use std::ffi::{CStr, CString};
 use std::io::Write;
 
+type ObjectId = i64;
+type Index = i32;
+
 pub struct FieldsMap {
     fields: HashMap<CString, Vec<DeclaredField>>,
 }
@@ -19,13 +22,13 @@ pub struct DeclaredField {
 }
 
 enum Access {
-    Field { from: i64, to: i64, index: i32 },
-    Array { from: i64, to: i64, index: i32 },
+    Field { from: ObjectId, to: ObjectId, index: Index },
+    Array { from: ObjectId, to: ObjectId, index: Index },
 }
 
 #[derive(Default)]
 pub struct HeapExplorer {
-    tags: HashSet<i64>,
+    tags: HashSet<ObjectId>,
     accesses: Vec<Access>,
 }
 
@@ -54,7 +57,7 @@ pub extern "C" fn fields_free(ptr: *mut FieldsMap) {
 }
 
 #[no_mangle]
-pub extern "C" fn heap_explore_init(tag: i64) -> *const HeapExplorer {
+pub extern "C" fn heap_explore_init(tag: ObjectId) -> *const HeapExplorer {
     let mut e = Box::new(HeapExplorer::default());
     if tag != 0 {
         e.tags.insert(tag);
@@ -64,21 +67,17 @@ pub extern "C" fn heap_explore_init(tag: i64) -> *const HeapExplorer {
 }
 
 #[no_mangle]
-pub extern "C" fn heap_explore_should_explore(explorer: *mut HeapExplorer, tag: i64) -> i8 {
+pub extern "C" fn heap_explore_should_explore(explorer: *mut HeapExplorer, tag: ObjectId) -> bool {
     let e = unsafe { &mut *explorer };
-    if e.tags.contains(&tag) {
-        1
-    } else {
-        0
-    }
+    e.tags.contains(&tag)
 }
 
 #[no_mangle]
 pub extern "C" fn heap_explore_visit_array_element(
     explorer: *mut HeapExplorer,
-    referrer: i64,
-    tag: i64,
-    index: i32,
+    referrer: ObjectId,
+    tag: ObjectId,
+    index: Index,
 ) {
     let e = unsafe { &mut *explorer };
     e.add_access(Access::Array {
@@ -91,9 +90,9 @@ pub extern "C" fn heap_explore_visit_array_element(
 #[no_mangle]
 pub extern "C" fn heap_explore_visit_field(
     explorer: *mut HeapExplorer,
-    referrer: i64,
-    tag: i64,
-    index: i32,
+    referrer: ObjectId,
+    tag: ObjectId,
+    index: Index,
 ) {
     let e = unsafe { &mut *explorer };
     e.add_access(Access::Field {

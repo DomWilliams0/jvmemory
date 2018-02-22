@@ -19,7 +19,7 @@ static jint JNICALL callback_heap_ref(
 {
 	heap_explorer_p explorer = (heap_explorer_p) user_data;
 
-	if (heap_explore_should_explore(explorer, *referrer_tag_ptr) != JNI_TRUE)
+	if (!heap_explore_should_explore(explorer, *referrer_tag_ptr))
 		return 0;
 
 	if (reference_kind == JVMTI_HEAP_REFERENCE_FIELD)
