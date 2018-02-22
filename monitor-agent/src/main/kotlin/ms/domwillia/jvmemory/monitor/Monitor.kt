@@ -28,9 +28,9 @@ object Monitor {
 
     @JvmStatic external fun exitMethod()
 
-    @JvmStatic external fun primeForSystemMethod()
+    @JvmStatic external fun exitSystemMethod(o: Any)
 
-    @JvmStatic external fun enterSystemMethod(o: Any) // TODO rename because its not actually on enter
+    @JvmStatic external fun processSystemMethodChanges()
 
     @JvmStatic external fun onGetField(obj: Any, field: String)
 
