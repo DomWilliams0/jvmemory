@@ -78,26 +78,24 @@ class CollectionsPatcher(
         // stack: array
     }
 
-    override fun visitTypeInsn(opcode: Int, type: String?) {
-        if (opcode != Opcodes.ANEWARRAY) {
-            super.visitTypeInsn(opcode, type)
-            return
-        }
+    override fun visitTypeInsn(opcode: Int, type: String?) =
+            when (opcode) {
+                Opcodes.ANEWARRAY -> {
+                    // stack: size
+                    super.dup()
 
-        // stack: size
-        super.dup()
+                    // stack: size size
+                    super.visitTypeInsn(opcode, type)
 
-        // stack: size size
-        super.visitTypeInsn(opcode, type)
+                    // stack: size array
+                    super.dupX1()
 
-        // stack: size array
-        super.dupX1()
+                    // stack: array size array
+                    super.visitLdcInsn(type)
 
-        // stack: array size array
-        super.visitLdcInsn(type)
-
-        // stack: array size array type
-        callMonitor(Monitor::allocateTagForArray)
-    }
-
+                    // stack: array size array type
+                    callMonitor(Monitor::allocateTagForArray)
+                }
+                else -> super.visitTypeInsn(opcode, type)
+            }
 }
