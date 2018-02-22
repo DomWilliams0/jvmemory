@@ -256,11 +256,11 @@ class MethodPatcher(
     }
 
     override fun visitMethodInsn(opcode: Int, owner: String, name: String?, desc: String?, itf: Boolean) {
+        super.visitMethodInsn(opcode, owner, name, desc, itf)
+
         if (opcode != Opcodes.INVOKESTATIC &&
                 BytecodeTransformer.isSpecialSystemClass(owner))
-            callMonitor(Monitor::primeForSystemMethod)
-
-        super.visitMethodInsn(opcode, owner, name, desc, itf)
+            callMonitor(Monitor::processSystemMethodChanges)
     }
 
     override fun visitLocalVariable(name: String, desc: String, signature: String?, start: Label?, end: Label?, index: Int) {

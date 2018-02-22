@@ -90,7 +90,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
 		jobject obj,
 		jstring clazz)
 {
-	if (get_tag(obj) == 0) {
+	if (get_tag(obj) == 0)
+	{
 		struct any_string s = ALLOC_STRING_JSTRING(clazz);
 		allocate_object_tag(jnienv, obj, &s);
 	}
@@ -139,35 +140,53 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
 	on_exit_method(logger, get_thread_id(jnienv));
 }
 
-static jboolean primed = JNI_FALSE;
+static jlong system_object = 0L;
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    primeForSystemMethod
- * Signature: ()V
+ * Method:    exitSystemMethod
+ * Signature: (Ljava/lang/Object;)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_primeForSystemMethod(
-		JNIEnv *jnienv,
-		jclass klass)
-{
-	primed = JNI_TRUE;
-}
-
-/*
- * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    enterSystemMethod
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterSystemMethod(
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitSystemMethod(
 		JNIEnv *jnienv,
 		jclass klass,
 		jobject obj)
 {
-	if (primed == JNI_TRUE)
-	{
-		primed = JNI_FALSE;
+	system_object = get_tag(obj);
+}
 
-		jlong tag = get_tag(obj);
+static jobject get_object(long tag)
+{
+	jobject *objs = NULL;
+	jint count = 0;
+	DO_SAFE((*env)->GetObjectsWithTags(env, 1, &tag, &count, &objs, NULL), "get obj with tag");
+
+	jobject obj = count == 1 ? objs[0] : NULL;
+	DEALLOCATE(objs);
+
+	return obj;
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    processSystemMethodChanges
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_processSystemMethodChanges(
+		JNIEnv *jnienv,
+		jclass klass)
+{
+	if (system_object != 0L)
+	{
+		jlong tag = system_object;
+		jobject obj = get_object(tag);
+		system_object = 0L;
+
+		if (obj == NULL) {
+			fprintf(stderr, "bad tag %lu\n", tag);
+			return;
+		}
+
 		jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
 		char *cls_name;
 		DO_SAFE((*env)->GetClassSignature(env, cls, &cls_name, NULL), "get class sig");
@@ -187,6 +206,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterSystemMet
 		follow_references(explorer, obj);
 		heap_explore_finish(explorer);
 		puts("=======");
+
+		(*jnienv)->DeleteLocalRef(jnienv, obj);
 	}
 }
 

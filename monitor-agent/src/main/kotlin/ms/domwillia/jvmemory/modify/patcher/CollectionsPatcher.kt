@@ -22,7 +22,7 @@ class CollectionsPatcher(
     override fun onMethodExit(opcode: Int) {
         if (methodAccess.and(Opcodes.ACC_STATIC) == 0) {
             super.visitVarInsn(Opcodes.ALOAD, 0)
-            callMonitor(Monitor::enterSystemMethod)
+            callMonitor(Monitor::exitSystemMethod)
         }
     }
 
