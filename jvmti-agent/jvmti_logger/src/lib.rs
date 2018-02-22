@@ -1,5 +1,6 @@
 extern crate libc;
 extern crate protobuf;
+extern crate diff;
 
 #[macro_use]
 mod cstr;

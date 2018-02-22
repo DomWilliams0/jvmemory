@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 use libc::*;
 use std::ffi::{CStr, CString};
 use std::io::Write;
+use diff;
 
 type ObjectId = i64;
 type Index = i32;
@@ -74,6 +75,7 @@ pub extern "C" fn heap_explore_init(tag: ObjectId) -> *const HeapExplorer {
         e.src_obj = tag;
     }
 
+    println!("exploring {}", tag);
     Box::into_raw(e)
 }
 
@@ -113,12 +115,26 @@ pub extern "C" fn heap_explore_visit_field(
     });
 }
 
-fn is_same(explorer: &HeapExplorer, cache: &ExploreCache) -> bool {
-    cache
+fn find_differences(explorer: &HeapExplorer, cache: &ExploreCache) -> bool {
+    let blank = Vec::new();
+    let last = cache
         .last_refs
         .get(&explorer.src_obj)
-        .map(|last| last == &explorer.accesses)
-        .unwrap_or(false)
+        .unwrap_or(&blank);
+
+    let diffs = diff::slice(last, &explorer.accesses);
+    for diff in &diffs {
+        match diff {
+            &diff::Result::Both(x, _) => println!(" {:?}", x),
+            &diff::Result::Left(x) => println!("-{:?}", x),
+            &diff::Result::Right(x) => println!("+{:?}", x),
+        }
+    }
+
+    diffs.iter().all(|x| match x {
+        &diff::Result::Both(_, _) => true,
+        _ => false,
+    })
 }
 
 #[no_mangle]
@@ -126,13 +142,8 @@ pub extern "C" fn heap_explore_finish(explorer: *mut HeapExplorer, cache: *mut E
     let e = unsafe { Box::from_raw(explorer) };
     let c = unsafe { &mut *cache };
 
-    if is_same(&e, &c) {
-        println!("same!")
-    } else {
-        e.accesses.iter().for_each(|a| match a {
-            &Access::Array { from, to, index } => println!("array {}[{}] = {}", from, index, to),
-            &Access::Field { from, to, index } => println!("field {}.{} = {}", from, index, to),
-        });
+    if find_differences(&e, &c) {
+        println!("all the same, no changes!");
     }
 
     c.last_refs.insert(e.src_obj, e.accesses);
