@@ -7,7 +7,7 @@
 
 extern jvmtiEnv *env;
 extern logger_p logger;
-extern fields_map_p fields_map;
+extern explore_cache_p explore_cache;
 
 extern unsigned int classes_loading;
 extern jboolean program_running;

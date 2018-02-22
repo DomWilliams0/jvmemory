@@ -14,7 +14,7 @@
 static JavaVM *jvm = NULL;
 jvmtiEnv *env = NULL;
 logger_p logger = NULL;
-fields_map_p fields_map = NULL;
+explore_cache_p explore_cache = NULL;
 
 static struct id_array freed_objects;
 static jrawMonitorID free_lock;
@@ -92,8 +92,8 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm,
 	// init logger
 	DO_SAFE_COND((logger = logger_init(out_path)) != NULL, "logger initialisation");
 
-	// init fields_map map
-	DO_SAFE_COND((fields_map = fields_init()) != NULL, "fields_map map initialisation");
+	// init explore cache
+	DO_SAFE_COND((explore_cache = explore_cache_init()) != NULL, "explore cache initialisation");
 
 	return JNI_OK;
 }
@@ -104,8 +104,8 @@ JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm)
 	id_array_free(&freed_objects);
 	logger_free(logger);
 	logger = NULL;
-	fields_free(fields_map);
-	fields_map = NULL;
+	explore_cache_free(explore_cache);
+	explore_cache = NULL;
 	DO_SAFE((*env)->RawMonitorExit(env, free_lock), "exiting free monitor");
 }
 

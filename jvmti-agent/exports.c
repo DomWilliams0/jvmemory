@@ -189,7 +189,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_processSystemM
 
 		heap_explorer_p explorer = heap_explore_init(tag);
 		follow_references(explorer, obj);
-		heap_explore_finish(explorer);
+		heap_explore_finish(explorer, explore_cache);
 
 		(*jnienv)->DeleteLocalRef(jnienv, obj);
 	}
