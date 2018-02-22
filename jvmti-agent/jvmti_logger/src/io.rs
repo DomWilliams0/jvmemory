@@ -1,4 +1,4 @@
-use std::{io, fs, ptr, thread, mem};
+use std::{fs, io, mem, ptr, thread};
 use proto::message::Variant;
 use protobuf::Message;
 use libc::*;
@@ -15,7 +15,10 @@ pub struct Logger {
     //writer: fs::File
 }
 
-fn spawn_buffer_thread(path: &str, recv: mpsc::Receiver<Variant>) -> io::Result<thread::JoinHandle<()>> {
+fn spawn_buffer_thread(
+    path: &str,
+    recv: mpsc::Receiver<Variant>,
+) -> io::Result<thread::JoinHandle<()>> {
     fn flush_buffer<W: io::Write>(buffer: &mut Vec<Variant>, out: &mut W) {
         for msg in buffer.iter() {
             if let Err(e) = msg.write_length_delimited_to_writer(out) {
@@ -24,7 +27,6 @@ fn spawn_buffer_thread(path: &str, recv: mpsc::Receiver<Variant>) -> io::Result<
         }
         buffer.clear();
     }
-
 
     let out_file = fs::File::create(path)?;
 
@@ -43,7 +45,6 @@ fn spawn_buffer_thread(path: &str, recv: mpsc::Receiver<Variant>) -> io::Result<
             if buffer.len() == BUFFER_SIZE {
                 flush_buffer(&mut buffer, &mut file);
             }
-
         }
         flush_buffer(&mut buffer, &mut file);
     }))
@@ -59,8 +60,8 @@ impl Logger {
     }
 
     fn safe_log(&mut self, message: Variant) -> Result<(), mpsc::SendError<Variant>> {
-         self.drainpipe.send(message)?;
-         Ok(())
+        self.drainpipe.send(message)?;
+        Ok(())
     }
 
     fn log(&mut self, message: Variant) {
@@ -71,7 +72,7 @@ impl Logger {
 }
 
 #[no_mangle]
-pub extern fn logger_init(out_file: *const c_char) -> *const Logger {
+pub extern "C" fn logger_init(out_file: *const c_char) -> *const Logger {
     let path = get_string_ref!(out_file, ptr::null());
     match Logger::new(&path) {
         Err(e) => {
@@ -83,14 +84,17 @@ pub extern fn logger_init(out_file: *const c_char) -> *const Logger {
 }
 
 #[no_mangle]
-pub extern fn logger_free(logger_ptr: *mut Logger) {
+pub extern "C" fn logger_free(logger_ptr: *mut Logger) {
     if !logger_ptr.is_null() {
         let mut logger = unsafe { Box::from_raw(logger_ptr) };
 
         let (dummy, _) = mpsc::channel();
         let sender = mem::replace(&mut logger.drainpipe, dummy);
         drop(sender);
-        logger.buffer_thread.join().expect("waiting on buffer thread");
+        logger
+            .buffer_thread
+            .join()
+            .expect("waiting on buffer thread");
     }
 }
 

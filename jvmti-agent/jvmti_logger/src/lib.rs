@@ -11,10 +11,10 @@ mod fields;
 use libc::*;
 use std::ffi::CStr;
 use proto::*;
-use proto::message::{Variant, MessageType};
+use proto::message::{MessageType, Variant};
 use io::Logger;
 
-pub use io::{logger_init, logger_free};
+pub use io::{logger_free, logger_init};
 pub use fields::*;
 
 type Long = i64;
@@ -23,7 +23,12 @@ type String = *const c_char;
 // TODO this is all horribly repetitive and can definitely be replaced with some macro magic
 
 #[no_mangle]
-pub extern fn on_enter_method(logger: *mut Logger, thread_id: Long, class: String, method: String) {
+pub extern "C" fn on_enter_method(
+    logger: *mut Logger,
+    thread_id: Long,
+    class: String,
+    method: String,
+) {
     let mut payload = flow::MethodEnter::new();
     payload.class = get_string!(class);
     payload.method = get_string!(method);
@@ -36,7 +41,7 @@ pub extern fn on_enter_method(logger: *mut Logger, thread_id: Long, class: Strin
 }
 
 #[no_mangle]
-pub extern fn on_exit_method(logger: *mut Logger, thread_id: Long) {
+pub extern "C" fn on_exit_method(logger: *mut Logger, thread_id: Long) {
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);
     msg.set_method_exit(flow::MethodExit::new());
@@ -45,7 +50,7 @@ pub extern fn on_exit_method(logger: *mut Logger, thread_id: Long) {
 }
 
 #[no_mangle]
-pub extern fn on_get_field(logger: *mut Logger, thread_id: Long, obj_id: Long, field: String) {
+pub extern "C" fn on_get_field(logger: *mut Logger, thread_id: Long, obj_id: Long, field: String) {
     let mut payload = access::GetField::new();
     payload.id = obj_id;
     payload.field = get_string!(field);
@@ -58,7 +63,13 @@ pub extern fn on_get_field(logger: *mut Logger, thread_id: Long, obj_id: Long, f
 }
 
 #[no_mangle]
-pub extern fn on_put_field_object(logger: *mut Logger, thread_id: Long, obj_id: Long, field: String, value_id: Long) {
+pub extern "C" fn on_put_field_object(
+    logger: *mut Logger,
+    thread_id: Long,
+    obj_id: Long,
+    field: String,
+    value_id: Long,
+) {
     let mut payload = access::PutFieldObject::new();
     payload.id = obj_id;
     payload.field = get_string!(field);
@@ -72,7 +83,12 @@ pub extern fn on_put_field_object(logger: *mut Logger, thread_id: Long, obj_id: 
 }
 
 #[no_mangle]
-pub extern fn on_put_field_primitive(logger: *mut Logger, thread_id: Long, obj_id: Long, field: String) {
+pub extern "C" fn on_put_field_primitive(
+    logger: *mut Logger,
+    thread_id: Long,
+    obj_id: Long,
+    field: String,
+) {
     let mut payload = access::PutFieldPrimitive::new();
     payload.id = obj_id;
     payload.field = get_string!(field);
@@ -85,7 +101,12 @@ pub extern fn on_put_field_primitive(logger: *mut Logger, thread_id: Long, obj_i
 }
 
 #[no_mangle]
-pub extern fn on_store_object(logger: *mut Logger, thread_id: Long, value_id: Long, index: Int) {
+pub extern "C" fn on_store_object(
+    logger: *mut Logger,
+    thread_id: Long,
+    value_id: Long,
+    index: Int,
+) {
     let mut payload = access::StoreObject::new();
     payload.value_id = value_id;
     payload.index = index;
@@ -98,7 +119,7 @@ pub extern fn on_store_object(logger: *mut Logger, thread_id: Long, value_id: Lo
 }
 
 #[no_mangle]
-pub extern fn on_store_primitive(logger: *mut Logger, thread_id: Long, index: Int) {
+pub extern "C" fn on_store_primitive(logger: *mut Logger, thread_id: Long, index: Int) {
     let mut payload = access::StorePrimitive::new();
     payload.index = index;
 
@@ -110,7 +131,13 @@ pub extern fn on_store_primitive(logger: *mut Logger, thread_id: Long, index: In
 }
 
 #[no_mangle]
-pub extern fn on_store_object_in_array(logger: *mut Logger, thread_id: Long, value_id: Long, array_id: Long, index: Int) {
+pub extern "C" fn on_store_object_in_array(
+    logger: *mut Logger,
+    thread_id: Long,
+    value_id: Long,
+    array_id: Long,
+    index: Int,
+) {
     let mut payload = access::StoreObjectInArray::new();
     payload.id = array_id;
     payload.index = index;
@@ -124,7 +151,12 @@ pub extern fn on_store_object_in_array(logger: *mut Logger, thread_id: Long, val
 }
 
 #[no_mangle]
-pub extern fn on_store_primitive_in_array(logger: *mut Logger, thread_id: Long, array_id: Long, index: Int) {
+pub extern "C" fn on_store_primitive_in_array(
+    logger: *mut Logger,
+    thread_id: Long,
+    array_id: Long,
+    index: Int,
+) {
     let mut payload = access::StorePrimitiveInArray::new();
     payload.id = array_id;
     payload.index = index;
@@ -137,7 +169,7 @@ pub extern fn on_store_primitive_in_array(logger: *mut Logger, thread_id: Long, 
 }
 
 #[no_mangle]
-pub extern fn on_load(logger: *mut Logger, thread_id: Long, index: Int) {
+pub extern "C" fn on_load(logger: *mut Logger, thread_id: Long, index: Int) {
     let mut payload = access::Load::new();
     payload.index = index;
 
@@ -149,7 +181,12 @@ pub extern fn on_load(logger: *mut Logger, thread_id: Long, index: Int) {
 }
 
 #[no_mangle]
-pub extern fn on_load_from_array(logger: *mut Logger, thread_id: Long, array_id: Long, index: Int) {
+pub extern "C" fn on_load_from_array(
+    logger: *mut Logger,
+    thread_id: Long,
+    array_id: Long,
+    index: Int,
+) {
     let mut payload = access::LoadFromArray::new();
     payload.id = array_id;
     if index >= 0 {
@@ -164,7 +201,12 @@ pub extern fn on_load_from_array(logger: *mut Logger, thread_id: Long, array_id:
 }
 
 #[no_mangle]
-pub extern fn on_alloc_object(logger: *mut Logger, thread_id: Long, obj_id: Long, class: String) {
+pub extern "C" fn on_alloc_object(
+    logger: *mut Logger,
+    thread_id: Long,
+    obj_id: Long,
+    class: String,
+) {
     let mut payload = allocations::AllocationObject::new();
     payload.id = obj_id;
     payload.field_type = get_string!(class);
@@ -177,7 +219,13 @@ pub extern fn on_alloc_object(logger: *mut Logger, thread_id: Long, obj_id: Long
 }
 
 #[no_mangle]
-pub extern fn on_alloc_array(logger: *mut Logger, thread_id: Long, array_id: Long, class: String, size: i32) {
+pub extern "C" fn on_alloc_array(
+    logger: *mut Logger,
+    thread_id: Long,
+    array_id: Long,
+    class: String,
+    size: i32,
+) {
     let mut payload = allocations::AllocationArray::new();
     payload.id = array_id;
     payload.size = size;
@@ -191,13 +239,15 @@ pub extern fn on_alloc_array(logger: *mut Logger, thread_id: Long, array_id: Lon
 }
 
 #[no_mangle]
-pub extern fn on_alloc_array_in_array(logger: *mut Logger,
-                                      thread_id: Long,
-                                      array_id: Long,
-                                      class: String,
-                                      size: i32,
-                                      src_array_id: Long,
-                                      src_index: Int) {
+pub extern "C" fn on_alloc_array_in_array(
+    logger: *mut Logger,
+    thread_id: Long,
+    array_id: Long,
+    class: String,
+    size: i32,
+    src_array_id: Long,
+    src_index: Int,
+) {
     let mut payload = allocations::AllocationArray::new();
     payload.id = array_id;
     payload.size = size;
@@ -215,9 +265,8 @@ pub extern fn on_alloc_array_in_array(logger: *mut Logger,
     io::log_message(logger, msg);
 }
 
-
 #[no_mangle]
-pub extern fn on_dealloc(logger: *mut Logger, obj_id: Long) {
+pub extern "C" fn on_dealloc(logger: *mut Logger, obj_id: Long) {
     let mut payload = allocations::Deallocation::new();
     payload.id = obj_id;
 
@@ -229,7 +278,12 @@ pub extern fn on_dealloc(logger: *mut Logger, obj_id: Long) {
 }
 
 #[no_mangle]
-pub extern fn on_define_class(logger: *mut Logger, thread_id: Long, buffer: *const u8, len: Int) {
+pub extern "C" fn on_define_class(
+    logger: *mut Logger,
+    thread_id: Long,
+    buffer: *const u8,
+    len: Int,
+) {
     use proto::definitions::*;
 
     null_check!(buffer);
@@ -240,7 +294,7 @@ pub extern fn on_define_class(logger: *mut Logger, thread_id: Long, buffer: *con
             eprintln!("failed to deserialize class definition: {:?}", e);
             return;
         }
-        Ok(def) => def
+        Ok(def) => def,
     };
 
     let mut msg = Variant::new();
