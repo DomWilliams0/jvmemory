@@ -14,24 +14,22 @@ extern fields_map_p fields_init();
 
 extern void fields_free(fields_map_p map);
 
-extern heap_explorer_p heap_explore_init(fields_map_p map,
-                                         const char *cls,
-                                         long tag
-                                        );
+extern heap_explorer_p heap_explore_init(long tag);
 
 extern void heap_explore_finish(heap_explorer_p explorer);
 
 extern jboolean heap_explore_should_explore(heap_explorer_p explorer,
                                             long tag);
 
-extern void heap_explore_add(heap_explorer_p explorer,
-                                 long tag);
+extern void heap_explore_visit_field(heap_explorer_p explorer,
+                                     long referrer,
+                                     long tag,
+                                     int index);
 
-extern void heap_explore_get_field(heap_explorer_p explorer,
-                                   long tag,
-                                   int index,
-                                   char **name,
-                                   char **clazz);
+extern void heap_explore_visit_array_element(heap_explorer_p explorer,
+                                             long referrer,
+                                             long tag,
+                                             int index);
 
 extern fields_discovery_p fields_discovery_init();
 

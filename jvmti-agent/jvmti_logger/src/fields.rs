@@ -1,4 +1,4 @@
-use std::{ptr, mem};
+use std::mem;
 use std::collections::{HashSet, HashMap};
 use libc::*;
 use std::ffi::{CStr, CString};
@@ -18,9 +18,25 @@ pub struct DeclaredField {
     clazz: CString,
 }
 
-pub struct HeapExplorer<'a> {
-    fields: &'a Vec<DeclaredField>,
+enum Access {
+    Field {from: i64, to: i64, index: i32},
+    Array {from: i64, to: i64, index: i32},
+}
+
+#[derive(Default)]
+pub struct HeapExplorer {
     tags: HashSet<i64>,
+    accesses: Vec<Access>,
+}
+
+impl HeapExplorer {
+    fn add_access(&mut self, access: Access) {
+        self.tags.insert(match access {
+            Access::Field{to,.. } => to,
+            Access::Array{to,.. } => to,
+        });
+        self.accesses.push(access);
+    }
 }
 
 #[no_mangle]
@@ -36,29 +52,19 @@ pub extern fn fields_free(ptr: *mut FieldsMap) {
 }
 
 #[no_mangle]
-pub extern fn heap_explore_init<'a>(ptr: *mut FieldsMap, cls: *const c_char, tag: i64) -> *const HeapExplorer<'a> {
-    let f = unsafe { &mut *ptr };
-    let cls_str = unsafe { CStr::from_ptr(cls) };
-    match f.fields.get(cls_str) {
-        None => ptr::null(),
-        Some(v) => Box::into_raw(Box::new(HeapExplorer {
-            fields: v,
-            tags: {
-                let mut tags = HashSet::new();
-                if tag != 0 {
-                    println!("exploriting {}", tag);
-                    tags.insert(tag);
-                }
-                tags
-            },
-        }))
+pub extern fn heap_explore_init(tag: i64) -> *const HeapExplorer {
+    let mut e = Box::new(HeapExplorer::default());
+    if tag != 0 {
+        e.tags.insert(tag);
     }
+
+    Box::into_raw(e)
 }
 
 #[no_mangle]
-pub extern fn heap_explore_should_explore<'a>(explorer: *mut HeapExplorer<'a>, tag: i64) -> i8 {
+pub extern fn heap_explore_should_explore(explorer: *mut HeapExplorer, tag: i64) -> i8 {
     let e = unsafe { &mut *explorer };
-    if (e.tags.contains(&tag)) {
+    if e.tags.contains(&tag) {
         1
     } else {
         0
@@ -66,29 +72,25 @@ pub extern fn heap_explore_should_explore<'a>(explorer: *mut HeapExplorer<'a>, t
 }
 
 #[no_mangle]
-pub extern fn heap_explore_add<'a>(explorer: *mut HeapExplorer<'a>, tag: i64) {
+pub extern fn heap_explore_visit_array_element(explorer: *mut HeapExplorer, referrer: i64, tag: i64, index: i32) {
     let e = unsafe { &mut *explorer };
-    e.tags.insert(tag);
+    e.add_access(Access::Array{from: referrer, to: tag, index});
 }
 
 #[no_mangle]
-pub extern fn heap_explore_get_field<'a>(explorer: *mut HeapExplorer<'a>, tag: i64, index: usize, name: *mut *const c_char, clazz: *mut *const c_char) {
+pub extern fn heap_explore_visit_field(explorer: *mut HeapExplorer, referrer: i64, tag: i64, index: i32) {
     let e = unsafe { &mut *explorer };
-
-    if let Some(field) = e.fields.get(index) {
-        if field.clazz.to_bytes().len() > 1 {
-            e.tags.insert(tag);
-            unsafe {
-                *name = field.name.as_ptr();
-                *clazz = field.clazz.as_ptr();
-            }
-        }
-    }
+    e.add_access(Access::Field{from: referrer, to: tag, index});
 }
 
 #[no_mangle]
-pub extern fn heap_explore_finish<'a>(explorer: *mut HeapExplorer<'a>) {
-    unsafe { Box::from_raw(explorer); }
+pub extern fn heap_explore_finish(explorer: *mut HeapExplorer) {
+    let e = unsafe { &mut *explorer };
+    e.accesses.iter().for_each(|a| match a {
+        &Access::Array{from, to, index} => println!("array {}[{}] = {}", from, index, to),
+        &Access::Field{from, to, index} => println!("field {}.{} = {}", from, index, to),
+    });
+    println!("=====");
 }
 
 #[no_mangle]
