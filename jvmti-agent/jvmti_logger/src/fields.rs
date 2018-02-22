@@ -105,7 +105,7 @@ pub extern "C" fn heap_explore_visit_field(
 
 #[no_mangle]
 pub extern "C" fn heap_explore_finish(explorer: *mut HeapExplorer) {
-    let e = unsafe { &mut *explorer };
+    let e = unsafe { Box::from_raw(explorer) };
     e.accesses.iter().for_each(|a| match a {
         &Access::Array { from, to, index } => println!("array {}[{}] = {}", from, index, to),
         &Access::Field { from, to, index } => println!("field {}.{} = {}", from, index, to),
