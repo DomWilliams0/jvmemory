@@ -6,6 +6,12 @@
 #include "agent.h"
 #include "util.h"
 
+struct fields
+{
+	fields_p fields;
+	jint count;
+};
+
 static jint JNICALL callback_heap_ref(
 		jvmtiHeapReferenceKind reference_kind,
 		const jvmtiHeapReferenceInfo *reference_info,
@@ -20,13 +26,22 @@ static jint JNICALL callback_heap_ref(
 
 	if (reference_kind == JVMTI_HEAP_REFERENCE_FIELD)
 	{
-		printf(
-				"%lu: field %d, tagged from %lu, length %d\n",
-				*tag_ptr,
-				reference_info->field.index,
-				*referrer_tag_ptr,
-				length);
-		return 0;
+		struct fields *fields = (struct fields *) user_data;
+		jint index = reference_info->field.index;
+		if (index < 0 || index >= fields->count)
+			fprintf(stderr, "bad field index %d when there are %d\n", index, fields->count);
+		else
+		{
+			struct field f = fields->fields[index];
+			printf(
+					"%lu.%s (%s) has tag %lu and %d len\n",
+					*referrer_tag_ptr,
+					f.name,
+					f.clazz,
+					*tag_ptr,
+					length);
+		}
+		return JVMTI_VISIT_OBJECTS;
 	}
 
 	return 0;
@@ -94,17 +109,21 @@ void discover_all_fields(JNIEnv *jnienv,
 
 void follow_references(jobject obj,
                        fields_p fields,
-                       int count)
+                       jint count)
 {
 
-	// TODO pass in this array of fields_map as user_data
+	struct fields container = {
+			.fields = fields,
+			.count = count
+	};
+
 	DO_SAFE((*env)->FollowReferences(
 			env,
 			0,
 			NULL,
 			obj,
 			&heap_callbacks,
-			NULL
+			&container
 	), "following refs");
 
 }

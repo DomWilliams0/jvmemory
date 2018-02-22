@@ -2,8 +2,11 @@
 #define JVMTI_AGENT_FIELDS
 
 struct fields_map;
-struct field;
 struct field_discovery;
+struct field {
+    const char *name;
+	const char *clazz;
+};
 
 typedef struct fields_map *fields_map_p;
 typedef struct field_discovery *fields_discovery_p;
@@ -36,6 +39,6 @@ void discover_all_fields(JNIEnv *jnienv,
 
 void follow_references(jobject obj,
                        fields_p fields,
-                       int count);
+                       jint count);
 
 #endif

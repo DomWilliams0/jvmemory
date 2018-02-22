@@ -2,13 +2,12 @@ use std::{ptr, mem};
 use std::collections::{HashSet, HashMap};
 use libc::*;
 use std::ffi::{CStr, CString};
+use std::io::Write;
 
-#[repr(C)]
 pub struct FieldsMap {
     fields: HashMap<CString, Vec<DeclaredField>>,
 }
 
-#[repr(C)]
 pub struct FieldDiscovery {
     discovered: HashSet<CString>,
     fields: Vec<DeclaredField>,
@@ -16,8 +15,8 @@ pub struct FieldDiscovery {
 
 #[repr(C)]
 pub struct DeclaredField {
-    name: CString,
-    clazz: CString,
+    name: *mut c_char,
+    clazz: *mut c_char,
 }
 
 #[no_mangle]
@@ -72,8 +71,8 @@ fn copy_str(ptr: *const c_char) -> CString {
 pub extern fn fields_discovery_register(discover: *mut FieldDiscovery, name: *const c_char, clazz: *const c_char) {
     let d = unsafe { &mut *discover };
     d.fields.push(DeclaredField {
-        name: copy_str(name),
-        clazz: copy_str(clazz),
+        name: copy_str(name).into_raw(),
+        clazz: copy_str(clazz).into_raw(),
     })
 }
 
@@ -82,5 +81,19 @@ pub extern fn fields_discovery_finish(discover: *mut FieldDiscovery, map: *mut F
     let mut d = unsafe { Box::from_raw(discover) };
     let f = unsafe { &mut *map };
     let fields = mem::replace(&mut d.fields, Vec::new());
+    println!("fields for {:?}:", copy_str(clazz));
+    for (i, f) in fields.iter().enumerate() {
+        println!("{}: {:?} {:?}", i, unsafe { CStr::from_ptr(f.clazz) }, unsafe { CStr::from_ptr(f.name) });
+    }
+    ::std::io::stdout().flush().expect("flush");
     f.fields.insert(copy_str(clazz), fields);
+}
+
+impl Drop for DeclaredField {
+    fn drop(&mut self) {
+        unsafe {
+            CString::from_raw(self.name);
+            CString::from_raw(self.clazz);
+        }
+    }
 }
