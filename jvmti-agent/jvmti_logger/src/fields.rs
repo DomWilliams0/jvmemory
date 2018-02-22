@@ -24,7 +24,13 @@ pub struct DeclaredField {
     clazz: CString,
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Copy, Clone)]
+enum Change {
+    Add(Access),
+    Del(Access),
+}
+
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 enum Access {
     Field {
         from: ObjectId,
@@ -115,35 +121,42 @@ pub extern "C" fn heap_explore_visit_field(
     });
 }
 
-fn find_differences(explorer: &HeapExplorer, cache: &ExploreCache) -> bool {
-    let blank = Vec::new();
+fn find_differences(explorer: &HeapExplorer, cache: &mut ExploreCache) -> Vec<Change> {
     let last = cache
         .last_refs
-        .get(&explorer.src_obj)
-        .unwrap_or(&blank);
+        .remove(&explorer.src_obj)
+        .unwrap_or(Vec::new());
 
-    let diffs = diff::slice(last, &explorer.accesses);
-    for diff in &diffs {
-        match diff {
-            &diff::Result::Both(x, _) => println!(" {:?}", x),
-            &diff::Result::Left(x) => println!("-{:?}", x),
-            &diff::Result::Right(x) => println!("+{:?}", x),
+    diff::slice(&last, &explorer.accesses)
+        .into_iter()
+        .filter_map(|d| match d {
+            diff::Result::Left(x) => Some(Change::Del(*x)),
+            diff::Result::Right(x) => Some(Change::Add(*x)),
+            _ => None,
+        })
+        .collect()
+}
+
+fn generate_diff_events(changes: Vec<Change>) {
+    for c in &changes {
+        match c {
+            &Change::Add(x) => println!("+{:?}", x),
+            &Change::Del(x) => println!("-{:?}", x),
         }
     }
-
-    diffs.iter().all(|x| match x {
-        &diff::Result::Both(_, _) => true,
-        _ => false,
-    })
 }
 
 #[no_mangle]
 pub extern "C" fn heap_explore_finish(explorer: *mut HeapExplorer, cache: *mut ExploreCache) {
     let e = unsafe { Box::from_raw(explorer) };
-    let c = unsafe { &mut *cache };
+    let mut c = unsafe { &mut *cache };
 
-    if find_differences(&e, &c) {
+    let diffs = find_differences(&e, &mut c);
+
+    if diffs.is_empty() {
         println!("all the same, no changes!");
+    } else {
+        generate_diff_events(diffs)
     }
 
     c.last_refs.insert(e.src_obj, e.accesses);
