@@ -2,6 +2,8 @@
 #define JVMTI_AGENT_UTIL
 
 // one liners that return jvmtiError only
+#include "agent.h"
+
 #define DO_SAFE_RETURN(code) do {\
     jvmtiError err = code;\
     if (err != JVMTI_ERROR_NONE)\
@@ -47,8 +49,7 @@
     (*jnienv)->ReleaseStringUTFChars(jnienv, str, chars);\
 } while (0)
 
-#define DEALLOCATE(p) (*env)->Deallocate(env, (unsigned char *)(p))
-
+void deallocate(void *p);
 
 long get_thread_id(JNIEnv *jnienv);
 

@@ -172,6 +172,10 @@ static void JNICALL callback_gc_finish(jvmtiEnv *env)
 	DO_SAFE((*env)->RawMonitorExit(env, free_lock), "exiting free monitor");
 }
 
+void deallocate(void *p) {
+	(*env)->Deallocate(env, (unsigned char *)(p));
+}
+
 long get_thread_id(JNIEnv *jnienv)
 {
 	jthread thread;

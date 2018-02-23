@@ -116,7 +116,7 @@ extern "C" {
         clazzes: *mut *mut c_char,
     );
 
-// TODO can all of these be in the same extern block?
+    fn deallocate(p: *const c_void);
 }
 
 #[no_mangle]
@@ -184,10 +184,12 @@ pub extern "C" fn emit_heap_differences(
 
         generate_diff_events(cache, changes, &clazz_map);
 
-        // TODO deallocate clazzes
-
-        // now we can generate events with class names
-        // TODO debug print for now
+        // deallocate clazzes
+        for p in clazzes {
+            unsafe {
+                deallocate(p as *const c_void);
+            }
+        }
     }
 
     cache.last_refs.insert(explorer.src_obj, explorer.accesses);
