@@ -15,7 +15,12 @@ extern void explore_cache_free(explore_cache_p cache);
 
 extern heap_explorer_p heap_explore_init(long tag);
 
-extern void heap_explore_finish(heap_explorer_p explorer, explore_cache_p cache);
+extern void heap_explore_finish(heap_explorer_p explorer,
+                                explore_cache_p cache,
+                                jlong **tags_to_discover,
+                                jint *discover_count);
+
+extern void heap_explore_free_discover_tags(jlong *tags_to_discover);
 
 extern jboolean heap_explore_should_explore(heap_explorer_p explorer,
                                             long tag);

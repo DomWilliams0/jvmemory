@@ -147,7 +147,12 @@ fn generate_diff_events(changes: Vec<Change>) {
 }
 
 #[no_mangle]
-pub extern "C" fn heap_explore_finish(explorer: *mut HeapExplorer, cache: *mut ExploreCache) {
+pub extern "C" fn heap_explore_finish(
+    explorer: *mut HeapExplorer,
+    cache: *mut ExploreCache,
+    tags_to_discover: *mut *const ObjectId,
+    tags_count: *mut i32,
+) {
     let e = unsafe { Box::from_raw(explorer) };
     let mut c = unsafe { &mut *cache };
 
@@ -156,11 +161,41 @@ pub extern "C" fn heap_explore_finish(explorer: *mut HeapExplorer, cache: *mut E
     if diffs.is_empty() {
         println!("all the same, no changes!");
     } else {
+        let mut to_discover = Box::new(Vec::with_capacity(diffs.len() * 2));
+            diffs
+                .iter()
+                .for_each(|d| match d {
+                    &Change::Add(Access::Array { from, to, .. }) |
+                    &Change::Add(Access::Field { from, to, .. }) |
+                    &Change::Del(Access::Array { from, to, .. }) |
+                    &Change::Del(Access::Field { from, to, .. }) => {
+                        to_discover.push(from);
+                        to_discover.push(to);
+                    }
+                });
+        to_discover.sort_unstable();
+        to_discover.dedup();
+
+        unsafe {
+            *tags_count = to_discover.len() as i32;
+            *tags_to_discover = (*Box::into_raw(to_discover)).as_ptr();
+        }
+
+        // debug print for now
         generate_diff_events(diffs)
     }
 
     c.last_refs.insert(e.src_obj, e.accesses);
     println!("=====");
+}
+
+#[no_mangle]
+pub extern "C" fn heap_explore_free_discover_tags(tags: *mut ObjectId) {
+    if !tags.is_null() {
+        unsafe {
+            Box::from_raw(tags);
+        }
+    }
 }
 
 #[no_mangle]
