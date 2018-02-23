@@ -3,6 +3,8 @@ use std::collections::{HashMap, HashSet};
 use libc::*;
 use std::ffi::{CStr, CString};
 use std::io::Write;
+use io::Logger;
+use {on_put_field_object, on_store_object_in_array};
 use diff;
 
 type ObjectId = i64;
@@ -117,6 +119,10 @@ extern "C" {
     );
 
     fn deallocate(p: *const c_void);
+
+    fn get_thread_id(jnienv: *const c_void) -> i64;
+
+    static logger: *mut Logger;
 }
 
 #[no_mangle]
@@ -182,7 +188,7 @@ pub extern "C" fn emit_heap_differences(
             map
         };
 
-        generate_diff_events(cache, changes, &clazz_map);
+        generate_diff_events(cache, jnienv, changes, &clazz_map);
 
         // deallocate clazzes
         for p in clazzes {
@@ -213,9 +219,46 @@ fn find_differences(explorer: &HeapExplorer, cache: &mut ExploreCache) -> Vec<Ch
 
 fn generate_diff_events(
     cache: &ExploreCache,
+    jnienv: *const c_void,
     changes: Vec<Change>,
     clazz_map: &HashMap<ObjectId, &CStr>,
 ) {
+    let get_field_name = |tag, index| -> Result<*const c_char, &'static str> {
+        let cls = clazz_map.get(&tag).ok_or("clazz map is incomplete")?;
+        let fields = cache.fields.get(*cls).ok_or("dicovered field is wrong")?;
+        fields
+            .get(index as usize)
+            .ok_or("bad field")
+            .map(|f: &DeclaredField| f.name.as_c_str().as_ptr())
+    };
+
+    let tid = unsafe { get_thread_id(jnienv) };
+
+    let log_put_field = |access: &AccessData, rm| unsafe {
+        let field = match get_field_name(access.from, access.index) {
+            Err(e) => return println!("failed to get field name: {}", e),
+            Ok(f) => f,
+        };
+        on_put_field_object(
+            logger,
+            tid,
+            access.from,
+            field,
+            if rm { 0 } else { access.to },
+        );
+    };
+
+    let log_store_in_array = |access: &AccessData, rm| unsafe {
+        on_store_object_in_array(
+            logger,
+            tid,
+            if rm { 0 } else { access.to },
+            access.from,
+            access.index,
+        );
+    };
+
+    /*
     fn debug_print_field(
         cache: &ExploreCache,
         clazz_map: &HashMap<ObjectId, &CStr>,
@@ -235,12 +278,20 @@ fn generate_diff_events(
         let val = if del { 0 } else { array.to };
         println!("{}[{}] = {}", array.from, array.index, val);
     }
+    */
+
     for c in changes {
         match c {
+            /*
             Change::Add(Access::Field(data)) => debug_print_field(cache, clazz_map, &data, false),
             Change::Del(Access::Field(data)) => debug_print_field(cache, clazz_map, &data, true),
             Change::Add(Access::Array(data)) => debug_print_array(&data, false),
             Change::Del(Access::Array(data)) => debug_print_array(&data, true),
+            */
+            Change::Add(Access::Field(data)) => log_put_field(&data, false),
+            Change::Del(Access::Field(data)) => log_put_field(&data, true),
+            Change::Add(Access::Array(data)) => log_store_in_array(&data, false),
+            Change::Del(Access::Array(data)) => log_store_in_array(&data, true),
         }
     }
 
