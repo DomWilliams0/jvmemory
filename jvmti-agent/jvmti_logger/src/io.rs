@@ -34,11 +34,7 @@ fn spawn_buffer_thread(
         let pipe = recv;
         let mut file = out_file;
         let mut buffer = Vec::<Variant>::with_capacity(BUFFER_SIZE);
-        loop {
-            let msg = match pipe.recv() {
-                Ok(msg) => msg,
-                Err(_) => break,
-            };
+        while let Ok(msg) = pipe.recv() {
 
             buffer.push(msg);
 
@@ -74,7 +70,7 @@ impl Logger {
 #[no_mangle]
 pub extern "C" fn logger_init(out_file: *const c_char) -> *const Logger {
     let path = get_string_ref!(out_file, ptr::null());
-    match Logger::new(&path) {
+    match Logger::new(path) {
         Err(e) => {
             eprintln!("logger_init failed: {:?}", e);
             ptr::null()
