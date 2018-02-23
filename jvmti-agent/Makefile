@@ -37,5 +37,6 @@ $(TARGET): $(OBJS) $(LOGGER_LIB)
 $(OBJS): %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+.PHONY: $(LOGGER_LIB)
 $(LOGGER_LIB):
 	@(cd $(LOGGER_DIR) && cargo build)
