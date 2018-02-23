@@ -10,7 +10,8 @@ CC = gcc
 TARGET = libagent.so
 
 RUST_COMPILE_DIR = release
-LOGGER_DIR = jvmti_logger/target/$(RUST_COMPILE_DIR)
+LOGGER_BASE_DIR = jvmti_logger
+LOGGER_DIR = $(LOGGER_BASE_DIR)/target/$(RUST_COMPILE_DIR)
 LOGGER_LIB = $(LOGGER_DIR)/libjvmti_logger.a
 
 RELEASE ?= 0
@@ -28,7 +29,7 @@ all: $(TARGET)
 .PHONY: clean
 clean:
 	@rm -rf $(TARGET) $(OBJS)
-	@(cd $(LOGGER_DIR) && cargo clean -p jvmti_logger)
+	@(cd $(LOGGER_BASE_DIR) && cargo clean -p jvmti_logger)
 
 $(TARGET): $(OBJS) $(LOGGER_LIB)
 	$(CC) $(CFLAGS) $^ -shared -o $@
@@ -39,4 +40,4 @@ $(OBJS): %.o : %.c
 
 .PHONY: $(LOGGER_LIB)
 $(LOGGER_LIB):
-	@(cd $(LOGGER_DIR) && cargo build)
+	@(cd $(LOGGER_BASE_DIR) && cargo build)
