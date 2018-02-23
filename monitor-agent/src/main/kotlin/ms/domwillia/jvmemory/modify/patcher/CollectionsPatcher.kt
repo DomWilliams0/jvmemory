@@ -3,6 +3,7 @@ package ms.domwillia.jvmemory.modify.patcher
 import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
 class CollectionsPatcher(
@@ -78,7 +79,7 @@ class CollectionsPatcher(
         // stack: array
     }
 
-    override fun visitTypeInsn(opcode: Int, type: String?) =
+    override fun visitTypeInsn(opcode: Int, type: String) =
             when (opcode) {
                 Opcodes.ANEWARRAY -> {
                     // stack: size
@@ -91,7 +92,7 @@ class CollectionsPatcher(
                     super.dupX1()
 
                     // stack: array size array
-                    super.visitLdcInsn(type)
+                    super.visitLdcInsn(Type.getObjectType(type).className + "[]")
 
                     // stack: array size array type
                     callMonitor(Monitor::allocateTagForArray)
