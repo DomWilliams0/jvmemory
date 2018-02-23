@@ -69,10 +69,10 @@ static void discover_fields(jclass cls,
 		char *sig;
 		DO_SAFE((*env)->GetFieldName(env, cls, fid, &name, &sig, NULL), "get field name");
 		fields_discovery_register(discover, name, sig);
-		DEALLOCATE(name);
-		DEALLOCATE(sig);
+		deallocate(name);
+		deallocate(sig);
 	}
-	DEALLOCATE(fields);
+	deallocate(fields);
 }
 
 // if cls_name_already is null, it will be fetched
@@ -94,7 +94,7 @@ static void discover_all_fields(JNIEnv *jnienv,
 		int check = fields_discovery_check(discover, cls_name);
 
 		if (cls_name_already == NULL)
-			DEALLOCATE(cls_name);
+			deallocate(cls_name);
 
 		if (check)
 			return;
@@ -110,7 +110,7 @@ static void discover_all_fields(JNIEnv *jnienv,
 		discover_all_fields(jnienv, iface, NULL, discover);
 		(*jnienv)->DeleteLocalRef(jnienv, iface);
 	}
-	DEALLOCATE(interfaces);
+	deallocate(interfaces);
 
 	jclass super = cls;
 	while ((super = (*jnienv)->GetSuperclass(jnienv, super)) != NULL)
@@ -129,7 +129,7 @@ jobject get_single_object(jlong tag)
 	DO_SAFE((*env)->GetObjectsWithTags(env, 1, &tag, &count, &objs, NULL), "get obj with tag");
 
 	jobject obj = count == 1 ? objs[0] : NULL;
-	DEALLOCATE(objs);
+	deallocate(objs);
 
 	return obj;
 }

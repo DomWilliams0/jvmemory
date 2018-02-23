@@ -54,7 +54,7 @@ JNIEXPORT jobject JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_newArrayWra
 	};
 	allocate_array_tag(jnienv, array, len, &any);
 
-	DEALLOCATE(type_name);
+	deallocate(type_name);
 	return array;
 }
 
@@ -84,7 +84,7 @@ JNIEXPORT jobject JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_multiNewArr
 
 	allocate_tags_for_multidim_array(jnienv, array, dim_len, &any);
 
-	DEALLOCATE(type_name);
+	deallocate(type_name);
 	return array;
 }
 
@@ -131,8 +131,8 @@ void JNICALL callback_native_bind(
 		}
 
 		(*jnienv)->DeleteLocalRef(jnienv, cls);
-		DEALLOCATE(class_name);
+		deallocate(class_name);
 	}
-	DEALLOCATE(method_name);
+	deallocate(method_name);
 }
 
