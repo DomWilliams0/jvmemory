@@ -11,9 +11,10 @@ type Index = i32;
 #[derive(Default)]
 pub struct ExploreCache {
     last_refs: HashMap<ObjectId, Vec<Access>>,
-    // fields: HashMap<CString, Vec<DeclaredField>>,
+    fields: HashMap<CString, Vec<DeclaredField>>,
 }
 
+#[derive(Default)]
 pub struct FieldDiscovery {
     discovered: HashSet<CString>,
     fields: Vec<DeclaredField>,
@@ -29,19 +30,17 @@ enum Change {
     Add(Access),
     Del(Access),
 }
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
+struct AccessData {
+    from: ObjectId,
+    to: ObjectId,
+    index: Index,
+}
 
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 enum Access {
-    Field {
-        from: ObjectId,
-        to: ObjectId,
-        index: Index,
-    },
-    Array {
-        from: ObjectId,
-        to: ObjectId,
-        index: Index,
-    },
+    Field(AccessData),
+    Array(AccessData),
 }
 
 #[derive(Default)]
@@ -54,8 +53,7 @@ pub struct HeapExplorer {
 impl HeapExplorer {
     fn add_access(&mut self, access: Access) {
         self.tags.insert(match access {
-            Access::Field { to, .. } => to,
-            Access::Array { to, .. } => to,
+            Access::Field(data) | Access::Array(data) => data.to,
         });
         self.accesses.push(access);
     }
@@ -74,18 +72,6 @@ pub extern "C" fn explore_cache_free(cache: *mut ExploreCache) {
 }
 
 #[no_mangle]
-pub extern "C" fn heap_explore_init(tag: ObjectId) -> *const HeapExplorer {
-    let mut e = Box::new(HeapExplorer::default());
-    if tag != 0 {
-        e.tags.insert(tag);
-        e.src_obj = tag;
-    }
-
-    println!("exploring {}", tag);
-    Box::into_raw(e)
-}
-
-#[no_mangle]
 pub extern "C" fn heap_explore_should_explore(explorer: *mut HeapExplorer, tag: ObjectId) -> bool {
     let e = unsafe { &mut *explorer };
     e.tags.contains(&tag)
@@ -99,11 +85,11 @@ pub extern "C" fn heap_explore_visit_array_element(
     index: Index,
 ) {
     let e = unsafe { &mut *explorer };
-    e.add_access(Access::Array {
+    e.add_access(Access::Array(AccessData {
         from: referrer,
         to: tag,
         index,
-    });
+    }));
 }
 
 #[no_mangle]
@@ -114,18 +100,104 @@ pub extern "C" fn heap_explore_visit_field(
     index: Index,
 ) {
     let e = unsafe { &mut *explorer };
-    e.add_access(Access::Field {
+    e.add_access(Access::Field(AccessData {
         from: referrer,
         to: tag,
         index,
-    });
+    }));
+}
+
+extern "C" {
+    fn follow_references(explorer: *mut HeapExplorer, tag: ObjectId);
+    fn discover_fields_if_necessary(
+        jnienv: *const c_void,
+        len: i32,
+        tags: *const ObjectId,
+        clazzes: *mut *mut c_char,
+    );
+
+// TODO can all of these be in the same extern block?
+}
+
+#[no_mangle]
+pub extern "C" fn emit_heap_differences(
+    cache: *mut ExploreCache,
+    jnienv: *const c_void,
+    tag: ObjectId,
+) {
+    let mut explorer = {
+        let mut h = HeapExplorer::default();
+        h.src_obj = tag;
+        h.tags.insert(tag);
+        h
+    };
+    let explorer_p = &mut explorer as *mut HeapExplorer;
+    let mut cache = unsafe { &mut *cache };
+
+    unsafe {
+        follow_references(explorer_p, tag);
+    }
+
+    let changes = find_differences(&explorer, &mut cache);
+
+    if changes.is_empty() {
+        println!("all the same, no changes!");
+    } else {
+        // collect all tag ids
+        let to_discover = {
+            let mut tags = Vec::with_capacity(changes.len() * 2);
+            changes.iter().for_each(|d| match *d {
+                Change::Add(Access::Array(data))
+                | Change::Add(Access::Field(data))
+                | Change::Del(Access::Array(data))
+                | Change::Del(Access::Field(data)) => {
+                    let AccessData { from, to, .. } = data;
+                    tags.push(from);
+                    tags.push(to);
+                }
+            });
+            tags.sort_unstable();
+            tags.dedup();
+            tags
+        };
+
+        // collect class names
+        let mut clazzes = Vec::<*mut c_char>::with_capacity(to_discover.len());
+        unsafe {
+            discover_fields_if_necessary(
+                jnienv,
+                to_discover.len() as i32,
+                to_discover.as_ptr(),
+                clazzes.as_mut_ptr(),
+            );
+            clazzes.set_len(to_discover.len());
+        }
+
+        // generate map of tag->clazz for easy access
+        let clazz_map = {
+            let mut map = HashMap::with_capacity(clazzes.len());
+            for (tag, clazz) in to_discover.iter().zip(clazzes.iter()) {
+                map.insert(*tag, unsafe { CStr::from_ptr(*clazz) }); // TODO ok?
+            }
+            map
+        };
+
+        generate_diff_events(cache, changes, &clazz_map);
+
+        // TODO deallocate clazzes
+
+        // now we can generate events with class names
+        // TODO debug print for now
+    }
+
+    cache.last_refs.insert(explorer.src_obj, explorer.accesses);
 }
 
 fn find_differences(explorer: &HeapExplorer, cache: &mut ExploreCache) -> Vec<Change> {
     let last = cache
         .last_refs
         .remove(&explorer.src_obj)
-        .unwrap_or(Vec::new());
+        .unwrap_or_default();
 
     diff::slice(&last, &explorer.accesses)
         .into_iter()
@@ -137,73 +209,45 @@ fn find_differences(explorer: &HeapExplorer, cache: &mut ExploreCache) -> Vec<Ch
         .collect()
 }
 
-fn generate_diff_events(changes: Vec<Change>) {
-    for c in &changes {
-        match c {
-            &Change::Add(x) => println!("+{:?}", x),
-            &Change::Del(x) => println!("-{:?}", x),
-        }
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn heap_explore_finish(
-    explorer: *mut HeapExplorer,
-    cache: *mut ExploreCache,
-    tags_to_discover: *mut *const ObjectId,
-    tags_count: *mut i32,
+fn generate_diff_events(
+    cache: &ExploreCache,
+    changes: Vec<Change>,
+    clazz_map: &HashMap<ObjectId, &CStr>,
 ) {
-    let e = unsafe { Box::from_raw(explorer) };
-    let mut c = unsafe { &mut *cache };
-
-    let diffs = find_differences(&e, &mut c);
-
-    if diffs.is_empty() {
-        println!("all the same, no changes!");
-    } else {
-        let mut to_discover = Box::new(Vec::with_capacity(diffs.len() * 2));
-            diffs
-                .iter()
-                .for_each(|d| match d {
-                    &Change::Add(Access::Array { from, to, .. }) |
-                    &Change::Add(Access::Field { from, to, .. }) |
-                    &Change::Del(Access::Array { from, to, .. }) |
-                    &Change::Del(Access::Field { from, to, .. }) => {
-                        to_discover.push(from);
-                        to_discover.push(to);
-                    }
-                });
-        to_discover.sort_unstable();
-        to_discover.dedup();
-
-        unsafe {
-            *tags_count = to_discover.len() as i32;
-            *tags_to_discover = (*Box::into_raw(to_discover)).as_ptr();
-        }
-
-        // debug print for now
-        generate_diff_events(diffs)
+    fn debug_print_field(
+        cache: &ExploreCache,
+        clazz_map: &HashMap<ObjectId, &CStr>,
+        field: &AccessData,
+        del: bool,
+    ) {
+        let f = {
+            let cls = clazz_map.get(&field.from).expect("clazz map is incomplete");
+            let fields = cache.fields.get(*cls).expect("dicovered field is wrong");
+            fields.get(field.index as usize).expect("bad field")
+        };
+        let val = if del { 0 } else { field.to };
+        println!("{}.{:?} ({:?}) = {}", field.from, f.name, f.clazz, val);
     }
 
-    c.last_refs.insert(e.src_obj, e.accesses);
-    println!("=====");
-}
-
-#[no_mangle]
-pub extern "C" fn heap_explore_free_discover_tags(tags: *mut ObjectId) {
-    if !tags.is_null() {
-        unsafe {
-            Box::from_raw(tags);
+    fn debug_print_array(array: &AccessData, del: bool) {
+        let val = if del { 0 } else { array.to };
+        println!("{}[{}] = {}", array.from, array.index, val);
+    }
+    for c in changes {
+        match c {
+            Change::Add(Access::Field(data)) => debug_print_field(cache, clazz_map, &data, false),
+            Change::Del(Access::Field(data)) => debug_print_field(cache, clazz_map, &data, true),
+            Change::Add(Access::Array(data)) => debug_print_array(&data, false),
+            Change::Del(Access::Array(data)) => debug_print_array(&data, true),
         }
     }
+
+    println!("====");
 }
 
 #[no_mangle]
 pub extern "C" fn fields_discovery_init() -> *const FieldDiscovery {
-    Box::into_raw(Box::new(FieldDiscovery {
-        discovered: HashSet::new(),
-        fields: Vec::new(),
-    }))
+    Box::into_raw(Box::new(FieldDiscovery::default()))
 }
 
 #[no_mangle]
@@ -215,7 +259,7 @@ pub extern "C" fn fields_discovery_check(
     let s = unsafe { CStr::from_ptr(cls) };
     let contains = d.discovered.contains(s);
     if !contains {
-        d.discovered.insert(copy_str(cls));
+        d.discovered.insert(copy_str(cls)); // only calls copy_str if necessary
     }
     contains
 }
@@ -240,18 +284,27 @@ pub extern "C" fn fields_discovery_register(
 #[no_mangle]
 pub extern "C" fn fields_discovery_finish(
     discover: *mut FieldDiscovery,
-    map: *mut ExploreCache,
+    cache: *mut ExploreCache,
     clazz: *const c_char,
 ) {
     let mut d = unsafe { Box::from_raw(discover) };
-    // let f = unsafe { &mut *map };
+    let c = unsafe { &mut *cache };
     let fields = mem::replace(&mut d.fields, Vec::new());
     println!("fields for {:?}:", copy_str(clazz));
     for (i, f) in fields.iter().enumerate() {
         println!("{}: {:?} {:?}", i, f.clazz, f.name);
     }
     ::std::io::stdout().flush().expect("flush");
-    // TODO f.fields.insert(copy_str(clazz), fields);
+    c.fields.insert(copy_str(clazz), fields);
+}
+
+#[no_mangle]
+pub extern "C" fn fields_discovery_has_discovered(
+    cache: *const ExploreCache,
+    clazz: *const c_char,
+) -> bool {
+    let c = unsafe { &*cache };
+    c.fields.contains_key(unsafe { CStr::from_ptr(clazz) })
 }
 
 /*

@@ -39,7 +39,23 @@ static const jvmtiHeapCallbacks heap_callbacks = {
 		.heap_reference_callback = callback_heap_ref
 };
 
-/*
+
+extern fields_discovery_p fields_discovery_init();
+
+extern int fields_discovery_check(fields_discovery_p discover,
+                                  const char *cls);
+
+extern void fields_discovery_register(fields_discovery_p discover,
+                                      const char *name,
+                                      const char *cls);
+
+extern void fields_discovery_finish(fields_discovery_p discover,
+                                    explore_cache_p cache,
+                                    const char *cls);
+
+extern jboolean fields_discovery_has_discovered(explore_cache_p explore_cache,
+                                                const char *cls);
+
 static void discover_fields(jclass cls,
                             fields_discovery_p discover)
 {
@@ -59,15 +75,26 @@ static void discover_fields(jclass cls,
 	DEALLOCATE(fields);
 }
 
-void discover_all_fields(JNIEnv *jnienv,
-                         jclass cls,
-                         fields_discovery_p discover)
+// if cls_name_already is null, it will be fetched
+static void discover_all_fields(JNIEnv *jnienv,
+                                jclass cls,
+                                char *cls_name_already,
+                                fields_discovery_p discover)
 {
 	{
 		char *cls_name;
-		DO_SAFE((*env)->GetClassSignature(env, cls, &cls_name, NULL), "get class sig");
+		if (cls_name_already != NULL)
+		{
+			cls_name = cls_name_already;
+		} else
+		{
+			DO_SAFE((*env)->GetClassSignature(env, cls, &cls_name, NULL), "get class sig");
+		}
+
 		int check = fields_discovery_check(discover, cls_name);
-		DEALLOCATE(cls_name);
+
+		if (cls_name_already == NULL)
+			DEALLOCATE(cls_name);
 
 		if (check)
 			return;
@@ -80,7 +107,7 @@ void discover_all_fields(JNIEnv *jnienv,
 	for (int i = 0; i < count; ++i)
 	{
 		jclass iface = interfaces[i];
-		discover_all_fields(jnienv, iface, discover);
+		discover_all_fields(jnienv, iface, NULL, discover);
 		(*jnienv)->DeleteLocalRef(jnienv, iface);
 	}
 	DEALLOCATE(interfaces);
@@ -88,23 +115,75 @@ void discover_all_fields(JNIEnv *jnienv,
 	jclass super = cls;
 	while ((super = (*jnienv)->GetSuperclass(jnienv, super)) != NULL)
 	{
-		discover_all_fields(jnienv, super, discover);
+		discover_all_fields(jnienv, super, NULL, discover);
 	}
 
 	discover_fields(cls, discover);
 
 }
- */
+
+jobject get_single_object(jlong tag)
+{
+	jobject *objs = NULL;
+	jint count = 0;
+	DO_SAFE((*env)->GetObjectsWithTags(env, 1, &tag, &count, &objs, NULL), "get obj with tag");
+
+	jobject obj = count == 1 ? objs[0] : NULL;
+	DEALLOCATE(objs);
+
+	return obj;
+}
+
+void discover_fields_if_necessary(JNIEnv *jnienv,
+                                  jint count,
+                                  jlong *tags,
+                                  char **clazzes_out)
+{
+	// get classes and names
+	jint found_count = 0;
+	jobject *objs = NULL;
+	jlong *found_tags = NULL;
+	DO_SAFE((*env)->GetObjectsWithTags(env, count, tags, &found_count, &objs, &found_tags), "get objects with tags");
+
+	// this assertion should never break!
+	DO_SAFE_COND(found_count == count, "tags are not unique! oh dear!");
+	for (int i = 0; i < count; ++i)
+		DO_SAFE_COND(found_tags[i] == tags[i], "tags returned in wrong order! oh dear!");
+
+	for (int i = 0; i < count; ++i)
+	{
+		jobject obj = objs[i];
+		jclass cls = (*jnienv)->GetObjectClass(jnienv, obj);
+		EXCEPTION_CHECK(jnienv);
+
+		char *class_name = NULL;
+		DO_SAFE((*env)->GetClassSignature(env, cls, &class_name, NULL), "get class sig");
+
+		if (!fields_discovery_has_discovered(explore_cache, class_name))
+		{
+			fields_discovery_p discover = fields_discovery_init();
+			discover_all_fields(jnienv, cls, class_name, discover);
+			fields_discovery_finish(discover, explore_cache, class_name);
+		}
+
+		// make sure to deallocate class name later
+		clazzes_out[i] = class_name;
+
+		(*jnienv)->DeleteLocalRef(jnienv, obj);
+		(*jnienv)->DeleteLocalRef(jnienv, cls);
+	}
+
+}
 
 void follow_references(heap_explorer_p explorer,
-                       jobject obj)
+                       jlong obj)
 {
 
 	DO_SAFE((*env)->FollowReferences(
 			env,
 			JVMTI_HEAP_FILTER_UNTAGGED,
 			NULL,
-			obj,
+			get_single_object(obj),
 			&heap_callbacks,
 			explorer
 	), "following refs");
