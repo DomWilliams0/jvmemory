@@ -155,18 +155,6 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitSystemMeth
 	system_object = get_tag(obj);
 }
 
-static jobject get_object(long tag)
-{
-	jobject *objs = NULL;
-	jint count = 0;
-	DO_SAFE((*env)->GetObjectsWithTags(env, 1, &tag, &count, &objs, NULL), "get obj with tag");
-
-	jobject obj = count == 1 ? objs[0] : NULL;
-	DEALLOCATE(objs);
-
-	return obj;
-}
-
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    processSystemMethodChanges
@@ -179,39 +167,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_processSystemM
 	if (system_object != 0L)
 	{
 		jlong tag = system_object;
-		jobject obj = get_object(tag);
 		system_object = 0L;
 
-		if (obj == NULL)
-		{
-			fprintf(stderr, "bad tag %lu\n", tag);
-			return;
-		}
-
-		heap_explorer_p explorer = heap_explore_init(tag);
-		follow_references(explorer, obj);
-
-		jlong *tags_to_discover = NULL;
-		jint tags_count = 0;
-		heap_explore_finish(explorer, explore_cache, &tags_to_discover, &tags_count);
-
-		if (tags_count > 0)
-		{
-			printf("discovering %d tags\n", tags_count);
-			for (int i = 0; i < tags_count; ++i)
-			{
-				printf("tag %d: %lu\n", i, tags_to_discover[i]);
-			}
-
-			heap_explore_free_discover_tags(tags_to_discover);
-/*			jobject *objs = NULL;
-			jlong *tags = NULL;
-			jint count = 0;
-			DO_SAFE((*env)->GetObjectsWithTags(env, tags_count, tags_to_discover, &count, &objs, &tags),
-			        "get objects with tags");*/
-		}
-
-		(*jnienv)->DeleteLocalRef(jnienv, obj);
+		emit_heap_differences(explore_cache, jnienv, tag);
 	}
 }
 
