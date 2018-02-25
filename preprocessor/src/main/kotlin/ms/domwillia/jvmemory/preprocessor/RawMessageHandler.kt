@@ -4,40 +4,46 @@ import ms.domwillia.jvmemory.preprocessor.protobuf.Event.*
 import ms.domwillia.jvmemory.protobuf.*
 import java.util.*
 
-typealias EmittedEvent = Pair<ThreadID, EventVariant.Builder>
+typealias EmittedEvent = EventVariant.Builder
 typealias EmittedEvents = MutableList<EmittedEvent>
 val emptyEmittedEvents = mutableListOf<EmittedEvent>()
 
 class RawMessageHandler {
-    private var classDefinitions = mutableMapOf<String, Definitions.ClassDefinition>()
-    private var allocationThread = mutableMapOf<ObjectID, ThreadID>()
-    private var callstacks = mutableMapOf<ThreadID, Stack<PushMethodFrame>>()
+    companion object {
+        private val classDefinitions = mutableMapOf<String, Definitions.ClassDefinition>()
+
+        val loadedClassDefinitions: Collection<Definitions.ClassDefinition>
+            get() = this.classDefinitions.values
+    }
+
+    private var allocations = mutableSetOf<ObjectID>()
+    private var callstack = Stack<PushMethodFrame>()
 
     fun handle(msg: Message.Variant): EmittedEvents = when (msg.type) {
-        Message.MessageType.ALLOC_OBJECT -> allocateObject(msg.allocObject, msg.threadId)
-        Message.MessageType.ALLOC_ARRAY -> allocateArray(msg.allocArray, msg.threadId)
+        Message.MessageType.ALLOC_OBJECT -> allocateObject(msg.allocObject)
+        Message.MessageType.ALLOC_ARRAY -> allocateArray(msg.allocArray)
         Message.MessageType.DEALLOC -> deallocate(msg.dealloc)
 
-        Message.MessageType.GETFIELD -> getField(msg.getField, msg.threadId)
-        Message.MessageType.PUTFIELD_OBJECT -> putFieldObject(msg.putFieldObject, msg.threadId)
-        Message.MessageType.PUTFIELD_PRIMITIVE -> putFieldPrimitive(msg.putFieldPrimitive, msg.threadId)
+        Message.MessageType.GETFIELD -> getField(msg.getField)
+        Message.MessageType.PUTFIELD_OBJECT -> putFieldObject(msg.putFieldObject)
+        Message.MessageType.PUTFIELD_PRIMITIVE -> putFieldPrimitive(msg.putFieldPrimitive)
 
-        Message.MessageType.LOAD -> load(msg.load, msg.threadId)
-        Message.MessageType.LOAD_ARRAY -> loadFromArray(msg.loadFromArray, msg.threadId)
+        Message.MessageType.LOAD -> load(msg.load)
+        Message.MessageType.LOAD_ARRAY -> loadFromArray(msg.loadFromArray)
 
-        Message.MessageType.STORE_OBJECT -> storeObject(msg.storeObject, msg.threadId)
-        Message.MessageType.STORE_PRIMITIVE -> storePrimitive(msg.storePrimitive, msg.threadId)
+        Message.MessageType.STORE_OBJECT -> storeObject(msg.storeObject)
+        Message.MessageType.STORE_PRIMITIVE -> storePrimitive(msg.storePrimitive)
 
-        Message.MessageType.STORE_OBJECT_IN_ARRAY -> storeObjectInArray(msg.storeObjectInArray, msg.threadId)
-        Message.MessageType.STORE_PRIMITIVE_IN_ARRAY -> storePrimitiveInArray(msg.storePrimitiveInArray, msg.threadId)
+        Message.MessageType.STORE_OBJECT_IN_ARRAY -> storeObjectInArray(msg.storeObjectInArray)
+        Message.MessageType.STORE_PRIMITIVE_IN_ARRAY -> storePrimitiveInArray(msg.storePrimitiveInArray)
 
         Message.MessageType.CLASS_DEF -> {
             defineClass(msg.classDef)
             emptyEmittedEvents
         }
 
-        Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter, msg.threadId)
-        Message.MessageType.METHOD_EXIT -> exitMethod(msg.threadId)
+        Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter)
+        Message.MessageType.METHOD_EXIT -> exitMethod()
 
         else -> throw IllegalArgumentException("bad message type: $msg")
     }
@@ -46,24 +52,18 @@ class RawMessageHandler {
      * Helpers
      */
     private fun createEvents(
-            threadId: ThreadID,
             messageType: EventType,
             initialiser: (EventVariant.Builder) -> Unit,
             continuous: Boolean = false): EmittedEvents =
-            mutableListOf(createEvent(threadId, messageType, initialiser, continuous))
+            mutableListOf(createEvent(messageType, initialiser, continuous))
 
     private fun createEvent(
-            threadId: ThreadID,
             messageType: EventType,
             initialiser: (EventVariant.Builder) -> Unit,
-            continuous: Boolean = false): EmittedEvent {
-
-        val event = EventVariant.newBuilder().apply {
-            type = messageType
-            this.continuous = continuous
-            initialiser(this)
-        }
-        return Pair(threadId, event)
+            continuous: Boolean = false): EmittedEvent = EventVariant.newBuilder().apply {
+        type = messageType
+        this.continuous = continuous
+        initialiser(this)
     }
 
     private fun defineClass(classDef: Definitions.ClassDefinition) {
@@ -72,7 +72,7 @@ class RawMessageHandler {
 
     private fun arrayIndexField(index: Int) = "[$index]"
 
-    private fun enterMethod(msg: Flow.MethodEnter, threadId: ThreadID): EmittedEvents {
+    private fun enterMethod(msg: Flow.MethodEnter): EmittedEvents {
         val type = msg.class_
         val methodName = msg.method
 
@@ -87,25 +87,24 @@ class RawMessageHandler {
             signature = methodDef.signature
         }.build()
 
-        callstacks.computeIfAbsent(threadId, { Stack() }).push(frame)
-
-        return createEvents(threadId, EventType.PUSH_METHOD_FRAME, {
+        callstack.push(frame)
+        return createEvents(EventType.PUSH_METHOD_FRAME, {
             it.pushMethodFrame = frame
         })
     }
 
-    private fun exitMethod(threadId: ThreadID): EmittedEvents {
-        callstacks[threadId]!!.pop()
+    private fun exitMethod(): EmittedEvents {
+        callstack.pop()
 
-        return createEvents(threadId, EventType.POP_METHOD_FRAME, {
+        return createEvents(EventType.POP_METHOD_FRAME, {
             it.popMethodFrame = PopMethodFrame.getDefaultInstance()
         })
     }
 
-    private fun allocateObject(alloc: Allocations.AllocationObject, threadId: ThreadID): EmittedEvents {
-        allocationThread[alloc.id] = threadId
+    private fun allocateObject(alloc: Allocations.AllocationObject): EmittedEvents {
+        allocations.add(alloc.id)
 
-        return createEvents(threadId, EventType.ADD_HEAP_OBJECT, {
+        return createEvents(EventType.ADD_HEAP_OBJECT, {
             it.addHeapObject = AddHeapObject.newBuilder().apply {
                 id = alloc.id
                 class_ = alloc.type
@@ -113,10 +112,10 @@ class RawMessageHandler {
         })
     }
 
-    private fun allocateArray(alloc: Allocations.AllocationArray, threadId: ThreadID): EmittedEvents {
-        allocationThread[alloc.id] = threadId
+    private fun allocateArray(alloc: Allocations.AllocationArray): EmittedEvents {
+        allocations.add(alloc.id)
 
-        val events = createEvents(threadId, EventType.ADD_HEAP_OBJECT, {
+        val events = createEvents(EventType.ADD_HEAP_OBJECT, {
             it.addHeapObject = AddHeapObject.newBuilder().apply {
                 id = alloc.id
                 class_ = alloc.type
@@ -126,7 +125,7 @@ class RawMessageHandler {
 
         if (alloc.hasField(Allocations.AllocationArray.getDescriptor().findFieldByNumber(Allocations.AllocationArray.SRC_ARRAY_ID_FIELD_NUMBER))) {
             events.add(
-                    createEvent(threadId, EventType.SET_INTRA_HEAP_LINK, {
+                    createEvent(EventType.SET_INTRA_HEAP_LINK, {
                         it.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
                             srcId = alloc.srcArrayId
                             dstId = alloc.id
@@ -139,19 +138,18 @@ class RawMessageHandler {
         return events
     }
 
-    private fun deallocate(dealloc: Allocations.Deallocation): EmittedEvents {
-        val threadId = allocationThread[dealloc.id] ?:
-                throw IllegalArgumentException("found deallocation of unknown object ${dealloc.id}")
+    private fun deallocate(dealloc: Allocations.Deallocation): EmittedEvents =
+            if (!allocations.remove(dealloc.id)) {
+                emptyEmittedEvents
+            } else
+                createEvents(EventType.DEL_HEAP_OBJECT, {
+                    it.delHeapObject = DelHeapObject.newBuilder().apply {
+                        id = dealloc.id
+                    }.build()
+                })
 
-        return createEvents(threadId, EventType.DEL_HEAP_OBJECT, {
-            it.delHeapObject = DelHeapObject.newBuilder().apply {
-                id = dealloc.id
-            }.build()
-        })
-    }
-
-    private fun getField(getField: Access.GetField, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
+    private fun getField(getField: Access.GetField): EmittedEvents {
+        return createEvents(EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = getField.id
                 fieldName = getField.field
@@ -164,13 +162,13 @@ class RawMessageHandler {
     // these will typically be boxed types (Long, Integer, Byte etc.) for which a range of low
     // values have been preallocated and cached
     private fun checkObjectIsNotImplicit(objectID: ObjectID): ObjectID =
-            if (objectID != 0L && !allocationThread.containsKey(objectID))
+            if (objectID != 0L && !allocations.contains(objectID))
                 0L
             else
                 objectID
 
-    private fun putFieldObject(putFieldObject: Access.PutFieldObject, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SET_INTRA_HEAP_LINK, {
+    private fun putFieldObject(putFieldObject: Access.PutFieldObject): EmittedEvents {
+        return createEvents(EventType.SET_INTRA_HEAP_LINK, {
             it.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
                 srcId = putFieldObject.id
                 dstId = checkObjectIsNotImplicit(putFieldObject.valueId) // may be 0/null
@@ -179,8 +177,8 @@ class RawMessageHandler {
         })
     }
 
-    private fun putFieldPrimitive(putFieldPrimitive: Access.PutFieldPrimitive, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
+    private fun putFieldPrimitive(putFieldPrimitive: Access.PutFieldPrimitive): EmittedEvents {
+        return createEvents(EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = putFieldPrimitive.id
                 read = false
@@ -188,8 +186,8 @@ class RawMessageHandler {
         })
     }
 
-    private fun storeObject(storeObject: Access.StoreObject, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SET_LOCAL_VAR_LINK, {
+    private fun storeObject(storeObject: Access.StoreObject): EmittedEvents {
+        return createEvents(EventType.SET_LOCAL_VAR_LINK, {
             it.setLocalVarLink = SetLocalVarLink.newBuilder().apply {
                 varIndex = storeObject.index
                 dstId = checkObjectIsNotImplicit(storeObject.valueId)
@@ -197,8 +195,8 @@ class RawMessageHandler {
         })
     }
 
-    private fun storePrimitive(storePrimitive: Access.StorePrimitive, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SHOW_LOCAL_VAR_ACCESS, {
+    private fun storePrimitive(storePrimitive: Access.StorePrimitive): EmittedEvents {
+        return createEvents(EventType.SHOW_LOCAL_VAR_ACCESS, {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = storePrimitive.index
                 read = false
@@ -206,8 +204,8 @@ class RawMessageHandler {
         })
     }
 
-    private fun storeObjectInArray(store: Access.StoreObjectInArray, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SET_INTRA_HEAP_LINK, {
+    private fun storeObjectInArray(store: Access.StoreObjectInArray): EmittedEvents {
+        return createEvents(EventType.SET_INTRA_HEAP_LINK, {
             it.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
                 srcId = store.id
                 dstId = checkObjectIsNotImplicit(store.valueId)
@@ -216,8 +214,8 @@ class RawMessageHandler {
         })
     }
 
-    private fun storePrimitiveInArray(store: Access.StorePrimitiveInArray, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
+    private fun storePrimitiveInArray(store: Access.StorePrimitiveInArray): EmittedEvents {
+        return createEvents(EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = store.id
                 read = false
@@ -225,8 +223,8 @@ class RawMessageHandler {
         })
     }
 
-    private fun load(load: Access.Load, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SHOW_LOCAL_VAR_ACCESS, {
+    private fun load(load: Access.Load): EmittedEvents {
+        return createEvents(EventType.SHOW_LOCAL_VAR_ACCESS, {
             it.showLocalVarAccess = ShowLocalVarAccess.newBuilder().apply {
                 varIndex = load.index
                 read = true
@@ -234,8 +232,8 @@ class RawMessageHandler {
         }, continuous = true)
     }
 
-    private fun loadFromArray(load: Access.LoadFromArray, threadId: ThreadID): EmittedEvents {
-        return createEvents(threadId, EventType.SHOW_HEAP_OBJECT_ACCESS, {
+    private fun loadFromArray(load: Access.LoadFromArray): EmittedEvents {
+        return createEvents(EventType.SHOW_HEAP_OBJECT_ACCESS, {
             it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
                 objId = load.id
                 read = true
@@ -244,7 +242,4 @@ class RawMessageHandler {
             }.build()
         }, continuous = true)
     }
-
-    internal val loadedClassDefinitions: Collection<Definitions.ClassDefinition>
-        get() = this.classDefinitions.values
 }

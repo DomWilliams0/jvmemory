@@ -12,12 +12,10 @@ enum class EventFlag {
     CONTINUOUS, REMOVED
 }
 
-class Preprocessor(outputDirPath: File) {
+class Preprocessor(private val loader: EventsLoader, private val threadId: ThreadID) {
 
     private val handler = RawMessageHandler()
-    private val eventsLoader = EventsLoader(outputDirPath)
-    private val emittedEvents = mutableMapOf<ThreadID, MutableList<Event.EventVariant.Builder>>()
-
+    private val emittedEvents = mutableListOf<Event.EventVariant.Builder>()
     private val flags = hashMapOf<Int, EventFlag>()
 
     private fun preprocess(messages: List<Message.Variant>) {
@@ -59,9 +57,9 @@ class Preprocessor(outputDirPath: File) {
                 return emptyEmittedEvents
 
             val emitted = handler.handle(msg)
-            emitted.forEach { (_, eventBuilder) ->
+            emitted.forEach { it ->
                 if (flag == EventFlag.CONTINUOUS)
-                    eventBuilder.continuous = true
+                    it.continuous = true
             }
 
             return emitted
@@ -72,9 +70,7 @@ class Preprocessor(outputDirPath: File) {
         while (it.hasNext()) {
             val msg = it.next()
             it.remove()
-            handle(index++, msg).forEach { (tid, event) ->
-                emittedEvents.computeIfAbsent(tid, { mutableListOf() }).add(event)
-            }
+            handle(index++, msg).forEach { emittedEvents += it }
         }
 
         flags.clear()
@@ -85,27 +81,20 @@ class Preprocessor(outputDirPath: File) {
                 (e.type == Event.EventType.SHOW_HEAP_OBJECT_ACCESS && !e.showHeapObjectAccess.read) ||
                         (e.type == Event.EventType.SHOW_LOCAL_VAR_ACCESS && !e.showLocalVarAccess.read)
 
-        emittedEvents.forEach { (_, events) ->
-            for (i in 1..events.lastIndex) {
+        for (i in 1..emittedEvents.lastIndex) {
                 // combine consecutive accesses
-                val e1 = events[i - 1]
-                val e2 = events[i]
+            val e1 = emittedEvents[i - 1]
+            val e2 = emittedEvents[i]
                 if (isMergeableAccess(e1) && isMergeableAccess(e2)) {
                     e1.continuous = true
                     e2.continuous = true
                 }
             }
-        }
     }
 
     private fun writeOut() {
-        emittedEvents.forEach { tid, events ->
-            eventsLoader.getFileForThread(tid).outputStream().buffered().use { stream ->
-                events.forEach { it.build().writeDelimitedTo(stream) }
-            }
-        }
-        eventsLoader.definitionFile.outputStream().use { stream ->
-            handler.loadedClassDefinitions.forEach { it.writeDelimitedTo(stream) }
+        loader.getFileForThread(threadId).outputStream().buffered().use { stream ->
+            emittedEvents.forEach { it.build().writeDelimitedTo(stream) }
         }
     }
 
@@ -129,20 +118,44 @@ class Preprocessor(outputDirPath: File) {
                 Files.createDirectories(outDirPath)
             }
 
-            val proc = Preprocessor(outputDirPath)
-            val messages = readMessages(inputLogPath)
+            val loader = EventsLoader(outputDirPath)
 
-            proc.preprocess(messages)
-            proc.process(messages)
-            proc.postprocess()
-            proc.writeOut()
+            val threads = getAllThreadIds(inputLogPath)
+            println("threads: $threads")
+            for (tid in threads) {
+                println("processing thread $tid")
+                val messages = readMessagesLazily(inputLogPath)
+                        .filter { it.threadId == tid || it.threadId == 0L }
+                        .toMutableList()
+                val proc = Preprocessor(loader, tid)
 
-            return proc.eventsLoader
+                proc.preprocess(messages)
+                proc.process(messages)
+                proc.postprocess()
+                proc.writeOut()
+            }
+
+            // dump definitions
+            loader.definitionFile.outputStream().use { stream ->
+                RawMessageHandler.loadedClassDefinitions.forEach { it.writeDelimitedTo(stream) }
+            }
+
+            return loader
         }
 
-        fun readMessages(inputLogPath: File): MutableList<Message.Variant> {
-            inputLogPath.inputStream().use {
-                return generateSequence { Message.Variant.parseDelimitedFrom(it) }.toMutableList()
+        private fun getAllThreadIds(inputLogPath: File): Set<ThreadID> {
+            val set = HashSet<ThreadID>()
+            readMessagesLazily(inputLogPath).forEach { set.add(it.threadId) }
+            set.remove(0L)
+            return set
+        }
+
+        fun readMessagesLazily(inputLogPath: File): Sequence<Message.Variant> {
+            val stream = inputLogPath.inputStream()
+            return generateSequence {
+                Message.Variant.parseDelimitedFrom(stream).let {
+                    if (it == null) stream.close(); it
+                }
             }
         }
     }

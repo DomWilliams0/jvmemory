@@ -34,7 +34,7 @@ class EventsLoader(private val outputDir: File) {
     internal val definitionFile: File
         get() = File(outputDir, "jvmemory-definitions.log")
 
-    fun getFileForThread(threadID: ThreadID) = File(outputDir, "jvmemory-thread-$threadID.log")
+    fun getFileForThread(threadId: ThreadID) = File(outputDir, "jvmemory-thread-$threadId.log")
 
     fun getThreadIDFromPath(file: File): ThreadID? =
             matchPat.matchEntire(file.name)?.groupValues?.get(1)?.toLong()

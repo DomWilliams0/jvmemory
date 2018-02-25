@@ -15,7 +15,7 @@ object DebugPrinter {
         val (inFile, outDir) = paths
         val thread = paths.getOrNull(2)?.toLong()
 
-        Preprocessor.readMessages(File(inFile)).forEach { println("$it\n-------------") }
+        Preprocessor.readMessagesLazily(File(inFile)).forEach { println("$it\n-------------") }
 
         val events = Preprocessor.runPreprocessor(File(inFile), File(outDir))
 
