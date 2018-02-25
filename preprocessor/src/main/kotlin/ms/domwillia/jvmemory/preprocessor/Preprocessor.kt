@@ -12,9 +12,13 @@ enum class EventFlag {
     CONTINUOUS, REMOVED
 }
 
-class Preprocessor(private val loader: EventsLoader, private val threadId: ThreadID) {
+class Preprocessor(
+        definitions: ClassDefinitions,
+        private val loader: EventsLoader,
+        private val threadId: ThreadID
+) {
 
-    private val handler = RawMessageHandler()
+    private val handler = RawMessageHandler(definitions)
     private val emittedEvents = mutableListOf<Event.EventVariant.Builder>()
     private val flags = hashMapOf<Int, EventFlag>()
 
@@ -120,6 +124,9 @@ class Preprocessor(private val loader: EventsLoader, private val threadId: Threa
 
             val loader = EventsLoader(outputDirPath)
 
+            // load definitions first, regardless of thread
+            val definitions = getAllDefinitions(inputLogPath)
+
             val threads = getAllThreadIds(inputLogPath)
             println("threads: $threads")
             for (tid in threads) {
@@ -127,7 +134,7 @@ class Preprocessor(private val loader: EventsLoader, private val threadId: Threa
                 val messages = readMessagesLazily(inputLogPath)
                         .filter { it.threadId == tid || it.threadId == 0L }
                         .toMutableList()
-                val proc = Preprocessor(loader, tid)
+                val proc = Preprocessor(definitions, loader, tid)
 
                 proc.preprocess(messages)
                 proc.process(messages)
@@ -137,18 +144,22 @@ class Preprocessor(private val loader: EventsLoader, private val threadId: Threa
 
             // dump definitions
             loader.definitionFile.outputStream().use { stream ->
-                RawMessageHandler.loadedClassDefinitions.forEach { it.writeDelimitedTo(stream) }
+                definitions.values.forEach { it.writeDelimitedTo(stream) }
             }
 
             return loader
         }
 
-        private fun getAllThreadIds(inputLogPath: File): Set<ThreadID> {
-            val set = HashSet<ThreadID>()
-            readMessagesLazily(inputLogPath).forEach { set.add(it.threadId) }
-            set.remove(0L)
-            return set
-        }
+        private fun getAllDefinitions(inputLogPath: File): ClassDefinitions =
+                readMessagesLazily(inputLogPath)
+                        .filter { it.type == Message.MessageType.CLASS_DEF }
+                        .associate { it.classDef.name to it.classDef }
+
+        private fun getAllThreadIds(inputLogPath: File): Set<ThreadID> =
+                readMessagesLazily(inputLogPath)
+                        .map { it.threadId }
+                        .toCollection(LinkedHashSet())
+                        .apply { remove(0L) }
 
         fun readMessagesLazily(inputLogPath: File): Sequence<Message.Variant> {
             val stream = inputLogPath.inputStream()

@@ -6,16 +6,11 @@ import java.util.*
 
 typealias EmittedEvent = EventVariant.Builder
 typealias EmittedEvents = MutableList<EmittedEvent>
+typealias ClassDefinitions = Map<String, Definitions.ClassDefinition>
+
 val emptyEmittedEvents = mutableListOf<EmittedEvent>()
 
-class RawMessageHandler {
-    companion object {
-        private val classDefinitions = mutableMapOf<String, Definitions.ClassDefinition>()
-
-        val loadedClassDefinitions: Collection<Definitions.ClassDefinition>
-            get() = this.classDefinitions.values
-    }
-
+class RawMessageHandler(private val classDefinitions: ClassDefinitions) {
     private var allocations = mutableSetOf<ObjectID>()
     private var callstack = Stack<PushMethodFrame>()
 
@@ -37,10 +32,7 @@ class RawMessageHandler {
         Message.MessageType.STORE_OBJECT_IN_ARRAY -> storeObjectInArray(msg.storeObjectInArray)
         Message.MessageType.STORE_PRIMITIVE_IN_ARRAY -> storePrimitiveInArray(msg.storePrimitiveInArray)
 
-        Message.MessageType.CLASS_DEF -> {
-            defineClass(msg.classDef)
-            emptyEmittedEvents
-        }
+        Message.MessageType.CLASS_DEF -> { emptyEmittedEvents }
 
         Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter)
         Message.MessageType.METHOD_EXIT -> exitMethod()
@@ -64,10 +56,6 @@ class RawMessageHandler {
         type = messageType
         this.continuous = continuous
         initialiser(this)
-    }
-
-    private fun defineClass(classDef: Definitions.ClassDefinition) {
-        classDefinitions[classDef.name] = classDef
     }
 
     private fun arrayIndexField(index: Int) = "[$index]"

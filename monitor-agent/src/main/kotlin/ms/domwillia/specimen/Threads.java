@@ -11,7 +11,7 @@ public class Threads implements Specimen {
 
 	@Override
 	public void go() {
-		int count = 1;
+		int count = 10;
 		for (int i = 0; i < count; i++) {
 			// TODO avoid invokeDynamic!
 			new Thread(new Runnable() {
