@@ -7,14 +7,13 @@
 // all functions act on the current calling thread
 
 struct thread_local_state {
-	explore_cache_p explore_cache;
+	jlong tid; // for debugging
 	unsigned int classload_depth;
 	jlong tracked_system_obj;
 };
 
-void thread_local_state_init();
+void thread_local_state_init(jlong tid);
 
-// TODO call on thread death
 void thread_local_state_free();
 
 // will exit on failure (DO_SAFE) so never returns null
