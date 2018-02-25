@@ -24,7 +24,13 @@ public class Threads implements Specimen {
 	public void go() {
 		int count = 3;
 		for (int i = 0; i < count; i++) {
-			new Thread(Threads::allocate).start();
+			// TODO avoid invokeDynamic!
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					allocate();
+				}
+			}).start();
 		}
 
 	}
