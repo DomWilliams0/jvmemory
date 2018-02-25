@@ -140,6 +140,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
 	on_exit_method(logger, get_thread_id(jnienv));
 }
 
+// TODO thread local
 static jlong system_object = 0L;
 
 /*

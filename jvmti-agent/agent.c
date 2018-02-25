@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "fields.h"
 #include "native_array.h"
+#include "thread_local.h"
 
 // TODO are any of these globals thread safe?
 //		i dont think so
@@ -40,6 +41,14 @@ static void JNICALL callback_vm_init(jvmtiEnv *env,
 
 static void JNICALL callback_gc_finish(jvmtiEnv *env);
 
+static void JNICALL callback_thread_start(jvmtiEnv *env,
+                                          JNIEnv *jnienv,
+                                          jthread thread);
+
+static void JNICALL callback_thread_end(jvmtiEnv *env,
+                                        JNIEnv *jnienv,
+                                        jthread thread);
+
 static jvmtiError register_callbacks()
 {
 #define ENABLE_EVENT(e) \
@@ -50,12 +59,16 @@ static jvmtiError register_callbacks()
 	callbacks.VMInit = &callback_vm_init;
 	callbacks.GarbageCollectionFinish = &callback_gc_finish;
 	callbacks.NativeMethodBind = &callback_native_bind;
+	callbacks.ThreadStart = &callback_thread_start;
+	callbacks.ThreadEnd = &callback_thread_end;
 
 	DO_SAFE_RETURN((*env)->SetEventCallbacks(env, &callbacks, sizeof(callbacks)));
 	ENABLE_EVENT(JVMTI_EVENT_OBJECT_FREE);
 	ENABLE_EVENT(JVMTI_EVENT_VM_INIT);
 	ENABLE_EVENT(JVMTI_EVENT_GARBAGE_COLLECTION_FINISH);
 	ENABLE_EVENT(JVMTI_EVENT_NATIVE_METHOD_BIND);
+	ENABLE_EVENT(JVMTI_EVENT_THREAD_START);
+	ENABLE_EVENT(JVMTI_EVENT_THREAD_END);
 
 	return JVMTI_ERROR_NONE;
 }
@@ -172,8 +185,23 @@ static void JNICALL callback_gc_finish(jvmtiEnv *env)
 	DO_SAFE((*env)->RawMonitorExit(env, free_lock), "exiting free monitor");
 }
 
-void deallocate(void *p) {
-	(*env)->Deallocate(env, (unsigned char *)(p));
+static void JNICALL callback_thread_start(jvmtiEnv *env,
+                                          JNIEnv *jnienv,
+                                          jthread thread)
+{
+	thread_local_state_init();
+}
+
+static void JNICALL callback_thread_end(jvmtiEnv *env,
+                                        JNIEnv *jnienv,
+                                        jthread thread)
+{
+	thread_local_state_free();
+}
+
+void deallocate(void *p)
+{
+	(*env)->Deallocate(env, (unsigned char *) (p));
 }
 
 long get_thread_id(JNIEnv *jnienv)
