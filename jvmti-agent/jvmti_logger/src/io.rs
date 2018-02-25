@@ -3,16 +3,17 @@ use proto::message::Variant;
 use protobuf::Message;
 use libc::*;
 use std::ffi::CStr;
-use std::sync::mpsc;
+use std::sync::{mpsc, Mutex};
 
 const BUFFER_SIZE: usize = 1024;
 
 #[repr(C)]
 pub struct Logger {
     buffer_thread: thread::JoinHandle<()>,
-    drainpipe: mpsc::Sender<Variant>,
-    // TODO it seems that using a BufWriter here causes a panic during allocation event logging
-    //writer: fs::File
+
+    // TODO instead of every thread sharing a single logger instance, give them thread local
+    //      buffers that only block to flush their buffers? profile first!
+    drainpipe: Mutex<mpsc::Sender<Variant>>,
 }
 
 fn spawn_buffer_thread(
@@ -28,8 +29,8 @@ fn spawn_buffer_thread(
         buffer.clear();
     }
 
+    // it seems that using a BufWriter here causes a panic during allocation event logging
     let out_file = fs::File::create(path)?;
-
     Ok(thread::spawn(|| {
         let pipe = recv;
         let mut file = out_file;
@@ -50,13 +51,13 @@ impl Logger {
     fn new(path: &str) -> io::Result<Self> {
         let (send, recv) = mpsc::channel();
         Ok(Self {
-            drainpipe: send,
+            drainpipe: Mutex::new(send),
             buffer_thread: spawn_buffer_thread(path, recv)?,
         })
     }
 
     fn safe_log(&mut self, message: Variant) -> Result<(), mpsc::SendError<Variant>> {
-        self.drainpipe.send(message)?;
+        self.drainpipe.lock().unwrap().send(message)?;
         Ok(())
     }
 
@@ -85,7 +86,7 @@ pub extern "C" fn logger_free(logger_ptr: *mut Logger) {
         let mut logger = unsafe { Box::from_raw(logger_ptr) };
 
         let (dummy, _) = mpsc::channel();
-        let sender = mem::replace(&mut logger.drainpipe, dummy);
+        let sender = mem::replace(&mut *logger.drainpipe.lock().unwrap(), dummy);
         drop(sender);
         logger
             .buffer_thread
