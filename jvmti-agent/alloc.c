@@ -6,12 +6,9 @@
 #include "util.h"
 #include "thread_local.h"
 
-jboolean program_running = 0;
-static jlong next_id = 1;
-
 jboolean should_log_allocatation()
 {
-	if (program_running != 1)
+	if (concurrent_is_program_running(concurrent) == JNI_FALSE)
 		return JNI_FALSE;
 
 	struct thread_local_state *state = thread_local_state_get();
@@ -50,7 +47,7 @@ static void allocate_array_with_array_src_tag(JNIEnv *jnienv,
                                               jlong src_array_id,
                                               jint src_index)
 {
-	jlong new_tag = next_id++;
+	jlong new_tag = concurrent_get_next_tag(concurrent);
 
 	jvmtiError err;
 	if ((err = (*env)->SetTag(env, obj, new_tag)) != JVMTI_ERROR_NONE)
@@ -59,7 +56,7 @@ static void allocate_array_with_array_src_tag(JNIEnv *jnienv,
 		return;
 	}
 
-	if (should_log_allocatation() == JNI_FALSE)
+	if (should_log_allocatation(jnienv) == JNI_FALSE)
 		return;
 
 

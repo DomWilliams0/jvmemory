@@ -2,7 +2,8 @@ package ms.domwillia.jvmemory.monitor
 
 @Suppress("unused")
 object Monitor {
-    @JvmStatic external fun setProgramInProgress(running: Boolean)
+
+    @JvmStatic external fun setProgramRunning(running: Boolean)
 
     @JvmStatic external fun onClassLoad(starting: Boolean)
 

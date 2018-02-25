@@ -83,7 +83,7 @@ pub extern "C" fn logger_init(out_file: *const c_char) -> *const Logger {
 #[no_mangle]
 pub extern "C" fn logger_free(logger_ptr: *mut Logger) {
     if !logger_ptr.is_null() {
-        let mut logger = unsafe { Box::from_raw(logger_ptr) };
+        let logger = unsafe { Box::from_raw(logger_ptr) };
 
         let (dummy, _) = mpsc::channel();
         let sender = mem::replace(&mut *logger.drainpipe.lock().unwrap(), dummy);

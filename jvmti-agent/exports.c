@@ -9,15 +9,15 @@
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    setProgramInProgress
+ * Method:    setProgramRunning
  * Signature: (Z)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramInProgress(
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramRunning(
 		JNIEnv *jnienv,
 		jclass klass,
 		jboolean value)
 {
-	program_running = value;
+	concurrent_set_program_running(concurrent, value);
 }
 
 /*
