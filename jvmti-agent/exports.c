@@ -5,6 +5,7 @@
 #include "exports.h"
 #include "alloc.h"
 #include "util.h"
+#include "thread_local.h"
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
@@ -29,7 +30,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad(
 		jclass klass,
 		jboolean starting)
 {
-	classes_loading += starting == JNI_TRUE ? 1 : -1;
+	struct thread_local_state *state = thread_local_state_get();
+	state->classload_depth += starting == JNI_TRUE ? 1 : -1;
 }
 
 /*
