@@ -13,6 +13,7 @@
 static JavaVM *jvm = NULL;
 jvmtiEnv *env = NULL;
 logger_p logger = NULL;
+concurrent_p concurrent = NULL;
 explore_cache_p explore_cache = NULL;
 
 static struct id_array freed_objects;
@@ -113,6 +114,9 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *javavm,
 	// init logger
 	DO_SAFE_COND((logger = logger_init(out_path)) != NULL, "logger initialisation");
 
+	// init concurrent
+	DO_SAFE_COND((concurrent = concurrent_init()) != NULL, "concurrent initialisation");
+
 	// init explore cache
 	DO_SAFE_COND((explore_cache = explore_cache_init()) != NULL, "explore cache initialisation");
 
@@ -125,6 +129,8 @@ JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm)
 	id_array_free(&freed_objects);
 	logger_free(logger);
 	logger = NULL;
+	concurrent_free(concurrent);
+	concurrent = NULL;
 	explore_cache_free(explore_cache);
 	explore_cache = NULL;
 	DO_SAFE((*env)->RawMonitorExit(env, free_lock), "exiting free monitor");
@@ -189,7 +195,6 @@ static void JNICALL callback_vm_init(jvmtiEnv *env,
 static void JNICALL callback_vm_start(jvmtiEnv *env,
                                       JNIEnv *jnienv)
 {
-
 	thread_local_state_init(1);
 }
 
@@ -227,18 +232,27 @@ void deallocate(void *p)
 
 long get_thread_id(JNIEnv *jnienv)
 {
-	jthread thread;
+	static jclass thread;
+	static jmethodID thread_get_id;
+
 	long id = 0;
-	if ((*env)->GetCurrentThread(env, &thread) == JVMTI_ERROR_NONE)
+
+	if (thread == NULL)
 	{
-		// TODO cache
-		jclass cls = (*jnienv)->GetObjectClass(jnienv, thread);
-		EXCEPTION_CHECK(jnienv);
-		jmethodID method = (*jnienv)->GetMethodID(jnienv, cls, "getId", "()J");
-		EXCEPTION_CHECK(jnienv);
-		id = (*jnienv)->CallLongMethod(jnienv, thread, method);
+		jthread t;
+		DO_SAFE((*env)->GetCurrentThread(env, &t), "get current thread");
+		thread = (*jnienv)->GetObjectClass(jnienv, t);
 		EXCEPTION_CHECK(jnienv);
 	}
+
+	if (thread_get_id == NULL)
+	{
+		thread_get_id = (*jnienv)->GetMethodID(jnienv, thread, "getId", "()J");
+		EXCEPTION_CHECK(jnienv);
+	}
+
+	id = (*jnienv)->CallLongMethod(jnienv, thread, thread_get_id);
+	EXCEPTION_CHECK(jnienv);
 
 	return id;
 }

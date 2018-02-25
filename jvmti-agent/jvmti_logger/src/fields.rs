@@ -294,8 +294,6 @@ fn generate_diff_events(
             Change::Del(Access::Array(data)) => log_store_in_array(&data, true),
         }
     }
-
-    println!("====");
 }
 
 #[no_mangle]

@@ -20,7 +20,7 @@ class MainPatcher(
         }
 
         visitInsn(opcode)
-        callMonitor(Monitor::setProgramInProgress)
+        callMonitor(Monitor::setProgramRunning)
     }
 
     override fun onMethodEnter() {

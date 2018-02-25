@@ -8,6 +8,7 @@ mod cstr;
 mod proto;
 mod io;
 mod fields;
+mod concurrent;
 
 use libc::*;
 use std::ffi::CStr;
@@ -17,6 +18,7 @@ use io::Logger;
 
 pub use io::{logger_free, logger_init};
 pub use fields::*;
+pub use concurrent::*;
 
 type Long = i64;
 type Int = i32;
