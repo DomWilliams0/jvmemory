@@ -4,8 +4,6 @@
 
 #include "id_array.h"
 #include "util.h"
-#include "logger.h"
-#include "fields.h"
 #include "native_array.h"
 #include "thread_local.h"
 
@@ -35,9 +33,15 @@ static jvmtiError add_capabilities()
 static void JNICALL callback_dealloc(jvmtiEnv *env,
                                      jlong tag);
 
+static void JNICALL callback_vm_start(jvmtiEnv *env,
+                                      JNIEnv *jnienv);
+
 static void JNICALL callback_vm_init(jvmtiEnv *env,
                                      JNIEnv *jnienv,
                                      jthread thread);
+
+static void JNICALL callback_vm_death(jvmtiEnv *env,
+                                      JNIEnv *jnienv);
 
 static void JNICALL callback_gc_finish(jvmtiEnv *env);
 
@@ -56,7 +60,9 @@ static jvmtiError register_callbacks()
 
 	jvmtiEventCallbacks callbacks = {0};
 	callbacks.ObjectFree = &callback_dealloc;
+	callbacks.VMStart = &callback_vm_start;
 	callbacks.VMInit = &callback_vm_init;
+	callbacks.VMDeath = &callback_vm_death;
 	callbacks.GarbageCollectionFinish = &callback_gc_finish;
 	callbacks.NativeMethodBind = &callback_native_bind;
 	callbacks.ThreadStart = &callback_thread_start;
@@ -65,6 +71,8 @@ static jvmtiError register_callbacks()
 	DO_SAFE_RETURN((*env)->SetEventCallbacks(env, &callbacks, sizeof(callbacks)));
 	ENABLE_EVENT(JVMTI_EVENT_OBJECT_FREE);
 	ENABLE_EVENT(JVMTI_EVENT_VM_INIT);
+	ENABLE_EVENT(JVMTI_EVENT_VM_START);
+	ENABLE_EVENT(JVMTI_EVENT_VM_DEATH);
 	ENABLE_EVENT(JVMTI_EVENT_GARBAGE_COLLECTION_FINISH);
 	ENABLE_EVENT(JVMTI_EVENT_NATIVE_METHOD_BIND);
 	ENABLE_EVENT(JVMTI_EVENT_THREAD_START);
@@ -178,6 +186,19 @@ static void JNICALL callback_vm_init(jvmtiEnv *env,
 	        "creating agent thread");
 }
 
+static void JNICALL callback_vm_start(jvmtiEnv *env,
+                                      JNIEnv *jnienv)
+{
+
+	thread_local_state_init(1);
+}
+
+static void JNICALL callback_vm_death(jvmtiEnv *env,
+                                      JNIEnv *jnienv)
+{
+	thread_local_state_free();
+}
+
 static void JNICALL callback_gc_finish(jvmtiEnv *env)
 {
 	DO_SAFE((*env)->RawMonitorEnter(env, free_lock), "entering free monitor");
@@ -189,7 +210,7 @@ static void JNICALL callback_thread_start(jvmtiEnv *env,
                                           JNIEnv *jnienv,
                                           jthread thread)
 {
-	thread_local_state_init();
+	thread_local_state_init(get_thread_id(jnienv));
 }
 
 static void JNICALL callback_thread_end(jvmtiEnv *env,
