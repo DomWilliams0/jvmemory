@@ -142,9 +142,6 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitMethod(
 	on_exit_method(logger, get_thread_id(jnienv));
 }
 
-// TODO thread local
-static jlong system_object = 0L;
-
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    exitSystemMethod
@@ -155,7 +152,7 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitSystemMeth
 		jclass klass,
 		jobject obj)
 {
-	system_object = get_tag(obj);
+	thread_local_state_get()->tracked_system_obj = get_tag(obj);
 }
 
 /*
@@ -167,10 +164,11 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_processSystemM
 		JNIEnv *jnienv,
 		jclass klass)
 {
-	if (system_object != 0L)
+	struct thread_local_state *state = thread_local_state_get();
+	if (state->tracked_system_obj != 0L)
 	{
-		jlong tag = system_object;
-		system_object = 0L;
+		jlong tag = state->tracked_system_obj;
+		state->tracked_system_obj = 0L;
 
 		emit_heap_differences(explore_cache, jnienv, tag);
 	}

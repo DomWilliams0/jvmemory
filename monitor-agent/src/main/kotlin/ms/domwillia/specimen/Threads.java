@@ -1,11 +1,13 @@
 package ms.domwillia.specimen;
 
+import java.util.ArrayList;
+
 public class Threads implements Specimen {
 
-	private static void allocate() {
-		for (int i = 0; i < 2000; i++) {
-			new GarbageCollection.WasteOfSpace("hiy");
-
+	private static void doThings() {
+		ArrayList<Object> list = new ArrayList<>();
+		for (int i = 0; i < 100; i++) {
+			list.add(new Object());
 		}
 	}
 
@@ -17,7 +19,7 @@ public class Threads implements Specimen {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-					allocate();
+					doThings();
 				}
 			}).start();
 		}
