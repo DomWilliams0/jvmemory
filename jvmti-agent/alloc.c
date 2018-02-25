@@ -4,12 +4,19 @@
 #include "alloc.h"
 #include "agent.h"
 #include "util.h"
+#include "thread_local.h"
 
-unsigned int classes_loading = 0;
 jboolean program_running = 0;
 static jlong next_id = 1;
 
-#define SHOULD_LOG_ALLOCATION (program_running == 1 && classes_loading == 0)
+jboolean should_log_allocatation()
+{
+	if (program_running != 1)
+		return JNI_FALSE;
+
+	struct thread_local_state *state = thread_local_state_get();
+	return (jboolean) (state->classload_depth == 0 ? JNI_TRUE : JNI_FALSE);
+}
 
 const char *get_chars(JNIEnv *jnienv,
                       struct any_string *any)
@@ -52,7 +59,7 @@ static void allocate_array_with_array_src_tag(JNIEnv *jnienv,
 		return;
 	}
 
-	if (!SHOULD_LOG_ALLOCATION)
+	if (should_log_allocatation() == JNI_FALSE)
 		return;
 
 
