@@ -229,27 +229,26 @@ void deallocate(void *p)
 
 long get_thread_id(JNIEnv *jnienv)
 {
-	static jclass thread;
+	static jclass thread_cls;
 	static jmethodID thread_get_id;
 
-	long id = 0;
+	jthread t;
+	DO_SAFE((*env)->GetCurrentThread(env, &t), "get current thread");
+	EXCEPTION_CHECK(jnienv);
 
-	if (thread == NULL)
+	if (thread_cls == NULL)
 	{
-		jthread t;
-		DO_SAFE((*env)->GetCurrentThread(env, &t), "get current thread");
-		thread = (*jnienv)->GetObjectClass(jnienv, t);
+		thread_cls = (*jnienv)->GetObjectClass(jnienv, t);
 		EXCEPTION_CHECK(jnienv);
 	}
 
 	if (thread_get_id == NULL)
 	{
-		thread_get_id = (*jnienv)->GetMethodID(jnienv, thread, "getId", "()J");
+		thread_get_id = (*jnienv)->GetMethodID(jnienv, thread_cls, "getId", "()J");
 		EXCEPTION_CHECK(jnienv);
 	}
 
-	id = (*jnienv)->CallLongMethod(jnienv, thread, thread_get_id);
+	long id = (*jnienv)->CallLongMethod(jnienv, t, thread_get_id);
 	EXCEPTION_CHECK(jnienv);
-
 	return id;
 }
