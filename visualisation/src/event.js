@@ -146,8 +146,13 @@ function startTicking(events) {
     ticker.resume();
 }
 
+function show_error(e) {
+    alert("Could not connect to " + SERVER + ": " + e);
+}
+
 function fetch_threads() {
-    return fetch(SERVER + "/definitions").then(resp => resp.arrayBuffer()).then(defs => {
+    return fetch(SERVER + "/definitions").then(
+        resp => resp.arrayBuffer(), show_error).then(defs => {
         definitions = new Definitions(new Uint8Array(defs));
         let main = definitions.findMainClass();
         if (main)
@@ -158,6 +163,6 @@ function fetch_threads() {
 }
 
 function start(thread_id) {
-    fetch(SERVER + "/thread/" + thread_id).then(resp => resp.arrayBuffer())
+    fetch(SERVER + "/thread/" + thread_id).then(resp => resp.arrayBuffer(), show_error)
         .then((events) => startTicking(new Uint8Array(events)));
 }
