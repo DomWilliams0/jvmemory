@@ -1,4 +1,4 @@
-use std::mem;
+use std::{mem, sync};
 use std::collections::{HashMap, HashSet};
 use libc::*;
 use std::ffi::{CStr, CString};
@@ -12,8 +12,8 @@ type Index = i32;
 
 #[derive(Default)]
 pub struct ExploreCache {
-    last_refs: HashMap<ObjectId, Vec<Access>>,
-    fields: HashMap<CString, Vec<DeclaredField>>,
+    last_refs: sync::Mutex<HashMap<ObjectId, Vec<Access>>>,
+    fields: sync::RwLock<HashMap<CString, Vec<DeclaredField>>>,
 }
 
 #[derive(Default)]
@@ -198,12 +198,18 @@ pub extern "C" fn emit_heap_differences(
         }
     }
 
-    cache.last_refs.insert(explorer.src_obj, explorer.accesses);
+    cache
+        .last_refs
+        .lock()
+        .expect("last_refs.lock()")
+        .insert(explorer.src_obj, explorer.accesses);
 }
 
 fn find_differences(explorer: &HeapExplorer, cache: &mut ExploreCache) -> Vec<Change> {
     let last = cache
         .last_refs
+        .lock()
+        .expect("last_refs.lock()")
         .remove(&explorer.src_obj)
         .unwrap_or_default();
 
@@ -225,7 +231,8 @@ fn generate_diff_events(
 ) {
     let get_field_name = |tag, index| -> Result<*const c_char, &'static str> {
         let cls = clazz_map.get(&tag).ok_or("clazz map is incomplete")?;
-        let fields = cache.fields.get(*cls).ok_or("dicovered field is wrong")?;
+        let fields_map = cache.fields.read().expect("fields.read()");
+        let fields = fields_map.get(*cls).ok_or("dicovered field is wrong")?;
         fields
             .get(index as usize)
             .ok_or("bad field")
@@ -346,7 +353,10 @@ pub extern "C" fn fields_discovery_finish(
         println!("{}: {:?} {:?}", i, f.clazz, f.name);
     }
     ::std::io::stdout().flush().expect("flush");
-    c.fields.insert(copy_str(clazz), fields);
+    c.fields
+        .write()
+        .expect("fields.write()")
+        .insert(copy_str(clazz), fields);
 }
 
 #[no_mangle]
@@ -355,7 +365,10 @@ pub extern "C" fn fields_discovery_has_discovered(
     clazz: *const c_char,
 ) -> bool {
     let c = unsafe { &*cache };
-    c.fields.contains_key(unsafe { CStr::from_ptr(clazz) })
+    c.fields
+        .read()
+        .expect("fields.read()")
+        .contains_key(unsafe { CStr::from_ptr(clazz) })
 }
 
 /*
