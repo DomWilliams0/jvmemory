@@ -125,7 +125,13 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
     val e = events(index)
     val action = if (undo) "undoing" else "handling"
     println(s"$action event $index: ${e.`type`}")
-    (e.continuous, handler.handle(e.payload, forwards = !undo))
+    try {
+      (e.continuous, handler.handle(e.payload, forwards = !undo))
+    } catch {
+      case any: RuntimeException =>
+        System.err.println(any)
+        (false, HandleResult.NoGraphChange)
+    }
   }
 
   private def refreshSimulation(graphChanges: Int, simChanges: Int): Unit =
