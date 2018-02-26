@@ -140,6 +140,16 @@
         @keyframes link-glow-rw {
             50% { stroke: #e5e142; }
         }
+
+        #choose-thread {
+            background: #5bd5d0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            padding: 10px;
+            border-radius: 10px;
+
+        }
     </style>
 </head>
 <body>
@@ -162,6 +172,13 @@
     <div id="right">
         <div id="heap"></div>
         <div id="timeline"></div>
+    </div>
+
+    <div id="choose-thread">
+        <select id="thread-select">
+            <option>Thread ID</option>
+        </select>
+        <button id="go-button">Go</button>
     </div>
 </div>
 <script src='http://d3js.org/d3.v4.js'></script>
