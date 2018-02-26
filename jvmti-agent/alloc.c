@@ -56,7 +56,7 @@ static void allocate_array_with_array_src_tag(JNIEnv *jnienv,
 		return;
 	}
 
-	if (should_log_allocatation(jnienv) == JNI_FALSE)
+	if (should_log_allocatation() == JNI_FALSE)
 		return;
 
 
