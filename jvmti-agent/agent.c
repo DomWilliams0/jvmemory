@@ -7,9 +7,6 @@
 #include "native_array.h"
 #include "thread_local.h"
 
-// TODO are any of these globals thread safe?
-//		i dont think so
-//		does it matter?
 static JavaVM *jvm = NULL;
 jvmtiEnv *env = NULL;
 logger_p logger = NULL;
