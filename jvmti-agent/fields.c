@@ -142,13 +142,10 @@ void discover_fields_if_necessary(JNIEnv *jnienv,
 	// get classes and names
 	jint found_count = 0;
 	jobject *objs = NULL;
-	jlong *found_tags = NULL;
-	DO_SAFE((*env)->GetObjectsWithTags(env, count, tags, &found_count, &objs, &found_tags), "get objects with tags");
+	DO_SAFE((*env)->GetObjectsWithTags(env, count, tags, &found_count, &objs, NULL), "get objects with tags");
 
 	// this assertion should never break!
 	DO_SAFE_COND(found_count == count, "tags are not unique! oh dear!");
-	for (int i = 0; i < count; ++i)
-		DO_SAFE_COND(found_tags[i] == tags[i], "tags returned in wrong order! oh dear!");
 
 	for (int i = 0; i < count; ++i)
 	{
@@ -173,6 +170,7 @@ void discover_fields_if_necessary(JNIEnv *jnienv,
 		(*jnienv)->DeleteLocalRef(jnienv, cls);
 	}
 
+	deallocate(objs);
 }
 
 void follow_references(heap_explorer_p explorer,
