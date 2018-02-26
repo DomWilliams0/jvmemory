@@ -20,8 +20,6 @@ void thread_local_state_free()
 	DO_SAFE((*env)->SetThreadLocalStorage(env, NULL, NULL), "set thread local storage");
 }
 
-// will exit on failure (DO_SAFE) so never returns null
-// error "handling"!
 struct thread_local_state *thread_local_state_get()
 {
 	void* state = NULL;
