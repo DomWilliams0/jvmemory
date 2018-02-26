@@ -146,19 +146,18 @@ function startTicking(events) {
     ticker.resume();
 }
 
-fetch(SERVER + "/definitions").then(resp => resp.arrayBuffer()).then(defs => {
-    definitions = new Definitions(new Uint8Array(defs));
-    let main = definitions.findMainClass();
-    if (main)
-        document.title = "JVMemory - " + main;
+function fetch_threads() {
+    return fetch(SERVER + "/definitions").then(resp => resp.arrayBuffer()).then(defs => {
+        definitions = new Definitions(new Uint8Array(defs));
+        let main = definitions.findMainClass();
+        if (main)
+            document.title = "JVMemory - " + main;
 
-    fetch(SERVER + "/thread").then(resp => resp.json()).then(threads => {
-        console.log("%d thread(s) available: %s", threads.length, threads);
-        if (threads.length === 0) throw "no events";
-        return threads[0];
-    }).then(thread_id => {
-        fetch(SERVER + "/thread/" + thread_id).then(resp => resp.arrayBuffer())
-            .then((events) => startTicking(new Uint8Array(events)));
+        return fetch(SERVER + "/thread").then(resp => resp.json());
     });
-});
+}
 
+function start(thread_id) {
+    fetch(SERVER + "/thread/" + thread_id).then(resp => resp.arrayBuffer())
+        .then((events) => startTicking(new Uint8Array(events)));
+}

@@ -39,7 +39,30 @@ let stackFrame = stackSvg.selectAll(".stackFrame");
 resize();
 d3.select(window).on("resize", resize);
 
-restart();
+fetch_threads().then(threads => {
+    if (!threads) {
+        alert("No events!");
+        return;
+    }
+    // add options
+    const select = document.getElementById("thread-select");
+    threads.forEach(t => {
+        const o = document.createElement("option");
+        o.appendChild(document.createTextNode(t));
+        select.options.add(o);
+    });
+
+    document.getElementById("go-button").onclick = e => {
+        let tid = parseInt(select.value);
+        if (isNaN(tid)) {
+            alert("Choose a thread!");
+            return;
+        }
+
+        select.parentElement.remove();
+        start(tid);
+    }
+});
 
 function tickSim() {
 
