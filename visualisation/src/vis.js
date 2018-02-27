@@ -52,7 +52,8 @@ fetch_threads().then(threads => {
         select.options.add(o);
     });
 
-    document.getElementById("go-button").onclick = e => {
+    const button = document.getElementById("go-button");
+    button.onclick = e => {
         let tid = parseInt(select.value);
         if (isNaN(tid)) {
             alert("Choose a thread!");
@@ -61,6 +62,12 @@ fetch_threads().then(threads => {
 
         select.parentElement.remove();
         start(tid);
+    };
+
+    if (threads.length === 1) {
+        select.value = threads[0];
+        console.log("selecting only thread automatically");
+        button.click();
     }
 });
 
