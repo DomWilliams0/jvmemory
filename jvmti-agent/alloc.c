@@ -146,6 +146,7 @@ void allocate_tags_for_multidim_array(JNIEnv *jnienv,
 jlong get_tag(jobject obj)
 {
 	jlong tag = 0L;
-	DO_SAFE((*env)->GetTag(env, obj, &tag), "get tag");
+	if (obj != NULL)
+		DO_SAFE((*env)->GetTag(env, obj, &tag), "get tag");
 	return tag;
 }
