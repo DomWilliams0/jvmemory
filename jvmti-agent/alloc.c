@@ -6,7 +6,7 @@
 #include "util.h"
 #include "thread_local.h"
 
-jboolean should_log_allocatation()
+jboolean should_log_allocation()
 {
 	if (concurrent_is_program_running(concurrent) == JNI_FALSE)
 		return JNI_FALSE;
@@ -56,7 +56,7 @@ static void allocate_array_with_array_src_tag(JNIEnv *jnienv,
 		return;
 	}
 
-	if (should_log_allocatation() == JNI_FALSE)
+	if (should_log_allocation() == JNI_FALSE)
 		return;
 
 
