@@ -1,8 +1,14 @@
 VERSION=0.1
 BUILD_ROOT=build
 TARGET_DIR=$(BUILD_ROOT)/jvmemory-$(VERSION)
-
 ROOT?=$(PWD)
+
+GRADLE_FLAGS=--daemon --parallel
+
+# protobufs
+PROTO_ROOT=$(ROOT)/protobufs
+PROTO_SRCS_JVM=$(shell find $(PROTO_ROOT/monitor) -type f)
+PROTO_SRCS_VIS=$(shell find $(PROTO_ROOT/vis) -type f)
 
 # monitor agent
 MONITOR_TRGT=$(TARGET_DIR)/agent.jar
@@ -37,8 +43,6 @@ VIS_SRCS=$(shell find $(VIS_ROOT)/src -type f)
 RUNSH_SRCS=$(ROOT)/scripts/run.sh
 RUNSH_TRGT=$(TARGET_DIR)/run.sh
 
-GRADLE_FLAGS=--daemon --parallel
-
 .PHONY: build
 build: $(TARGET_DIR) $(MONITOR_TRGT) $(NATIVE_TRGT) $(BOOTSTRAP_TRGT) $(PREPROC_TRGT) $(EVENTS_TRGT) vis_srcs $(RUNSH_TRGT)
 	@echo $(TARGET_DIR)
@@ -48,7 +52,7 @@ $(TARGET_DIR):
 
 # TODO check for failures needed?
 
-$(MONITOR_TRGT): $(MONITOR_SRC)
+$(MONITOR_TRGT): $(MONITOR_SRC) $(PROTO_SRCS_JVM)
 	$(MONITOR_ROOT)/gradlew $(GRADLE_FLAGS) -p $(MONITOR_ROOT) buildJar >$@.stdout 2>$@.stderr
 	@cp -f $(MONITOR_ROOT)/build/libs/monitor-agent-$(VERSION).jar $@
 
@@ -56,17 +60,18 @@ $(BOOTSTRAP_TRGT): $(MONITOR_TRGT)
 	@cp -f $< $@
 	@zip -q -d $@ ms/domwillia/jvmemory/modify/*
 
-$(PREPROC_TRGT): $(PREPROC_SRCS)
+$(PREPROC_TRGT): $(PREPROC_SRCS) $(PROTO_SRCS_JVM $(PROTO_SRCS_VIS))
 	$(PREPROC_ROOT)/gradlew $(GRADLE_FLAGS) -p $(PREPROC_ROOT) buildJar >$@.stdout 2>$@.stderr
 	@cp -f $(PREPROC_ROOT)/build/libs/visualisation-server-$(VERSION).jar $@
 
-$(NATIVE_TRGT):
+$(NATIVE_TRGT): $(PROTO_SRCS_JVM)
 	$(MAKE) -C $(NATIVE_ROOT) >$@.stdout 2>$@.stderr
 	@cp -f $(NATIVE_ROOT)/libagent.so $@
 
 # TODO replace slow sbt
-$(EVENTS_TRGT): $(EVENTS_SRCS)
-	(cd $(EVENTS_ROOT) && exec sbt fastOptJS) >$@.stdout 2>$@.stderr # TODO release config
+# TODO release config
+$(EVENTS_TRGT): $(EVENTS_SRCS) $(PROTO_SRCS_VIS)
+	(cd $(EVENTS_ROOT) && exec sbt fastOptJS) >$@.stdout 2>$@.stderr
 	@cp -f $(EVENTS_ROOT)/target/scala-$(SCALA_VERSION)/event_ticker-fastopt.js $@
 
 .PHONY: vis_srcs
