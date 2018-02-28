@@ -133,6 +133,11 @@ class Handler(val goodyBag: GoodyBag) {
   private def undoImpl(value: ShowHeapObjectAccess): HandleResult = HandleResult.NoGraphChange
 
   private def handleImpl(value: PushMethodFrame): HandleResult = {
+    val method = s"${value.owningClass}#${value.name}"
+    if (value.objId == 0)
+      println(s"static method $method")
+    else
+      println(s"calling $method on ${value.objId}")
     goodyBag.definitions.getMethodDefinition(value.owningClass, value.name, value.signature)
       .map(new StackFrame(value.owningClass, _))
       .foreach(goodyBag.callStack.push)

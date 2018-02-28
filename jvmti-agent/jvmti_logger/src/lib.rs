@@ -29,12 +29,14 @@ type String = *const c_char;
 pub extern "C" fn on_enter_method(
     logger: *mut Logger,
     thread_id: Long,
+    obj_id: Long,
     class: String,
     method: String,
 ) {
     let mut payload = flow::MethodEnter::new();
     payload.class = get_string!(class);
     payload.method = get_string!(method);
+    payload.obj_id = obj_id;
 
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);

@@ -73,6 +73,7 @@ class RawMessageHandler(private val classDefinitions: ClassDefinitions) {
             owningClass = classDef.name
             name = methodDef.name
             signature = methodDef.signature
+            objId = msg.objId
         }.build()
 
         callstack.push(frame)

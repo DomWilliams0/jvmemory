@@ -25,7 +25,7 @@ object Monitor {
 
     @JvmStatic external fun getTag(o: Any): Long
 
-    @JvmStatic external fun enterMethod(clazz: String, method: String)
+    @JvmStatic external fun enterMethod(o: Any?, clazz: String, method: String)
 
     @JvmStatic external fun exitMethod()
 

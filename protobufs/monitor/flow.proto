@@ -6,6 +6,7 @@ option java_outer_classname = "Flow";
 message MethodEnter {
     string class = 1;
     string method = 2;
+    int64 obj_id = 3;
 }
 
 message MethodExit {}

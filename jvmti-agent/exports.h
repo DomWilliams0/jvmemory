@@ -108,11 +108,12 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    enterMethod
- * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod
 		(JNIEnv *,
 		 jclass,
+		 jobject,
 		 jstring,
 		 jstring);
 

@@ -115,17 +115,18 @@ JNIEXPORT jlong JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_getTag(
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    enterMethod
- * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterMethod(
 		JNIEnv *jnienv,
 		jclass klass,
+		jobject obj,
 		jstring class_name,
 		jstring method_name)
 {
 	const char *cls = (*jnienv)->GetStringUTFChars(jnienv, class_name, NULL);
 	const char *mthd = (*jnienv)->GetStringUTFChars(jnienv, method_name, NULL);
-	on_enter_method(logger, get_thread_id(jnienv), cls, mthd);
+	on_enter_method(logger, get_thread_id(jnienv), get_tag(obj), cls, mthd);
 	(*jnienv)->ReleaseStringUTFChars(jnienv, class_name, cls);
 	(*jnienv)->ReleaseStringUTFChars(jnienv, method_name, mthd);
 }

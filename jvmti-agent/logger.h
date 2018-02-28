@@ -10,6 +10,7 @@ extern void logger_free(logger_p logger);
 
 extern void on_enter_method(logger_p logger,
                             long thread_id,
+                            long obj_id,
                             const char *clazz,
                             const char *method);
 

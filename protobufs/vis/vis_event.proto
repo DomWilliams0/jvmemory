@@ -42,6 +42,7 @@ message PushMethodFrame {
     string owning_class = 1;
     string name = 2;
     string signature = 3;
+    int64 obj_id = 4;
 }
 
 message PopMethodFrame {}
