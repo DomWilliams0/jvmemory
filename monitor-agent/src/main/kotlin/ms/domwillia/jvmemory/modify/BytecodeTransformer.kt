@@ -38,10 +38,11 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
         else -> null
     }
 
-    override fun transform(loader: ClassLoader?, className: String,
+    override fun transform(loader: ClassLoader?, classNamePerhaps: String?,
                            classBeingRedefined: Class<*>?, protectionDomain: ProtectionDomain?,
                            classfileBuffer: ByteArray): ByteArray? {
 
+        val className = classNamePerhaps ?: return null
         return createVisitor(className)?.let { visitor ->
 
             val reader = ClassReader(classfileBuffer)
