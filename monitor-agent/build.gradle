@@ -61,7 +61,7 @@ protobuf.protoc {
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
     dependsOn("generateProto")
-    dependsOn("buildNative")
+//    dependsOn("buildNative")
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
