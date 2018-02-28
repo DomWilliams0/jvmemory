@@ -29,14 +29,14 @@ class ClassLoaderClassVisitor(api: Int, cv: ClassVisitor?) : ClassVisitor(api, c
 
         override fun onMethodEnter() {
             super.visitInsn(Opcodes.ICONST_1)
-            callMonitor(Monitor::onClassLoad)
+            callMonitor(Monitor::enterIgnoreRegion)
 
             super.onMethodEnter()
         }
 
         override fun onMethodExit(opcode: Int) {
             super.visitInsn(Opcodes.ICONST_0)
-            callMonitor(Monitor::onClassLoad)
+            callMonitor(Monitor::enterIgnoreRegion)
 
             super.onMethodExit(opcode)
         }

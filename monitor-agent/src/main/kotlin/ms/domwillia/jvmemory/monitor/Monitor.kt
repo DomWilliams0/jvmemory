@@ -5,7 +5,7 @@ object Monitor {
 
     @JvmStatic external fun setProgramRunning(running: Boolean)
 
-    @JvmStatic external fun onClassLoad(starting: Boolean)
+    @JvmStatic external fun enterIgnoreRegion(entering: Boolean)
 
     /**
      * To be called from within java/lang/Object's constructor only

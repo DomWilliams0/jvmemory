@@ -19,10 +19,10 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramRunn
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
- * Method:    onClassLoad
+ * Method:    enterIgnoreRegion
  * Signature: (Z)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterIgnoreRegion
 		(JNIEnv *,
 		 jclass,
 		 jboolean);

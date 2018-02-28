@@ -25,13 +25,13 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_setProgramRunn
  * Method:    onClassLoad
  * Signature: (Z)V
  */
-JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onClassLoad(
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterIgnoreRegion(
 		JNIEnv *jnienv,
 		jclass klass,
-		jboolean starting)
+		jboolean entering)
 {
 	struct thread_local_state *state = thread_local_state_get();
-	state->classload_depth += starting == JNI_TRUE ? 1 : -1;
+	state->ignore_depth += entering == JNI_TRUE ? 1 : -1;
 }
 
 /*

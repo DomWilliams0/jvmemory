@@ -3,10 +3,7 @@ package ms.domwillia.jvmemory.modify.patcher
 import ms.domwillia.jvmemory.modify.BytecodeTransformer
 import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.MethodDefinition
-import org.objectweb.asm.Label
-import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Type
+import org.objectweb.asm.*
 import org.objectweb.asm.commons.InstructionAdapter
 
 class MethodPatcher(
@@ -116,6 +113,16 @@ class MethodPatcher(
         }
 
         super.putfield(owner, name, desc)
+    }
+
+    override fun invokedynamic(name: String?, desc: String?, bsm: Handle?, bsmArgs: Array<out Any>?) {
+        super.iconst(1)
+        callMonitor(Monitor::enterIgnoreRegion)
+
+        super.invokedynamic(name, desc, bsm, bsmArgs)
+
+        super.iconst(0)
+        callMonitor(Monitor::enterIgnoreRegion)
     }
 
     override fun newarray(type: Type) {

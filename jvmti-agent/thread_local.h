@@ -8,7 +8,7 @@
 
 struct thread_local_state {
 	jlong tid; // for debugging
-	unsigned int classload_depth;
+	unsigned int ignore_depth;
 	jlong tracked_system_obj;
 };
 
