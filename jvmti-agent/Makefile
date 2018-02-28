@@ -11,6 +11,7 @@ TARGET = libagent.so
 
 RUST_COMPILE_DIR = release
 LOGGER_BASE_DIR = jvmti_logger
+RUST_SRCS = $(shell find $(LOGGER_BASE_DIR)/src -type f -name "*.rs")
 LOGGER_DIR = $(LOGGER_BASE_DIR)/target/$(RUST_COMPILE_DIR)
 LOGGER_LIB = $(LOGGER_DIR)/libjvmti_logger.a
 
@@ -38,6 +39,5 @@ $(TARGET): $(OBJS) $(LOGGER_LIB)
 $(OBJS): %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: $(LOGGER_LIB)
-$(LOGGER_LIB):
+$(LOGGER_LIB): $(RUST_SRCS)
 	@(cd $(LOGGER_BASE_DIR) && cargo build)
