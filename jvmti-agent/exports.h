@@ -181,6 +181,29 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrim
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onGetStatic
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetStatic
+		(JNIEnv *,
+		 jclass,
+		 jstring,
+		 jstring);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onPutStaticObject
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutStaticObject
+		(JNIEnv *,
+		 jclass,
+		 jobject,
+		 jstring,
+		 jstring);
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onStoreLocalVarObject
  * Signature: (Ljava/lang/Object;I)V
  */

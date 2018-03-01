@@ -231,6 +231,43 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutFieldPrim
 
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onGetStatic
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onGetStatic(
+		JNIEnv *jnienv,
+		jclass klass,
+		jstring class,
+		jstring field)
+{
+	const char *class_str = (*jnienv)->GetStringUTFChars(jnienv, class, NULL);
+	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
+	on_get_static(logger, get_thread_id(jnienv), class_str, field_str);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, class, class_str);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    onPutStaticObject
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onPutStaticObject(
+		JNIEnv *jnienv,
+		jclass klass,
+		jobject value,
+		jstring class,
+		jstring field)
+{
+	const char *class_str = (*jnienv)->GetStringUTFChars(jnienv, class, NULL);
+	const char *field_str = (*jnienv)->GetStringUTFChars(jnienv, field, NULL);
+	on_put_static_object(logger, get_thread_id(jnienv), class_str, field_str, get_tag(value));
+	(*jnienv)->ReleaseStringUTFChars(jnienv, field, field_str);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, class, class_str);
+}
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    onStoreLocalVarObject
  * Signature: (Ljava/lang/Object;I)V
  */

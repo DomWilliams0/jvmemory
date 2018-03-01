@@ -115,6 +115,34 @@ class MethodPatcher(
         super.putfield(owner, name, desc)
     }
 
+    override fun getstatic(owner: String, name: String, desc: String) {
+        if (Type.getType(desc).sort == Type.OBJECT) {
+            super.visitLdcInsn(owner)
+            super.visitLdcInsn(name)
+            callMonitor(Monitor::onGetStatic)
+        }
+
+        super.getstatic(owner, name, desc)
+    }
+
+    override fun putstatic(owner: String, name: String, desc: String) {
+        if (Type.getType(desc).sort == Type.OBJECT) {
+            // stack: value
+            super.dup()
+
+            // stack: value value
+            super.visitLdcInsn(owner)
+            super.visitLdcInsn(name)
+
+            // stack: value value class field
+            callMonitor(Monitor::onPutStaticObject)
+
+            // stack: value
+        }
+
+        super.putstatic(owner, name, desc)
+    }
+
     override fun invokedynamic(name: String?, desc: String?, bsm: Handle?, bsmArgs: Array<out Any>?) {
         super.iconst(1)
         callMonitor(Monitor::enterIgnoreRegion)

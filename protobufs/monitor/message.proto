@@ -22,6 +22,9 @@ enum MessageType {
     PUTFIELD_OBJECT = 7;
     PUTFIELD_PRIMITIVE = 8;
 
+    GETSTATIC = 15;
+    PUTSTATIC_OBJECT = 16;
+
     LOAD = 9;
     LOAD_ARRAY = 10;
 
@@ -50,6 +53,9 @@ message Variant {
         GetField get_field = 8;
         PutFieldObject put_field_object = 9;
         PutFieldPrimitive put_field_primitive = 10;
+
+        GetStatic get_static = 18;
+        PutStaticObject put_static_object = 19;
 
         Load load = 11;
         LoadFromArray load_from_array = 12;

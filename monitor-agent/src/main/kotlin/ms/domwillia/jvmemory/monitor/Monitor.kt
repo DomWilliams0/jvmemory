@@ -45,6 +45,12 @@ object Monitor {
      */
     @JvmStatic external fun onPutFieldPrimitive(obj: Any, field: String)
 
+    @JvmStatic
+    external fun onGetStatic(clazz: String, field: String)
+
+    @JvmStatic
+    external fun onPutStaticObject(value: Any?, clazz: String, field: String)
+
     @JvmStatic external fun onStoreLocalVarObject(value: Any, index: Int)
 
     /**

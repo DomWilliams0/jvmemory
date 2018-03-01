@@ -106,6 +106,44 @@ pub extern "C" fn on_put_field_primitive(
 }
 
 #[no_mangle]
+pub extern "C" fn on_get_static(
+    logger: *mut Logger,
+    thread_id: Long,
+    class: String,
+    field: String,
+) {
+    let mut payload = access::GetStatic::new();
+    payload.class = get_string!(class);
+    payload.field = get_string!(field);
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_get_static(payload);
+    msg.set_field_type(MessageType::GETSTATIC);
+    io::log_message(logger, msg);
+}
+
+#[no_mangle]
+pub extern "C" fn on_put_static_object(
+    logger: *mut Logger,
+    thread_id: Long,
+    class: String,
+    field: String,
+    value_id: Long,
+) {
+    let mut payload = access::PutStaticObject::new();
+    payload.class = get_string!(class);
+    payload.field = get_string!(field);
+    payload.value_id = value_id;
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_put_static_object(payload);
+    msg.set_field_type(MessageType::PUTSTATIC_OBJECT);
+    io::log_message(logger, msg);
+}
+
+#[no_mangle]
 pub extern "C" fn on_store_object(
     logger: *mut Logger,
     thread_id: Long,

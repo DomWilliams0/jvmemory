@@ -33,6 +33,17 @@ extern void on_put_field_primitive(logger_p logger,
                                    long obj_id,
                                    const char *field);
 
+extern void on_get_static(logger_p logger,
+                          long thread_id,
+                          const char *clazz,
+                          const char *field);
+
+extern void on_put_static_object(logger_p logger,
+                                 long thread_id,
+                                 const char *clazz,
+                                 const char *field,
+                                 long value_id);
+
 extern void on_store_object(logger_p logger,
                             long thread_id,
                             long value_id,
