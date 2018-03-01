@@ -115,8 +115,13 @@ class MethodPatcher(
         super.putfield(owner, name, desc)
     }
 
+    private fun isReferenceType(desc: String): Boolean =
+            Type.getType(desc).sort.let { t ->
+                t == Type.OBJECT || t == Type.ARRAY
+            }
+
     override fun getstatic(owner: String, name: String, desc: String) {
-        if (Type.getType(desc).sort == Type.OBJECT) {
+        if (isReferenceType(desc)) {
             super.visitLdcInsn(owner)
             super.visitLdcInsn(name)
             callMonitor(Monitor::onGetStatic)
@@ -126,7 +131,7 @@ class MethodPatcher(
     }
 
     override fun putstatic(owner: String, name: String, desc: String) {
-        if (Type.getType(desc).sort == Type.OBJECT) {
+        if (isReferenceType(desc)) {
             // stack: value
             super.dup()
 
