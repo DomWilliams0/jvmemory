@@ -12,6 +12,9 @@ jboolean should_log_allocation()
 		return JNI_FALSE;
 
 	struct thread_local_state *state = thread_local_state_get();
+	if (state == NULL)
+		return JNI_FALSE;
+
 	return (jboolean) (state->ignore_depth == 0 ? JNI_TRUE : JNI_FALSE);
 }
 
