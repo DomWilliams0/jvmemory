@@ -6,9 +6,9 @@ ROOT?=$(PWD)
 GRADLE_FLAGS=--daemon --parallel
 
 # protobufs
-PROTO_ROOT=$(ROOT)/protobufs
-PROTO_SRCS_JVM=$(shell find $(PROTO_ROOT/monitor) -type f)
-PROTO_SRCS_VIS=$(shell find $(PROTO_ROOT/vis) -type f)
+# PROTO_ROOT=$(ROOT)/protobufs
+# PROTO_SRCS_JVM=$(shell find $(PROTO_ROOT/monitor) -type f)
+# PROTO_SRCS_VIS=$(shell find $(PROTO_ROOT/vis) -type f)
 
 # monitor agent
 MONITOR_TRGT=$(TARGET_DIR)/agent.jar
@@ -52,7 +52,7 @@ $(TARGET_DIR):
 
 # TODO check for failures needed?
 
-$(MONITOR_TRGT): $(MONITOR_SRC) $(PROTO_SRCS_JVM)
+$(MONITOR_TRGT): $(MONITOR_SRC)
 	$(MONITOR_ROOT)/gradlew $(GRADLE_FLAGS) -p $(MONITOR_ROOT) buildJar >$@.stdout 2>$@.stderr
 	@cp -f $(MONITOR_ROOT)/build/libs/monitor-agent-$(VERSION).jar $@
 
@@ -60,17 +60,17 @@ $(BOOTSTRAP_TRGT): $(MONITOR_TRGT)
 	@cp -f $< $@
 	@zip -q -d $@ ms/domwillia/jvmemory/modify/*
 
-$(PREPROC_TRGT): $(PREPROC_SRCS) $(PROTO_SRCS_JVM $(PROTO_SRCS_VIS))
+$(PREPROC_TRGT): $(PREPROC_SRCS)
 	$(PREPROC_ROOT)/gradlew $(GRADLE_FLAGS) -p $(PREPROC_ROOT) buildJar >$@.stdout 2>$@.stderr
 	@cp -f $(PREPROC_ROOT)/build/libs/visualisation-server-$(VERSION).jar $@
 
-$(NATIVE_TRGT): $(PROTO_SRCS_JVM)
+$(NATIVE_TRGT):
 	$(MAKE) -C $(NATIVE_ROOT) >$@.stdout 2>$@.stderr
 	@cp -f $(NATIVE_ROOT)/libagent.so $@
 
 # TODO replace slow sbt
 # TODO release config
-$(EVENTS_TRGT): $(EVENTS_SRCS) $(PROTO_SRCS_VIS)
+$(EVENTS_TRGT): $(EVENTS_SRCS)
 	(cd $(EVENTS_ROOT) && exec sbt fastOptJS) >$@.stdout 2>$@.stderr
 	@cp -f $(EVENTS_ROOT)/target/scala-$(SCALA_VERSION)/event_ticker-fastopt.js $@
 
