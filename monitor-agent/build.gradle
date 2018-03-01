@@ -68,7 +68,7 @@ compileTestKotlin {
 }
 
 clean {
-    dependsOn("cleanNative")
+//    dependsOn("cleanNative")
 }
 
 task buildNative(type: Exec) {
