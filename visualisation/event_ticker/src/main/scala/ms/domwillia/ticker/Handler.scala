@@ -21,6 +21,7 @@ class Handler(val goodyBag: GoodyBag) {
   // state keeping for rewinding time
   private val linkHistory = mutable.HashMap[(InternalObjectId, String), mutable.ArrayStack[InternalObjectId]]()
   private val stackHistory = mutable.ArrayStack[(MethodName, MethodDefinition)]()
+  private var calledObj: Option[InternalObjectId] = None
 
   def handle(payload: Payload, forwards: Boolean): HandleResult = payload match {
     case Payload.AddHeapObject(value) => if (forwards) handleImpl(value) else undoImpl(value)
@@ -134,10 +135,19 @@ class Handler(val goodyBag: GoodyBag) {
 
   private def handleImpl(value: PushMethodFrame): HandleResult = {
     val method = s"${value.owningClass}#${value.name}"
-    if (value.objId == 0)
+
+    calledObj.foreach(goodyBag.setCalledObjHighlighted(_, false))
+
+    if (value.objId == 0) {
       println(s"static method $method")
-    else
+    }
+    else {
       println(s"calling $method on ${value.objId}")
+      calledObj = Some(value.objId)
+    }
+
+    calledObj.foreach(goodyBag.setCalledObjHighlighted(_, true))
+
     goodyBag.definitions.getMethodDefinition(value.owningClass, value.name, value.signature)
       .map(new StackFrame(value.owningClass, _))
       .foreach(goodyBag.callStack.push)

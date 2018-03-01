@@ -50,6 +50,17 @@ function highlightHeapObj(objId, field, read) {
     }
 }
 
+function setCalledObjHighlighted(objId, highlight) {
+    console.log("hello %o", objId);
+    const clazz = "calledObj";
+    const obj = node.filter(d => d.id === objId);
+
+    if (!obj.empty()) {
+        obj.classed(clazz, highlight);
+    }
+
+}
+
 function setPlayButtonState(playing) {
     const play = "fa-play";
     const pause = "fa-pause";
@@ -103,6 +114,7 @@ function startTicking(events) {
         setSimState: (state) => state ? sim.restart() : sim.stop(),
         highlightLocalVar: highlightLocalVar,
         highlightHeapObj: highlightHeapObj,
+        setCalledObjHighlighted,
         removeStackNodes,
         removeHeapNode,
         getHeapCentre: () => HEAP_CENTRE,
