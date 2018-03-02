@@ -91,6 +91,10 @@ function removeHeapNode(id) {
     heapObjects.splice(index, 1);
 }
 
+function removeLinks(targetId) {
+    heapLinks = heapLinks.filter(x => x.target.id !== targetId)
+}
+
 const playPauseButton = d3.select("#play-pause");
 
 const SPEED_STEP = 50;
@@ -117,6 +121,7 @@ function startTicking(events) {
         setCalledObjHighlighted,
         removeStackNodes,
         removeHeapNode,
+        removeLinks,
         getHeapCentre: () => HEAP_CENTRE,
         callStack,
         definitions,

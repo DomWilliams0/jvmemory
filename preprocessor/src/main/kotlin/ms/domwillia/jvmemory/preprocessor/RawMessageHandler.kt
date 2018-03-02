@@ -235,14 +235,22 @@ class RawMessageHandler(private val classStates: ClassStates) {
         })
     }
 
+    // TODO what if other threads set the value of a static?
+
     private fun putStaticObject(putStaticObject: Access.PutStaticObject): EmittedEvents {
         val state = classStates[putStaticObject.class_]
                 ?: throw IllegalArgumentException("unknown class ${putStaticObject.class_}")
 
-        state.statics[putStaticObject.field] = putStaticObject.valueId
+        val oldValue = state.statics.put(putStaticObject.field, putStaticObject.valueId)
 
-        // TODO set static event
-        return emptyEmittedEvents
+        return createEvents(EventType.SET_STATIC, {
+            it.setStatic = SetStatic.newBuilder().apply {
+                oldObjId = oldValue ?: 0L
+                newObjId = putStaticObject.valueId
+                class_ = putStaticObject.class_
+                fieldName = putStaticObject.field
+            }.build()
+        })
     }
 
     private fun storeObjectInArray(store: Access.StoreObjectInArray): EmittedEvents {

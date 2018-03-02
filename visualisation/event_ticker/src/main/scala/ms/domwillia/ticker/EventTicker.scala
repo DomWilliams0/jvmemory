@@ -19,6 +19,7 @@ trait GoodyBag extends js.Object {
   val setCalledObjHighlighted: js.Function2[VisualObjectId, Boolean, Unit] = js.native
   val removeStackNodes: js.Function1[StackFrameUuid, Unit] = js.native
   val removeHeapNode: js.Function1[VisualObjectId, Unit] = js.native
+  val removeLinks: js.Function1[VisualObjectId, Unit] = js.native
   val getHeapCentre: js.Function0[js.Array[Float]] = js.native
 
   val callStack: CallStack = js.native

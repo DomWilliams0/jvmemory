@@ -18,6 +18,8 @@ enum EventType {
 
     PUSH_METHOD_FRAME = 7;
     POP_METHOD_FRAME = 8;
+
+    SET_STATIC = 9;
 }
 
 message EventVariant {
@@ -35,6 +37,8 @@ message EventVariant {
 
         PushMethodFrame push_method_frame = 8;
         PopMethodFrame pop_method_frame = 10;
+
+        SetStatic set_static = 11;
     }
 }
 
@@ -77,4 +81,11 @@ message ShowHeapObjectAccess {
     int64 obj_id = 1;
     string field_name = 2;
     bool read = 3;
+}
+
+message SetStatic {
+    int64 old_obj_id = 1;
+    int64 new_obj_id = 2;
+	string class = 3;
+	string field_name = 4;
 }

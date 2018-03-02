@@ -1,7 +1,5 @@
 package ms.domwillia.specimen;
 
-import java.util.ArrayList;
-
 public class StaticField implements Specimen {
 /*	static Object[] objects = new Object[10];
 	static int dontIgnoreMe = 0;
@@ -21,12 +19,18 @@ public class StaticField implements Specimen {
 	@Override
 	public void go() {
 
-		Element[] arr = new Element[3];
-		arr[0] = new Element();
-		arr[1] = new Element();
-		arr[2] = new Element();
+//		Element[] arr = new Element[3];
+//		arr[0] = new Element();
+//		arr[1] = new Element();
+//		arr[2] = new Element();
 
-		int hash = arr[0].shared.hashCode();
+		new Element();
+		new Element();
+
+		for (int i = 0; i < 3; i++) {
+			Element.shared = null;
+			Element.shared = new Object();
+		}
 
 /*
 		Object a;

@@ -32,6 +32,7 @@ class Handler(val goodyBag: GoodyBag) {
     case Payload.ShowHeapObjectAccess(value) => if (forwards) handleImpl(value) else undoImpl(value)
     case Payload.PushMethodFrame(value) => if (forwards) handleImpl(value) else undoImpl(value)
     case Payload.PopMethodFrame(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.SetStatic(value) => if (forwards) handleImpl(value) else undoImpl(value)
     case x => println(s"unknown event: $x"); HandleResult.NoGraphChange
   }
 
@@ -170,6 +171,34 @@ class Handler(val goodyBag: GoodyBag) {
     val history = stackHistory.pop()
     pushStackFrame(history)
     HandleResult.ChangedGraph
+  }
+
+  private def handleImpl(value: SetStatic): HandleResult = {
+
+    if (value.oldObjId != 0L) {
+      if (value.newObjId != 0L) {
+        // redirect existing links
+        goodyBag.links().filter(_.target.id == value.oldObjId).foreach(_.target = findNode(value.newObjId))
+      } else {
+        // delete links
+        goodyBag.removeLinks(value.oldObjId)
+      }
+    } else {
+      // create new links
+      val links = goodyBag.links()
+      val target = findNode(value.newObjId)
+      goodyBag.nodes()
+        .filter(_.clazz == value._class)
+        .foreach(n => links.push(new Link(n, target, value.fieldName)))
+    }
+
+    HandleResult.ChangedGraph
+  }
+
+  private def undoImpl(value: SetStatic): HandleResult = {
+
+    // TODO
+    HandleResult.NoGraphChange
   }
 
   private def findNode(id: VisualObjectId): Node = goodyBag.nodes().find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
