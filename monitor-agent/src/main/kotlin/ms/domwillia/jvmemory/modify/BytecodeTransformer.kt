@@ -1,5 +1,6 @@
 package ms.domwillia.jvmemory.modify
 
+import ms.domwillia.jvmemory.modify.patcher.tidyClassName
 import ms.domwillia.jvmemory.modify.visitor.*
 import org.objectweb.asm.*
 import java.io.File
@@ -58,7 +59,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             val classDir = "/tmp/classes"
             File(classDir).mkdir()
 
-            val outPath = "$classDir/mod_${className.replace('/', '.')}.class"
+            val outPath = "$classDir/mod_${className.tidyClassName()}.class"
             File(outPath).outputStream().use { file ->
                 file.write(bytes)
             }
@@ -126,7 +127,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             val bootstrapPath = split.take(1).elementAtOrNull(0) ?: bail()
             val classes = split.drop(1)
                     .filter(String::isNotEmpty)
-                    .map { it.replace('.', '/') }
+                    .map { it.replace('.', '/') } // cannot use String#tidyClassName here because JVMTI_ERROR_WRONG_PHASE
                     .toList()
 
             if (!File(bootstrapPath).isFile)

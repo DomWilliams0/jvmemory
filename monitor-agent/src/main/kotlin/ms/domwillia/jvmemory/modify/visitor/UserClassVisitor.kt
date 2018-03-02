@@ -3,10 +3,14 @@ package ms.domwillia.jvmemory.modify.visitor
 import ms.domwillia.jvmemory.modify.patcher.CallTracer
 import ms.domwillia.jvmemory.modify.patcher.MainPatcher
 import ms.domwillia.jvmemory.modify.patcher.MethodPatcher
+import ms.domwillia.jvmemory.modify.patcher.tidyClassName
 import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.ClassType
-import org.objectweb.asm.*
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.FieldVisitor
+import org.objectweb.asm.MethodVisitor
 
 class UserClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer) {
 
@@ -20,8 +24,7 @@ class UserClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer
             superName: String?,
             interfaces: Array<String>?
     ) {
-        fun tidyClassName(name: String?): String? = name?.replace('/', '.')
-        currentClass = ClassDefinition(tidyClassName(name)!!, access, tidyClassName(superName), interfaces)
+        currentClass = ClassDefinition(name.tidyClassName(), access, superName?.tidyClassName(), interfaces)
         super.visit(version, access, name, signature, superName, interfaces)
     }
 

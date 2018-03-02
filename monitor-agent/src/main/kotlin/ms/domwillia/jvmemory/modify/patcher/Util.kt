@@ -23,3 +23,4 @@ fun <R> MethodVisitor.callMonitor(method: KFunction<R>) {
     )
 }
 
+fun String.tidyClassName(): String = replace('/', '.')
