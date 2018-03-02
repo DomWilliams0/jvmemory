@@ -122,7 +122,7 @@ class MethodPatcher(
 
     override fun getstatic(owner: String, name: String, desc: String) {
         if (isReferenceType(desc)) {
-            super.visitLdcInsn(owner)
+            super.visitLdcInsn(owner.tidyClassName())
             super.visitLdcInsn(name)
             callMonitor(Monitor::onGetStatic)
         }
@@ -136,7 +136,7 @@ class MethodPatcher(
             super.dup()
 
             // stack: value value
-            super.visitLdcInsn(owner)
+            super.visitLdcInsn(owner.tidyClassName())
             super.visitLdcInsn(name)
 
             // stack: value value class field
