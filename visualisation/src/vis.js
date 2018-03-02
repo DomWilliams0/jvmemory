@@ -9,10 +9,9 @@ let HEAP_CENTRE;
 // constants
 const CENTRE_PULL = 0.030;
 const NODE_REPULSION = 40;
-const LINK_LENGTH = 50;
-const HEAP_LINK_STRENGTH = 2.0;
-const STACK_LINK_STRENGTH = 1.0;
+const LINK_LENGTH = 60;
 
+const STATIC_NODE_RADIUS = 6;
 const HEAP_NODE_RADIUS = 4;
 const STACK_NODE_RADIUS = 2;
 const LOCAL_VAR_SLOT_HEIGHT = 18;
@@ -26,7 +25,7 @@ const sim = d3.forceSimulation(heapObjects)
     .force("charge", d3.forceManyBody().strength(-NODE_REPULSION))
     .force("link", d3.forceLink().id(d => d.id)
         .distance(LINK_LENGTH)
-        .strength(d => d.stack ? STACK_LINK_STRENGTH : HEAP_LINK_STRENGTH))
+        .strength(linkStrength))
     .on("tick", tickSim)
     .alphaTarget(0.5);
 
@@ -146,6 +145,46 @@ function shortenClassName(className) {
     }
     return className;
 }
+function linkStrength(d) {
+    if (d.stack)
+        return 0.25;
+
+    if (d.static)
+        return 0.1;
+
+    return 0.4;
+}
+
+function nodeRadius(d) {
+    if (d.stack)
+        return STACK_NODE_RADIUS;
+
+    if (d.static) {
+        return STATIC_NODE_RADIUS;
+    }
+
+    return HEAP_NODE_RADIUS;
+}
+
+function nodeClass(d) {
+    if (d.stack)
+        return "stackNode";
+
+    if (d.static)
+        return "staticNode";
+
+    return "node";
+}
+
+function linkClass(d) {
+    if (d.stack)
+        return "stackLink";
+
+    if (d.target.static)
+        return "staticLink";
+
+    return "link";
+}
 
 function restart(changedGraph) {
     // sim.stop(); // necessary?
@@ -156,11 +195,15 @@ function restart(changedGraph) {
     node = node.data(heapObjects, d => d.id);
     node.exit().remove();
 
+    node.select("circle")
+        .attr("r", nodeRadius)
+        .attr("class", nodeClass);
+
     let nodeEnter = node.enter().append("g");
     let nodeEnterObjs = nodeEnter.append("circle");
     nodeEnterObjs
-        .attr("class", d => d.stack ? "nodeStack" : "node")
-        .attr("r", d => d.stack ? STACK_NODE_RADIUS : HEAP_NODE_RADIUS)
+        .attr("class", nodeClass)
+        .attr("r", nodeRadius)
         .attr("fill", d => d.fill ? d.fill : "none");
     nodeEnterObjs.append("title") // hover
         .text(d => d.id + " - " + d.clazz);
@@ -185,7 +228,7 @@ function restart(changedGraph) {
     link = link.data(heapLinks, d => d.name);
     link.exit().remove();
     let linkEnter = link.enter().append("line")
-        .attr("class", d => d.stack ? "stackLink" : "link")
+        .attr("class", linkClass)
         .attr("marker-end", "url(#arrowhead)");
     link = link.merge(linkEnter);
 

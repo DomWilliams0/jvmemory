@@ -172,9 +172,13 @@ class Handler(val goodyBag: GoodyBag) {
   private def handleImpl(value: SetStatic): HandleResult = {
 
     if (value.oldObjId != 0L) {
+      findNode(value.oldObjId).static = false
+
       if (value.newObjId != 0L) {
         // redirect existing links
-        goodyBag.links().filter(_.target.id == value.oldObjId).foreach(_.target = findNode(value.newObjId))
+        val newNode = findNode(value.newObjId)
+        goodyBag.links().filter(_.target.id == value.oldObjId).foreach(_.target = newNode)
+        newNode.static = true
       } else {
         // delete links
         goodyBag.removeLinks(value.oldObjId)
@@ -186,6 +190,7 @@ class Handler(val goodyBag: GoodyBag) {
       goodyBag.nodes()
         .filter(_.clazz == value._class)
         .foreach(n => links.push(new Link(n, target, value.fieldName)))
+      target.static = true
     }
 
     HandleResult.ChangedGraph

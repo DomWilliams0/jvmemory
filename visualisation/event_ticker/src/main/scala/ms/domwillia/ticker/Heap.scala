@@ -23,6 +23,7 @@ class StackMeta(val frameUuid: StackFrameUuid, val index: Int) extends js.Object
 class Node(val id: VisualObjectId,
            val clazz: TypeName,
            pos: (Float, Float),
+           var static: Boolean = false,
            val array: UndefOr[ArrayMeta] = js.undefined,
            val stack: UndefOr[StackMeta] = js.undefined,
            val fill: NodeColour = "none")

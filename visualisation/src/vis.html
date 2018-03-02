@@ -81,9 +81,14 @@
 
         .node { stroke: black; }
 
-        .nodeStack {
-            fill: #46c3e1;
+        .stackNode {
             stroke: black;
+            fill: #46c3e1;
+        }
+
+        .staticNode {
+            stroke: black;
+            stroke-dasharray: 3px;
         }
 
         .nodeArray {
@@ -97,6 +102,11 @@
         }
 
         .stackLink { stroke: #333; }
+
+        .staticLink {
+            stroke: #23a4e0;
+            stroke-dasharray: 3px;
+        }
 
         .linkLabel {
             font-size: 8pt;
@@ -152,7 +162,6 @@
             left: 50%;
             padding: 10px;
             border-radius: 10px;
-
         }
     </style>
 </head>
