@@ -179,7 +179,7 @@ class Handler(val goodyBag: GoodyBag) {
         // delete links
         goodyBag.removeLinks(value.oldObjId)
       }
-    } else {
+    } else if (value.newObjId != 0L) {
       // create new links
       val links = goodyBag.links()
       val target = findNode(value.newObjId)
