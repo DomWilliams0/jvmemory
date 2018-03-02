@@ -106,7 +106,25 @@ class RawMessageHandler(private val classStates: ClassStates) {
             }.build()
         })
 
-        // TODO connect to all static vars for class
+        // TODO links must be static
+        classStates[alloc.type]?.let { cls ->
+            cls.def.fieldsList
+                    .filter { it.static }
+                    .forEach { field ->
+                        cls.statics[field.name]?.let { value ->
+                            if (value != 0L) {
+                                events += createEvent(EventType.SET_INTRA_HEAP_LINK, { e ->
+                                    e.setIntraHeapLink = SetIntraHeapLink.newBuilder().apply {
+                                        srcId = alloc.id
+                                        dstId = value
+                                        fieldName = field.name
+                                    }.build()
+                                })
+                            }
+                        }
+                    }
+        }
+
 
         return events
     }
