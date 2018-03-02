@@ -15,13 +15,14 @@ object HandleResult extends Enumeration {
   val NoGraphChange, ChangedStackOnly, ChangedGraph = Value
 }
 
+case class StackFrameBuilder(calledObj: VisualObjectId, className: TypeName, methodDef: MethodDefinition)
+
 class Handler(val goodyBag: GoodyBag) {
   implicit def id2int(id: InternalObjectId): VisualObjectId = id.toString
 
   // state keeping for rewinding time
   private val linkHistory = mutable.HashMap[(InternalObjectId, String), mutable.ArrayStack[InternalObjectId]]()
-  private val stackHistory = mutable.ArrayStack[(MethodName, MethodDefinition)]()
-  private var calledObj: Option[InternalObjectId] = None
+  private val stackHistory = mutable.ArrayStack[StackFrameBuilder]()
 
   def handle(payload: Payload, forwards: Boolean): HandleResult = payload match {
     case Payload.AddHeapObject(value) => if (forwards) handleImpl(value) else undoImpl(value)
@@ -135,23 +136,13 @@ class Handler(val goodyBag: GoodyBag) {
   private def undoImpl(value: ShowHeapObjectAccess): HandleResult = HandleResult.NoGraphChange
 
   private def handleImpl(value: PushMethodFrame): HandleResult = {
-    val method = s"${value.owningClass}#${value.name}"
-
-    calledObj.foreach(goodyBag.setCalledObjHighlighted(_, false))
-
-    if (value.objId == 0) {
-      println(s"static method $method")
-    }
-    else {
-      println(s"calling $method on ${value.objId}")
-      calledObj = Some(value.objId)
-    }
-
-    calledObj.foreach(goodyBag.setCalledObjHighlighted(_, true))
+    setTopOfCallStackCalled(false)
 
     goodyBag.definitions.getMethodDefinition(value.owningClass, value.name, value.signature)
-      .map(new StackFrame(value.owningClass, _))
+      .map(new StackFrame(value.objId, value.owningClass, _))
       .foreach(goodyBag.callStack.push)
+
+    setTopOfCallStackCalled(true)
 
     HandleResult.NoGraphChange
   }
@@ -162,8 +153,13 @@ class Handler(val goodyBag: GoodyBag) {
   }
 
   private def handleImpl(value: PopMethodFrame): HandleResult = {
+    setTopOfCallStackCalled(false)
+
     val frame = popStackFrame()
-    stackHistory.push((frame.clazzLong, frame.method))
+    stackHistory.push(StackFrameBuilder(frame.calledObject, frame.clazzLong, frame.method))
+
+    setTopOfCallStackCalled(true)
+
     HandleResult.ChangedGraph
   }
 
@@ -221,11 +217,17 @@ class Handler(val goodyBag: GoodyBag) {
     case _ => throw new IllegalStateException("heap centre must be [x, y]")
   }
 
-  private def pushStackFrame(args: (MethodName, MethodDefinition)): Unit = goodyBag.callStack.push(new StackFrame(args._1, args._2))
+  private def pushStackFrame(builder: StackFrameBuilder): Unit =
+    goodyBag.callStack.push(new StackFrame(builder.calledObj, builder.className, builder.methodDef))
 
   private def popStackFrame(): StackFrame = {
     val frame = goodyBag.callStack.pop()
     goodyBag.removeStackNodes(frame.uuid)
     frame
   }
+
+  private def setTopOfCallStackCalled(calling: Boolean) =
+    goodyBag.callStack.topPerhaps()
+      .filter(_.calledObject != "0")
+      .map(frame => goodyBag.setCalledObjHighlighted(frame.calledObject, calling))
 }

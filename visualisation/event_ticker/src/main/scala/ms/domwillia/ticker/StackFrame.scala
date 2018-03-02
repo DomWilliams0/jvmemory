@@ -2,7 +2,7 @@ package ms.domwillia.ticker
 
 import ms.domwillia.jvmemory.protobuf.definitions
 import ms.domwillia.jvmemory.protobuf.definitions.MethodDefinition
-import ms.domwillia.ticker.Types.{MethodName, StackFrameUuid, TypeName}
+import ms.domwillia.ticker.Types.{MethodName, StackFrameUuid, TypeName, VisualObjectId}
 
 import scala.collection.mutable
 import scala.scalajs.js
@@ -25,7 +25,7 @@ object StackFrame {
 
 class LocalVar(val name: String, val `type`: TypeName, val index: Int) extends js.Object
 
-class StackFrame(clazz: TypeName, val method: MethodDefinition) extends js.Object {
+class StackFrame(val calledObject: VisualObjectId, clazz: TypeName, val method: MethodDefinition) extends js.Object {
   val clazzLong: TypeName = clazz
   val clazzShort: TypeName = s"Short($clazzLong)" // TODO
   val name: MethodName = method.name

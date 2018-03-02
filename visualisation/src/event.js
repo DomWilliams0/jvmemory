@@ -51,14 +51,12 @@ function highlightHeapObj(objId, field, read) {
 }
 
 function setCalledObjHighlighted(objId, highlight) {
-    console.log("hello %o", objId);
     const clazz = "calledObj";
     const obj = node.filter(d => d.id === objId);
 
     if (!obj.empty()) {
         obj.classed(clazz, highlight);
     }
-
 }
 
 function setPlayButtonState(playing) {
