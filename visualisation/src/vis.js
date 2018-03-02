@@ -38,7 +38,7 @@ let stackFrame = stackSvg.selectAll(".stackFrame");
 resize();
 d3.select(window).on("resize", resize);
 
-fetch_threads().then(threads => {
+fetchThreads().then(threads => {
     if (!threads) {
         alert("No events!");
         return;
