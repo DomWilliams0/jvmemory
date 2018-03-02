@@ -13,7 +13,7 @@ enum class EventFlag {
 }
 
 class Preprocessor(
-        definitions: ClassDefinitions,
+        definitions: ClassStates,
         private val loader: EventsLoader,
         private val threadId: ThreadID
 ) {
@@ -124,8 +124,8 @@ class Preprocessor(
 
             val loader = EventsLoader(outputDirPath)
 
-            // load definitions first, regardless of thread
-            val definitions = getAllDefinitions(inputLogPath)
+            // load class defs and static values from all threads
+            val classStates = getAllDefinitions(inputLogPath)
 
             val threads = getAllThreadIds(inputLogPath)
             println("threads: $threads")
@@ -134,7 +134,7 @@ class Preprocessor(
                 val messages = readMessagesLazily(inputLogPath)
                         .filter { it.threadId == tid || it.threadId == 0L }
                         .toMutableList()
-                val proc = Preprocessor(definitions, loader, tid)
+                val proc = Preprocessor(classStates, loader, tid)
 
                 proc.preprocess(messages)
                 proc.process(messages)
@@ -142,18 +142,18 @@ class Preprocessor(
                 proc.writeOut()
             }
 
-            // dump definitions
+            // dump classStates
             loader.definitionFile.outputStream().use { stream ->
-                definitions.values.forEach { it.writeDelimitedTo(stream) }
+                classStates.values.forEach { it.def.writeDelimitedTo(stream) }
             }
 
             return loader
         }
 
-        private fun getAllDefinitions(inputLogPath: File): ClassDefinitions =
+        private fun getAllDefinitions(inputLogPath: File): ClassStates =
                 readMessagesLazily(inputLogPath)
                         .filter { it.type == Message.MessageType.CLASS_DEF }
-                        .associate { it.classDef.name to it.classDef }
+                        .associate { it.classDef.name to ClassState(it.classDef, mutableMapOf()) }
 
         private fun getAllThreadIds(inputLogPath: File): Set<ThreadID> =
                 readMessagesLazily(inputLogPath)

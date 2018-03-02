@@ -6,11 +6,14 @@ import java.util.*
 
 typealias EmittedEvent = EventVariant.Builder
 typealias EmittedEvents = MutableList<EmittedEvent>
-typealias ClassDefinitions = Map<String, Definitions.ClassDefinition>
+typealias ClassStates = Map<String, ClassState>
+
+data class ClassState(val def: Definitions.ClassDefinition,
+                      val statics: MutableMap<String, ObjectID>)
 
 val emptyEmittedEvents = mutableListOf<EmittedEvent>()
 
-class RawMessageHandler(private val classDefinitions: ClassDefinitions) {
+class RawMessageHandler(private val classStates: ClassStates) {
     private var allocations = mutableSetOf<ObjectID>()
     private var callstack = Stack<PushMethodFrame>()
 
@@ -28,6 +31,9 @@ class RawMessageHandler(private val classDefinitions: ClassDefinitions) {
 
         Message.MessageType.STORE_OBJECT -> storeObject(msg.storeObject)
         Message.MessageType.STORE_PRIMITIVE -> storePrimitive(msg.storePrimitive)
+
+        Message.MessageType.GETSTATIC -> getStatic(msg.getStatic)
+        Message.MessageType.PUTSTATIC_OBJECT -> putStaticObject(msg.putStaticObject)
 
         Message.MessageType.STORE_OBJECT_IN_ARRAY -> storeObjectInArray(msg.storeObjectInArray)
         Message.MessageType.STORE_PRIMITIVE_IN_ARRAY -> storePrimitiveInArray(msg.storePrimitiveInArray)
@@ -64,13 +70,13 @@ class RawMessageHandler(private val classDefinitions: ClassDefinitions) {
         val type = msg.class_
         val methodName = msg.method
 
-        val classDef = classDefinitions[type]
+        val classDef = classStates[type]
                 ?: throw IllegalStateException("undefined class $type")
-        val methodDef = classDef.methodsList.find { it.name == methodName }
+        val methodDef = classDef.def.methodsList.find { it.name == methodName }
                 ?: throw IllegalStateException("undefined method $type:$methodName")
 
         val frame = PushMethodFrame.newBuilder().apply {
-            owningClass = classDef.name
+            owningClass = type
             name = methodDef.name
             signature = methodDef.signature
             objId = msg.objId
@@ -93,12 +99,16 @@ class RawMessageHandler(private val classDefinitions: ClassDefinitions) {
     private fun allocateObject(alloc: Allocations.AllocationObject): EmittedEvents {
         allocations.add(alloc.id)
 
-        return createEvents(EventType.ADD_HEAP_OBJECT, {
+        val events = createEvents(EventType.ADD_HEAP_OBJECT, {
             it.addHeapObject = AddHeapObject.newBuilder().apply {
                 id = alloc.id
                 class_ = alloc.type
             }.build()
         })
+
+        // TODO connect to all static vars for class
+
+        return events
     }
 
     private fun allocateArray(alloc: Allocations.AllocationArray): EmittedEvents {
@@ -191,6 +201,30 @@ class RawMessageHandler(private val classDefinitions: ClassDefinitions) {
                 read = false
             }.build()
         })
+    }
+
+    private fun getStatic(getStatic: Access.GetStatic): EmittedEvents {
+        val state = classStates[getStatic.class_]
+                ?: throw IllegalArgumentException("unknown class ${getStatic.class_}")
+
+        val value = state.statics[getStatic.field] ?: return emptyEmittedEvents
+
+        return createEvents(EventType.SHOW_HEAP_OBJECT_ACCESS, {
+            it.showHeapObjectAccess = ShowHeapObjectAccess.newBuilder().apply {
+                objId = value
+                read = true
+            }.build()
+        })
+    }
+
+    private fun putStaticObject(putStaticObject: Access.PutStaticObject): EmittedEvents {
+        val state = classStates[putStaticObject.class_]
+                ?: throw IllegalArgumentException("unknown class ${putStaticObject.class_}")
+
+        state.statics[putStaticObject.field] = putStaticObject.valueId
+
+        // TODO set static event
+        return emptyEmittedEvents
     }
 
     private fun storeObjectInArray(store: Access.StoreObjectInArray): EmittedEvents {
