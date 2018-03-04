@@ -265,7 +265,7 @@ function restart(changedGraph) {
     stackFrameEnter.append("rect")
         .attr("width", "100%")
         .attr("height", d => (d.localVars.length * LOCAL_VAR_SLOT_HEIGHT) + FRAME_BASE_SIZE)
-        .attr("fill", () => "steelblue");
+        .attr("class", "stackFrame");
     stackFrameEnter.append("text")
         .attr("text-anchor", "middle")
         .attr("x", "50%")

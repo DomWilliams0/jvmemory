@@ -46,7 +46,7 @@
         }
 
         #buttons {
-            background-color: darkorchid;
+            /*background-color: darkorchid;*/
             display: flex;
             text-align: center;
             align-items: center;
@@ -71,19 +71,23 @@
             justify-content: stretch;
         }
 
-        #left { background-color: darkolivegreen;}
+        #left { background-color: #283d3b;}
 
-        #right { background-color: coral;}
+        #right { background-color: #353535;}
 
-        #stack { background-color: aqua; }
+        #stack { background-color: #878787; }
 
-        #heap { background-color: orange; }
+        #heap { background-color: #353535; }
 
         .node { stroke: black; }
 
         .stackNode {
             stroke: black;
-            fill: #46c3e1;
+            fill: white;
+        }
+
+        .stackFrame {
+            fill: #3b6074;
         }
 
         .staticNode {
@@ -101,7 +105,7 @@
             stroke-width: 1px;
         }
 
-        .stackLink { stroke: #333; }
+        .stackLink { stroke: #111; }
 
         .staticLink {
             stroke: #23a4e0;
@@ -109,8 +113,8 @@
         }
 
         .linkLabel {
-            font-size: 8pt;
-            fill: #666
+            font-size: 6pt;
+            fill: #fff
         }
 
         .calledObj {
