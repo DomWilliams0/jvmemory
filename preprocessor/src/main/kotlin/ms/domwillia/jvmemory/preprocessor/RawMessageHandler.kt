@@ -223,7 +223,7 @@ class RawMessageHandler(private val classStates: ClassStates) {
 
     private fun getStatic(getStatic: Access.GetStatic): EmittedEvents {
         val state = classStates[getStatic.class_]
-                ?: throw IllegalArgumentException("unknown class ${getStatic.class_}")
+                ?: return emptyEmittedEvents
 
         val value = state.statics[getStatic.field] ?: return emptyEmittedEvents
 
