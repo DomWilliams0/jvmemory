@@ -296,10 +296,25 @@ class MethodPatcher(
     }
 
     override fun visitMethodInsn(opcode: Int, owner: String, name: String?, desc: String?, itf: Boolean) {
+        val special = BytecodeTransformer.isSpecialSystemClass(owner)
+        val ignore = opcode != Opcodes.INVOKESPECIAL &&
+                !BytecodeTransformer.isMonitorClass(owner) &&
+                !special &&
+                !BytecodeTransformer.isUserClass(owner)
+
+        if (ignore) {
+            pushBoolean(true)
+            callMonitor(Monitor::enterIgnoreRegion)
+        }
+
         super.visitMethodInsn(opcode, owner, name, desc, itf)
 
-        if (opcode != Opcodes.INVOKESTATIC &&
-                BytecodeTransformer.isSpecialSystemClass(owner))
+        if (ignore) {
+            pushBoolean(false)
+            callMonitor(Monitor::enterIgnoreRegion)
+        }
+
+        if (opcode != Opcodes.INVOKESTATIC && special)
             callMonitor(Monitor::processSystemMethodChanges)
     }
 

@@ -13,13 +13,9 @@ import kotlin.system.exitProcess
 
 typealias VisitorConstructor = ((Int, ClassWriter) -> ClassVisitor)
 
-class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFileTransformer {
+class BytecodeTransformer : ClassFileTransformer {
 
     private val apiVersion = Opcodes.ASM6
-
-    private fun isUserClass(className: String): Boolean {
-        return userClassPrefixes.find { className.startsWith(it) } != null
-    }
 
     private fun createVisitor(className: String): VisitorConstructor? = when {
     // user classes
@@ -106,6 +102,12 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
 
         fun isSpecialSystemClass(clazz: String): Boolean = systemClassesDescriptors.containsKey(clazz)
 
+        private lateinit var userPackages: List<String>
+
+        fun isUserClass(className: String) = userPackages.find { className.startsWith(it) } != null
+
+        fun isMonitorClass(clazz: String) = clazz.startsWith("ms/domwillia/jvmemory/monitor")
+
         private fun forceLoadSystemClasses() {
             // the native method multiNewArray isn't automatically loaded without this? bizarre
             java.lang.reflect.Array.newInstance(Int::class.java, 1, 1)
@@ -125,7 +127,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
             val split = args.splitToSequence(',')
 
             val bootstrapPath = split.take(1).elementAtOrNull(0) ?: bail()
-            val classes = split.drop(1)
+            userPackages = split.drop(1)
                     .filter(String::isNotEmpty)
                     .map { it.replace('.', '/') } // cannot use String#tidyClassName here because JVMTI_ERROR_WRONG_PHASE
                     .toList()
@@ -135,7 +137,7 @@ class BytecodeTransformer(private val userClassPrefixes: List<String>) : ClassFi
 
             inst.appendToBootstrapClassLoaderSearch(JarFile(bootstrapPath))
             println("Adding to bootstrap path: $bootstrapPath")
-            inst.addTransformer(BytecodeTransformer(classes), true)
+            inst.addTransformer(BytecodeTransformer(), true)
             inst.retransformClasses(java.lang.Object::class.java)
             inst.retransformClasses(java.lang.ClassLoader::class.java)
 
