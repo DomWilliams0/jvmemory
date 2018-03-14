@@ -86,6 +86,6 @@ message ShowHeapObjectAccess {
 message SetStatic {
     int64 old_obj_id = 1;
     int64 new_obj_id = 2;
-	string class = 3;
-	string field_name = 4;
+    string class = 3;
+    string field_name = 4;
 }
