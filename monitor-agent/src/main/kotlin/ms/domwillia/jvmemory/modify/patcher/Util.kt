@@ -23,4 +23,8 @@ fun <R> MethodVisitor.callMonitor(method: KFunction<R>) {
     )
 }
 
+fun MethodVisitor.pushBoolean(bool: Boolean) {
+    visitInsn(if (bool) Opcodes.ICONST_1 else Opcodes.ICONST_0)
+}
+
 fun String.tidyClassName(): String = replace('/', '.')

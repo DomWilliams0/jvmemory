@@ -1,6 +1,7 @@
 package ms.domwillia.jvmemory.modify.visitor
 
 import ms.domwillia.jvmemory.modify.patcher.callMonitor
+import ms.domwillia.jvmemory.modify.patcher.pushBoolean
 import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -28,14 +29,14 @@ class ClassLoaderClassVisitor(api: Int, cv: ClassVisitor?) : ClassVisitor(api, c
     ) : AdviceAdapter(api, mv, access, methodName, desc) {
 
         override fun onMethodEnter() {
-            super.visitInsn(Opcodes.ICONST_1)
+            pushBoolean(true)
             callMonitor(Monitor::enterIgnoreRegion)
 
             super.onMethodEnter()
         }
 
         override fun onMethodExit(opcode: Int) {
-            super.visitInsn(Opcodes.ICONST_0)
+            pushBoolean(false)
             callMonitor(Monitor::enterIgnoreRegion)
 
             super.onMethodExit(opcode)

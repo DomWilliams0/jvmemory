@@ -149,12 +149,12 @@ class MethodPatcher(
     }
 
     override fun invokedynamic(name: String?, desc: String?, bsm: Handle?, bsmArgs: Array<out Any>?) {
-        super.iconst(1)
+        pushBoolean(true)
         callMonitor(Monitor::enterIgnoreRegion)
 
         super.invokedynamic(name, desc, bsm, bsmArgs)
 
-        super.iconst(0)
+        pushBoolean(false)
         callMonitor(Monitor::enterIgnoreRegion)
     }
 
