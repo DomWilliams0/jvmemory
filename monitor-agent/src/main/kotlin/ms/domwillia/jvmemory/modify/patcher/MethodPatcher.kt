@@ -177,7 +177,6 @@ class MethodPatcher(
         // stack: array
     }
 
-    // TODO deal with sizes
     override fun multianewarray(desc: String, dims: Int) {
         super.multianewarray(desc, dims)
 
