@@ -59,6 +59,33 @@ class MethodPatcher(
         super.getfield(owner, name, desc)
     }
 
+    // expects object to be on top of the stack, and consumes it
+    private fun logToString() {
+        // TODO debug only
+        // stack: obj
+        super.getstatic("java/lang/System", "out", "Ljava/io/PrintStream;")
+
+        // stack: obj out
+        super.swap()
+
+        // stack: out obj
+        super.invokevirtual(
+                "java/lang/Object",
+                "toString",
+                "()Ljava/lang/String;",
+                false)
+
+        // TODO debug only
+        // stack: out string
+        super.invokevirtual(
+                "java/io/PrintStream",
+                "println",
+                "(Ljava/lang/String;)V",
+                false)
+
+        // stack:
+    }
+
     override fun putfield(owner: String, name: String, desc: String) {
         // TODO there are extra onLoadLocalVars before every putfield - remove these!
         val type = Type.getType(desc)
@@ -112,7 +139,43 @@ class MethodPatcher(
             callMonitor(func)
         }
 
-        super.putfield(owner, name, desc)
+        when (size) {
+            1 -> {
+                // stack: obj value
+                super.dup2()
+
+                // stack: obj value obj value
+                super.putfield(owner, name, desc)
+
+                // stack: obj value
+                super.pop()
+
+                // stack: obj
+            }
+            2 -> {
+                // stack: obj value
+                super.dup2X1()
+
+                // stack: value obj value
+                super.pop2()
+
+                // stack: value obj
+                super.dupX2()
+                super.dupX2()
+
+                // stack: obj obj value obj
+                super.pop()
+
+                // stack: obj obj value
+                super.putfield(owner, name, desc)
+
+                // stack: obj
+            }
+        }
+        // stack: obj
+        logToString()
+
+        // stack:
     }
 
     private fun isReferenceType(desc: String): Boolean =

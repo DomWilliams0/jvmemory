@@ -7,10 +7,7 @@ import ms.domwillia.jvmemory.modify.patcher.tidyClassName
 import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.ClassType
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.FieldVisitor
-import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.*
 
 class UserClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer) {
 
