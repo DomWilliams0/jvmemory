@@ -70,4 +70,7 @@ object Monitor {
     @JvmStatic external fun onLoadLocalVar(index: Int)
 
     @JvmStatic external fun onDefineClass(def: ByteArray)
+
+    @JvmStatic
+    external fun toStringObject(obj: Any, toString: String)
 }

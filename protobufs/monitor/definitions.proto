@@ -35,3 +35,8 @@ message FieldDefinition {
     string visibility = 3;
     bool static = 4;
 }
+
+message ToStringObject {
+    int64 obj_id = 1;
+    string to_string = 2;
+}

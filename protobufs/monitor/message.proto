@@ -34,7 +34,7 @@ enum MessageType {
     STORE_OBJECT_IN_ARRAY = 13;
     STORE_PRIMITIVE_IN_ARRAY = 14;
 
-
+    TO_STRING_OBJECT = 17;
 }
 
 message Variant {
@@ -65,6 +65,8 @@ message Variant {
 
         StoreObjectInArray store_object_in_array = 15;
         StorePrimitiveInArray store_primitive_in_array = 16;
+
+        ToStringObject to_string_object = 20;
     }
 
 }

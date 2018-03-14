@@ -346,3 +346,21 @@ pub extern "C" fn on_define_class(
     msg.set_field_type(MessageType::CLASS_DEF);
     io::log_message(logger, msg)
 }
+
+#[no_mangle]
+pub extern "C" fn to_string_object(
+    logger: *mut Logger,
+    thread_id: Long,
+    obj_id: Long,
+    to_string: String
+) {
+    let mut payload = definitions::ToStringObject::new();
+    payload.obj_id = obj_id;
+    payload.to_string = get_string!(to_string);
+
+    let mut msg = Variant::new();
+    msg.set_thread_id(thread_id);
+    msg.set_to_string_object(payload);
+    msg.set_field_type(MessageType::TO_STRING_OBJECT);
+    io::log_message(logger, msg);
+}

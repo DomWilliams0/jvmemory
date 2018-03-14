@@ -373,3 +373,19 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onDefineClass(
 
 	(*jnienv)->ReleaseByteArrayElements(jnienv, def, array, JNI_ABORT);
 }
+
+/*
+ * Class:     ms_domwillia_jvmemory_monitor_Monitor
+ * Method:    toStringObject
+ * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject(
+		JNIEnv *jnienv,
+		 jclass klass,
+		 jobject obj,
+		 jstring to_string) {
+	const char *str = (*jnienv)->GetStringUTFChars(jnienv, to_string, NULL);
+	to_string_object(logger, get_thread_id(jnienv), get_tag(obj), str);
+	(*jnienv)->ReleaseStringUTFChars(jnienv, to_string, str);
+
+}
