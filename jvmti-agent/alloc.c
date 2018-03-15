@@ -85,6 +85,52 @@ static void allocate_array_with_array_src_tag(JNIEnv *jnienv,
 		}
 	}
 
+#ifdef ALLOC_STACK_TRACE
+#define STACK_TRACE_LENGTH 60
+	jvmtiFrameInfo frames[STACK_TRACE_LENGTH];
+	jint count;
+	jvmtiEnv *jvmti = env;
+
+	err = (*jvmti)->GetStackTrace(
+			jvmti, 0, 0, STACK_TRACE_LENGTH,
+			frames, &count);
+	if (err == JVMTI_ERROR_NONE && count >= 1)
+	{
+		printf("allocated %lu of type %s: \n", new_tag, clazz_mod);
+		for (int i = 0; i < count; ++i)
+		{
+			char *methodName;
+			err = (*jvmti)->GetMethodName(
+					jvmti, frames[i].method,
+					&methodName, NULL, NULL);
+			if (err != JVMTI_ERROR_NONE)
+				continue;
+
+			jclass declaring_clazz = NULL;
+			err = (*jvmti)->GetMethodDeclaringClass(jvmti, frames[i].method, &declaring_clazz);
+			if (err == JVMTI_ERROR_NONE)
+			{
+				char *declaring_name = NULL;
+				err = (*jvmti)->GetClassSignature(jvmti, declaring_clazz, &declaring_name, NULL);
+				if (err == JVMTI_ERROR_NONE)
+				{
+					printf("%d: %s:%s", i, declaring_name, methodName);
+					if (frames[i].location == -1)
+						printf("\n");
+					else
+						printf(":%lu\n", frames[i].location);
+
+					deallocate(declaring_name);
+				}
+
+				(*jnienv)->DeleteLocalRef(jnienv, declaring_clazz);
+			}
+		}
+
+		puts("-----");
+	}
+#endif
+
 
 	if (array_size == 0)
 		on_alloc_object(logger, get_thread_id(jnienv), new_tag, clazz_mod);
