@@ -386,6 +386,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject
 		 jclass klass,
 		 jobject obj)
 {
+	if (concurrent_is_program_running(concurrent) == JNI_FALSE)
+		return;
+
 	jlong tag = get_tag(obj);
 	if (tag == 0L)
 		return;
