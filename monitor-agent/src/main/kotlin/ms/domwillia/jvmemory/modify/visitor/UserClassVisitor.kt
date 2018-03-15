@@ -7,7 +7,10 @@ import ms.domwillia.jvmemory.modify.patcher.tidyClassName
 import ms.domwillia.jvmemory.monitor.Monitor
 import ms.domwillia.jvmemory.monitor.definition.ClassDefinition
 import ms.domwillia.jvmemory.monitor.definition.ClassType
-import org.objectweb.asm.*
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.FieldVisitor
+import org.objectweb.asm.MethodVisitor
 
 class UserClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer) {
 
@@ -30,6 +33,18 @@ class UserClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer
         return super.visitField(access, name, desc, signature, value)
     }
 
+    enum class BuiltinMethod {
+        TO_STRING, MAIN, NONE;
+
+        companion object {
+        fun parse(name: String, desc: String): BuiltinMethod = when {
+            name == "toString" && desc == "()Ljava/lang/String;" -> TO_STRING
+            name == "main" && desc == "([Ljava/lang/String;)V" -> MAIN
+            else -> NONE
+        }
+        }
+    }
+
     override fun visitMethod(
             access: Int,
             name: String,
@@ -40,17 +55,20 @@ class UserClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer
 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
+        val builtin = BuiltinMethod.parse(name, desc)
+
         // call tracing
         // TODO check this at the method level instead of class level
-        if (currentClass.flags.type != ClassType.INTERFACE)
+        if (currentClass.flags.type != ClassType.INTERFACE && builtin != BuiltinMethod.TO_STRING)
             mv = CallTracer(api, currentClass.name, mv, access, name, desc)
 
         // main
-        if (name == "main" && desc == "([Ljava/lang/String;)V")
+        if (builtin == BuiltinMethod.MAIN)
             mv = MainPatcher(api, mv, access, name, desc)
 
         // instruction patching
-        mv = MethodPatcher(api, mv, currentClass.registerMethod(access, name, desc))
+        if (builtin != BuiltinMethod.TO_STRING)
+            mv = MethodPatcher(api, mv, currentClass.registerMethod(access, name, desc))
 
         return mv
     }
