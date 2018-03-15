@@ -30,7 +30,7 @@ class CollectionsPatcher(
 
             if (methodName == "<init>") {
                 super.visitLdcInsn(className.tidyClassName())
-                callMonitor(Monitor::callToString)
+                callMonitor(Monitor::toStringObjectInConstructor)
             } else {
                 callMonitor(Monitor::toStringObject)
             }
