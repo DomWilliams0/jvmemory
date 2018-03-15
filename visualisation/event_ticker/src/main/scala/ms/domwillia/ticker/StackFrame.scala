@@ -27,7 +27,7 @@ class LocalVar(val name: String, val `type`: TypeName, val index: Int) extends j
 
 class StackFrame(val calledObject: VisualObjectId, clazz: TypeName, val method: MethodDefinition) extends js.Object {
   val clazzLong: TypeName = clazz
-  val clazzShort: TypeName = s"Short($clazzLong)" // TODO
+  val clazzShort: TypeName = Types.shortenTypeName(clazzLong)
   val name: MethodName = method.name
   val signature: String = method.signature
   val localVars: js.Array[LocalVar] = method.localVars.map(convertLocalVar).toJSArray
