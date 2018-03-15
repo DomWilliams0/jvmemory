@@ -16,7 +16,7 @@
                 what\
                 );\
         fflush(stderr);\
-        exit(99);\
+        exit(100);\
     }\
 } while (0)
 
@@ -24,7 +24,7 @@
     if ((*env)->ExceptionCheck(env) == JNI_TRUE) {\
         (*env)->ExceptionDescribe(env);\
         fflush(stderr);\
-        exit(99);\
+        exit(101);\
     }\
 } while (0)
 
@@ -39,7 +39,7 @@
                 str ? str : "unknown error"\
                 );\
         fflush(stderr);\
-        exit(99);\
+        exit(102);\
     }\
 } while (0)
 
