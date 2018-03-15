@@ -384,6 +384,14 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject
 		 jclass klass,
 		 jobject obj)
 {
+	jlong tag = get_tag(obj);
+	if (tag == 0L)
+		return;
+
+	struct thread_local_state *state = thread_local_state_get();
+	if (state->ignore_depth > 0)
+		return;
+
 	static jmethodID to_string_method = NULL;
 
 	if (to_string_method == NULL)
@@ -392,8 +400,6 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject
 		EXCEPTION_CHECK(jnienv);
 	}
 
-	struct thread_local_state *state = thread_local_state_get();
-
 	state->ignore_depth += 1;
 	jstring to_string = (*jnienv)->CallObjectMethod(jnienv, obj, to_string_method);
 	state->ignore_depth -= 1;
@@ -401,6 +407,6 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject
 	EXCEPTION_CHECK(jnienv);
 
 	const char *str = (*jnienv)->GetStringUTFChars(jnienv, to_string, NULL);
-	to_string_object(logger, get_thread_id(jnienv), get_tag(obj), str);
+	to_string_object(logger, get_thread_id(jnienv), tag, str);
 	(*jnienv)->ReleaseStringUTFChars(jnienv, to_string, str);
 }
