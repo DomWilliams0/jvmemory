@@ -96,6 +96,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_allocateTagFor
 	{
 		struct any_string s = ALLOC_STRING_JSTRING(clazz);
 		allocate_object_tag(jnienv, obj, &s);
+
+		Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject(jnienv, klass, obj);
 	}
 }
 
