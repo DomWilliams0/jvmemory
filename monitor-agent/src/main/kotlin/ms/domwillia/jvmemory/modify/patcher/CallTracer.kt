@@ -21,8 +21,10 @@ class CallTracer(
         desc
 ) {
 
+    private val static = methodAccess.and(Opcodes.ACC_STATIC) != 0
+
     override fun onMethodEnter() {
-        if (methodAccess.and(Opcodes.ACC_STATIC) != 0)
+        if (static)
             super.visitInsn(Opcodes.ACONST_NULL)
         else
             super.visitVarInsn(Opcodes.ALOAD, 0)
@@ -33,6 +35,12 @@ class CallTracer(
     }
 
     override fun onMethodExit(opcode: Int) {
+        if (!static) {
+            super.visitVarInsn(Opcodes.ALOAD, 0)
+            callMonitor(Monitor::toStringObject)
+        }
+
+
         callMonitor(Monitor::exitMethod)
     }
 }
