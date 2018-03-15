@@ -79,7 +79,8 @@ vis_srcs:
 	@cp -f $(VIS_SRCS) $(VIS_OUT)
 
 $(RUNSH_TRGT): $(RUNSH_SRCS)
-	@cp -f $< $@
+	@sed 's:$$INSTALL_DIR:$(abspath $(TARGET_DIR)):' $< > $@
+	@chmod +x $@
 
 .PHONY: clean
 clean:
