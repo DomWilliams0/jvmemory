@@ -418,6 +418,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject
 		return;
 	}
 
+	if (to_string == NULL)
+		return;
 
 	const char *str = (*jnienv)->GetStringUTFChars(jnienv, to_string, NULL);
 	to_string_object(logger, get_thread_id(jnienv), tag, str);
