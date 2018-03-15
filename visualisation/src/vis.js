@@ -35,6 +35,10 @@ let linkPath = heapSvg.selectAll(".linkPath");
 let linkLabel = heapSvg.selectAll(".linkLabel");
 let stackFrame = stackSvg.selectAll(".stackFrame");
 
+let tooltips = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
 resize();
 d3.select(window).on("resize", resize);
 
@@ -145,6 +149,7 @@ function shortenClassName(className) {
     }
     return className;
 }
+
 function linkStrength(d) {
     if (d.stack)
         return 0.25;
@@ -186,6 +191,24 @@ function linkClass(d) {
     return "link";
 }
 
+// thanks https://stackoverflow.com/a/12034334
+function escapeToString(str) {
+    const escapeHtmlMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+    };
+
+    if (!str)
+        return "";
+    return str.replace(/[&<>"'`=\/]/g, s => escapeHtmlMap[s]);
+}
+
 function restart(changedGraph) {
     // sim.stop(); // necessary?
     sim.nodes(heapObjects);
@@ -204,9 +227,21 @@ function restart(changedGraph) {
     nodeEnterObjs
         .attr("class", nodeClass)
         .attr("r", nodeRadius)
-        .attr("fill", d => d.fill ? d.fill : "none");
-    nodeEnterObjs.append("title") // hover
-        .text(d => d.id + " - " + d.clazz);
+        .attr("fill", d => d.fill ? d.fill : "none")
+        .on("mouseover", d => {
+            tooltips.transition()
+                .duration(200)
+                .style("opacity", 1.0);
+            tooltips
+                .html(`<b>${d.clazz}</b><br/>UUID: ${d.id}<br/>${escapeToString(d.str)}`)
+                .style("left", d3.event.pageX + "px")
+                .style("top", d3.event.pageY + "px")
+        })
+        .on("mouseout", d => {
+            tooltips.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
 
     node = node.merge(nodeEnter);
 

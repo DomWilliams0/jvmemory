@@ -356,7 +356,7 @@ pub extern "C" fn to_string_object(
 ) {
     let mut payload = definitions::ToStringObject::new();
     payload.obj_id = obj_id;
-    payload.to_string = get_string!(to_string);
+    payload.str = get_string!(to_string);
 
     let mut msg = Variant::new();
     msg.set_thread_id(thread_id);

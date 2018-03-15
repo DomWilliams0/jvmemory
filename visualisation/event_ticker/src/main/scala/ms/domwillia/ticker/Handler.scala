@@ -34,6 +34,7 @@ class Handler(val goodyBag: GoodyBag) {
     case Payload.PushMethodFrame(value) => if (forwards) handleImpl(value) else undoImpl(value)
     case Payload.PopMethodFrame(value) => if (forwards) handleImpl(value) else undoImpl(value)
     case Payload.SetStatic(value) => if (forwards) handleImpl(value) else undoImpl(value)
+    case Payload.ToStringObject(value) => if (forwards) handleImpl(value) else undoImpl(value)
     case x => println(s"unknown event: $x"); HandleResult.NoGraphChange
   }
 
@@ -201,6 +202,17 @@ class Handler(val goodyBag: GoodyBag) {
     // TODO
     HandleResult.NoGraphChange
   }
+
+  private def handleImpl(value: ToStringObject): HandleResult = {
+    findNode(value.objId).str = value.str
+    HandleResult.NoGraphChange
+  }
+
+  private def undoImpl(value: ToStringObject): HandleResult = {
+    // TODO
+    HandleResult.NoGraphChange
+  }
+
 
   private def findNode(id: VisualObjectId): Node = goodyBag.nodes().find(_.id == id).getOrElse(throw new IllegalArgumentException(s"bad node id $id"))
 

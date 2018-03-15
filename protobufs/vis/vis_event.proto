@@ -20,6 +20,8 @@ enum EventType {
     POP_METHOD_FRAME = 8;
 
     SET_STATIC = 9;
+
+    TO_STRING_OBJECT = 10;
 }
 
 message EventVariant {
@@ -39,6 +41,7 @@ message EventVariant {
         PopMethodFrame pop_method_frame = 10;
 
         SetStatic set_static = 11;
+        ToStringObject to_string_object = 12;
     }
 }
 
@@ -88,4 +91,9 @@ message SetStatic {
     int64 new_obj_id = 2;
     string class = 3;
     string field_name = 4;
+}
+
+message ToStringObject {
+    int64 obj_id = 1;
+    string str = 2;
 }

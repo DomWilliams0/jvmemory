@@ -30,9 +30,8 @@ class Node(val id: VisualObjectId,
   extends js.Object {
   val x: Float = pos._1
   val y: Float = pos._2
+  var str: UndefOr[String] = js.undefined
 }
-
-// TODO stackmeta
 
 @JSExportTopLevel("Link")
 class Link(val source: Node, var target: Node, val name: String, val stack: UndefOr[StackMeta] = js.undefined) extends js.Object

@@ -103,6 +103,6 @@ extern void on_define_class(logger_p logger,
 extern void to_string_object(logger_p logger,
                              long thread_id,
                              long obj_id,
-                             const char *to_string);
+                             const char *str);
 
 #endif

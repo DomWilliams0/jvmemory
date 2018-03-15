@@ -38,5 +38,5 @@ message FieldDefinition {
 
 message ToStringObject {
     int64 obj_id = 1;
-    string to_string = 2;
+    string str = 2;
 }

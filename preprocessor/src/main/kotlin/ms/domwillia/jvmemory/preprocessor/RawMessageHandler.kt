@@ -43,6 +43,8 @@ class RawMessageHandler(private val classStates: ClassStates) {
         Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter)
         Message.MessageType.METHOD_EXIT -> exitMethod()
 
+        Message.MessageType.TO_STRING_OBJECT -> toStringObject(msg.toStringObject)
+
         else -> throw IllegalArgumentException("bad message type: $msg")
     }
 
@@ -288,6 +290,15 @@ class RawMessageHandler(private val classStates: ClassStates) {
                 read = true
                 if (load.hasField(Access.LoadFromArray.getDescriptor().findFieldByNumber(Access.LoadFromArray.INDEX_FIELD_NUMBER)))
                     fieldName = arrayIndexField(load.index)
+            }.build()
+        }, continuous = true)
+    }
+
+    private fun toStringObject(toString: Definitions.ToStringObject): EmittedEvents {
+        return createEvents(EventType.TO_STRING_OBJECT, {
+            it.toStringObject = ToStringObject.newBuilder().apply {
+                objId = toString.objId
+                str = toString.str
             }.build()
         }, continuous = true)
     }
