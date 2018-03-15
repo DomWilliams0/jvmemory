@@ -59,13 +59,6 @@ class MethodPatcher(
         super.getfield(owner, name, desc)
     }
 
-    // expects object to be on top of the stack, and consumes it
-    private fun logToString() {
-        // stack: obj
-        callMonitor(Monitor::toStringObject)
-        // stack:
-    }
-
     override fun putfield(owner: String, name: String, desc: String) {
         // TODO there are extra onLoadLocalVars before every putfield - remove these!
         val type = Type.getType(desc)
@@ -153,7 +146,7 @@ class MethodPatcher(
             }
         }
         // stack: obj
-        logToString()
+        callMonitor(Monitor::toStringObject)
 
         // stack:
     }

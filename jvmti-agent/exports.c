@@ -407,8 +407,17 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject
 
 	state->ignore_depth += 1;
 	jstring to_string = (*jnienv)->CallObjectMethod(jnienv, obj, to_string_method);
-	EXCEPTION_CHECK(jnienv);
 	state->ignore_depth -= 1;
+
+	jthrowable ex = (*jnienv)->ExceptionOccurred(jnienv);
+	if (ex != NULL)
+	{
+		// TODO i sicken myself
+		(*jnienv)->ExceptionClear(jnienv);
+		fprintf(stderr, "exception swallowed while evaluating toString on object %lu\n", tag);
+		return;
+	}
+
 
 	const char *str = (*jnienv)->GetStringUTFChars(jnienv, to_string, NULL);
 	to_string_object(logger, get_thread_id(jnienv), tag, str);

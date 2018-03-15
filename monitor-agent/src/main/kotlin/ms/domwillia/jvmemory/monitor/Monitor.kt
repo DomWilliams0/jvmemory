@@ -73,4 +73,10 @@ object Monitor {
 
     @JvmStatic
     external fun toStringObject(obj: Any)
+
+    @JvmStatic
+    fun callToString(obj: Any, className: String) {
+        if (obj.javaClass.name == className)
+            toStringObject(obj)
+    }
 }

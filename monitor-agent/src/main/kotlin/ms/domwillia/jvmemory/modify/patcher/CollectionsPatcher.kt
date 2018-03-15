@@ -9,14 +9,15 @@ import org.objectweb.asm.commons.AdviceAdapter
 class CollectionsPatcher(
         api: Int,
         mv: MethodVisitor?,
+        private val className: String,
         access: Int,
-        name: String,
+        private val methodName: String,
         desc: String?
 ) : AdviceAdapter(
         api,
         mv,
         access,
-        name,
+        methodName,
         desc
 ) {
 
@@ -26,7 +27,13 @@ class CollectionsPatcher(
             super.dup()
 
             callMonitor(Monitor::exitSystemMethod)
-            callMonitor(Monitor::toStringObject)
+
+            if (methodName == "<init>") {
+                super.visitLdcInsn(className.tidyClassName())
+                callMonitor(Monitor::callToString)
+            } else {
+                callMonitor(Monitor::toStringObject)
+            }
         }
     }
 

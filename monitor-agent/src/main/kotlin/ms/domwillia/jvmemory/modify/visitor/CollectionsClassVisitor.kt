@@ -4,9 +4,14 @@ import ms.domwillia.jvmemory.modify.patcher.CollectionsPatcher
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
 
 class CollectionsClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer) {
+    private lateinit var className: String
+
+    override fun visit(version: Int, access: Int, name: String, signature: String?, superName: String?, interfaces: Array<out String>?) {
+        className = name
+        super.visit(version, access, name, signature, superName, interfaces)
+    }
 
     override fun visitMethod(
             access: Int,
@@ -18,7 +23,10 @@ class CollectionsClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api,
 
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
-        mv = CollectionsPatcher(api, mv, access, name, desc)
+
+        // TODO use BuiltinMethod?
+        if (!(name == "toString" && desc == "()Ljava/lang/String;"))
+            mv = CollectionsPatcher(api, mv, className, access, name, desc)
 
         return mv
     }

@@ -3,7 +3,6 @@ package ms.domwillia.jvmemory.modify.patcher
 import ms.domwillia.jvmemory.monitor.Monitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Type
 import org.objectweb.asm.commons.AdviceAdapter
 
 class CallTracer(
@@ -35,12 +34,18 @@ class CallTracer(
     }
 
     override fun onMethodExit(opcode: Int) {
+        callMonitor(Monitor::exitMethod)
+
         if (!static) {
             super.visitVarInsn(Opcodes.ALOAD, 0)
-            callMonitor(Monitor::toStringObject)
+
+            if (methodName == "<init>") {
+                super.visitLdcInsn(className.tidyClassName())
+                callMonitor(Monitor::callToString)
+            } else {
+                callMonitor(Monitor::toStringObject)
+            }
         }
 
-
-        callMonitor(Monitor::exitMethod)
     }
 }
