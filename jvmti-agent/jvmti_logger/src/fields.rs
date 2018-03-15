@@ -246,13 +246,17 @@ fn generate_diff_events(
             Err(e) => return println!("failed to get field name: {}", e),
             Ok(f) => f,
         };
-        on_put_field_object(
-            logger,
-            tid,
-            access.from,
-            field,
-            if rm { 0 } else { access.to },
-        );
+
+        // remove this$0
+        if "this$0" != get_string_ref!(field) {
+            on_put_field_object(
+                logger,
+                tid,
+                access.from,
+                field,
+                if rm { 0 } else { access.to },
+                );
+        }
     };
 
     let log_store_in_array = |access: &AccessData, rm| unsafe {
