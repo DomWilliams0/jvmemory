@@ -61,25 +61,8 @@ class MethodPatcher(
 
     // expects object to be on top of the stack, and consumes it
     private fun logToString() {
-        pushBoolean(true)
-        callMonitor(Monitor::enterIgnoreRegion)
-
         // stack: obj
-        super.dup()
-
-        // stack: obj obj
-        super.invokevirtual(
-                "java/lang/Object",
-                "toString",
-                "()Ljava/lang/String;",
-                false)
-
-        pushBoolean(false)
-        callMonitor(Monitor::enterIgnoreRegion)
-
-        // stack: obj string
         callMonitor(Monitor::toStringObject)
-
         // stack:
     }
 

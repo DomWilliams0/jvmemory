@@ -280,13 +280,12 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onDefineClass
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    toStringObject
- * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
+ * Signature: (Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject
 		(JNIEnv *,
 		 jclass,
-		 jobject,
-		 jstring);
+		 jobject);
 
 #ifdef __cplusplus
 }

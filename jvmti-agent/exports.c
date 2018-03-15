@@ -377,15 +377,30 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_onDefineClass(
 /*
  * Class:     ms_domwillia_jvmemory_monitor_Monitor
  * Method:    toStringObject
- * Signature: (Ljava/lang/Object;Ljava/lang/String;)V
+ * Signature: (Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_toStringObject(
 		JNIEnv *jnienv,
 		 jclass klass,
-		 jobject obj,
-		 jstring to_string) {
+		 jobject obj)
+{
+	static jmethodID to_string_method = NULL;
+
+	if (to_string_method == NULL)
+	{
+		to_string_method = (*jnienv)->GetMethodID(jnienv, klass, "toString", "()Ljava/lang/String;");
+		EXCEPTION_CHECK(jnienv);
+	}
+
+	struct thread_local_state *state = thread_local_state_get();
+
+	state->ignore_depth += 1;
+	jstring to_string = (*jnienv)->CallObjectMethod(jnienv, obj, to_string_method);
+	state->ignore_depth -= 1;
+
+	EXCEPTION_CHECK(jnienv);
+
 	const char *str = (*jnienv)->GetStringUTFChars(jnienv, to_string, NULL);
 	to_string_object(logger, get_thread_id(jnienv), get_tag(obj), str);
 	(*jnienv)->ReleaseStringUTFChars(jnienv, to_string, str);
-
 }
