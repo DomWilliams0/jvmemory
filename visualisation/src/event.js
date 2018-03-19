@@ -46,7 +46,7 @@ function highlightHeapObj(objId, field, read) {
 
     if (field) {
         const links = link.filter(d => d.source.id === objId && (!field || d.name === field));
-        highlightLinks(links);
+        highlightLinks(links, read);
     }
 }
 
