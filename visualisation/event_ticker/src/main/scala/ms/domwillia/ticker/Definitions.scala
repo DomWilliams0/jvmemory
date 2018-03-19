@@ -18,10 +18,7 @@ object Definitions {
     val clazzSansArray = clazz.replace("[]", "")
     random.setSeed(clazzSansArray.hashCode)
     val hue = random.nextFloat() * 360.0
-    if (!isSystem)
-      s"hsl($hue, 70%, 70%)"
-    else
-      s"hsl($hue, 60%, 40%)"
+    s"hsl($hue, 70%, 70%)"
   }
 }
 
