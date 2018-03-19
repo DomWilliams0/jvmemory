@@ -96,7 +96,7 @@ function removeLinks(targetId) {
 const playPauseButton = d3.select("#play-pause");
 
 const SPEED_STEP = 50;
-const SCRUB_STEP = 1;
+const SCRUB_STEP = 10;
 const SERVER = "http://localhost:52933";
 
 const speedSlider = {
