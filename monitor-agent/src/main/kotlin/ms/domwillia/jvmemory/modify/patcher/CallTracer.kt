@@ -34,8 +34,6 @@ class CallTracer(
     }
 
     override fun onMethodExit(opcode: Int) {
-        callMonitor(Monitor::exitMethod)
-
         if (!static) {
             super.visitVarInsn(Opcodes.ALOAD, 0)
 
@@ -46,6 +44,8 @@ class CallTracer(
                 callMonitor(Monitor::toStringObject)
             }
         }
+
+        callMonitor(Monitor::exitMethod)
 
     }
 }
