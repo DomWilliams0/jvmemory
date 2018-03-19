@@ -5,6 +5,7 @@
 #include "fields.h"
 #include "agent.h"
 #include "util.h"
+#include "alloc.h"
 
 static jint JNICALL callback_heap_ref(
 		jvmtiHeapReferenceKind reference_kind,
@@ -165,6 +166,7 @@ void discover_fields_if_necessary(JNIEnv *jnienv,
 
 		// make sure to deallocate class name later
 		clazzes_out[i] = class_name;
+		tags[i] = get_tag(obj);
 
 		(*jnienv)->DeleteLocalRef(jnienv, obj);
 		(*jnienv)->DeleteLocalRef(jnienv, cls);
