@@ -209,6 +209,14 @@ function escapeToString(str) {
     return str.replace(/[&<>"'`=\/]/g, s => escapeHtmlMap[s]);
 }
 
+function connect(node) {
+    node.connected = true;
+    link.filter(d => d.source.id === node.id).each(d => {
+        d.connected = true;
+        connect(d.target);
+    });
+}
+
 function restart(changedGraph) {
     // sim.stop(); // necessary?
     sim.nodes(heapObjects);
@@ -245,8 +253,10 @@ function restart(changedGraph) {
 
     node = node.merge(nodeEnter);
 
-    // array nodes
     node.each(function (d) {
+        d.connected = false;
+
+        // array nodes
         if (!d.array) return; // TODO filter?!
         if (d.array.done) return;
         d.array.done = true;
@@ -266,6 +276,12 @@ function restart(changedGraph) {
         .attr("class", linkClass)
         .attr("marker-end", "url(#arrowhead)");
     link = link.merge(linkEnter);
+
+    // find connected graph
+    link.each(d => d.connected = false);
+    node.filter(d => d.stack).each(connect);
+    node.classed("unreferenced", d => !d.connected);
+    link.classed("unreferenced", d => !d.connected);
 
     // link paths
     linkPath = linkPath.data(heapLinks, d => d.name);
