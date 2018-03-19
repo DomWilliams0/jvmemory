@@ -126,7 +126,7 @@ class EventTicker(rawEvents: js.typedarray.Uint8Array, val goodyBag: GoodyBag) {
   private def handle(index: Int, undo: Boolean = false): (Boolean, HandleResult) = {
     val e = events(index)
     val action = if (undo) "undoing" else "handling"
-    println(s"$action event $index: ${e.`type`}")
+    println(s"$action event $index: $e\n-----")
     try {
       (e.continuous, handler.handle(e.payload, forwards = !undo))
     } catch {
