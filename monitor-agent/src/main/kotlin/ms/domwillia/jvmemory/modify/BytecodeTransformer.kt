@@ -73,7 +73,9 @@ class BytecodeTransformer : ClassFileTransformer {
                     java.util.HashSet::class.java to ::CollectionsClassVisitor,
                     java.util.LinkedHashMap::class.java to ::CollectionsClassVisitor,
                     java.util.Arrays::class.java to ::CollectionsClassVisitor,
-                    java.lang.reflect.Array::class.java to ::ArrayNativeClassVisitor
+                    java.lang.reflect.Array::class.java to ::ArrayNativeClassVisitor,
+                    java.lang.String::class.java to ::StringClassVisitor,
+                    java.lang.StringBuilder::class.java to ::StringClassVisitor
             )
 
             fun getSuperClasses(clazz: Class<out Any>) = buildSequence {
