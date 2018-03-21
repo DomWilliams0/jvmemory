@@ -237,6 +237,7 @@ function restart(changedGraph) {
         .attr("r", nodeRadius)
         .attr("fill", d => d.fill ? d.fill : "none")
         .on("mouseover", d => {
+            if (d.stack) return;
             tooltips.transition()
                 .duration(200)
                 .style("opacity", 1.0);
