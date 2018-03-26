@@ -145,7 +145,7 @@ class Handler(val goodyBag: GoodyBag) {
 
     setTopOfCallStackCalled(true)
 
-    HandleResult.NoGraphChange
+    HandleResult.ChangedStackOnly
   }
 
   private def undoImpl(value: PushMethodFrame): HandleResult = {
