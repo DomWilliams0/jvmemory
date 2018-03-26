@@ -38,7 +38,7 @@ class RawMessageHandler(private val classStates: ClassStates) {
         Message.MessageType.STORE_OBJECT_IN_ARRAY -> storeObjectInArray(msg.storeObjectInArray)
         Message.MessageType.STORE_PRIMITIVE_IN_ARRAY -> storePrimitiveInArray(msg.storePrimitiveInArray)
 
-        Message.MessageType.CLASS_DEF -> { emptyEmittedEvents }
+        Message.MessageType.CLASS_DEF -> emptyEmittedEvents
 
         Message.MessageType.METHOD_ENTER -> enterMethod(msg.methodEnter)
         Message.MessageType.METHOD_EXIT -> exitMethod()

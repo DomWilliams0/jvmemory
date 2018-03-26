@@ -61,9 +61,9 @@ class Preprocessor(
                 return emptyEmittedEvents
 
             val emitted = handler.handle(msg)
-            emitted.forEach { it ->
+            emitted.forEach { e ->
                 if (flag == EventFlag.CONTINUOUS)
-                    it.continuous = true
+                    e.continuous = true
             }
 
             return emitted
