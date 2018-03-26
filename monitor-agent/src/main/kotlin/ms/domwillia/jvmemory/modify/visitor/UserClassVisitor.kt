@@ -33,18 +33,6 @@ class UserClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api, writer
         return super.visitField(access, name, desc, signature, value)
     }
 
-    enum class BuiltinMethod {
-        TO_STRING, MAIN, NONE;
-
-        companion object {
-        fun parse(name: String, desc: String): BuiltinMethod = when {
-            name == "toString" && desc == "()Ljava/lang/String;" -> TO_STRING
-            name == "main" && desc == "([Ljava/lang/String;)V" -> MAIN
-            else -> NONE
-        }
-        }
-    }
-
     override fun visitMethod(
             access: Int,
             name: String,

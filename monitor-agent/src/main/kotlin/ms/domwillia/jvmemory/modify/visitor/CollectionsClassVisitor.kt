@@ -24,8 +24,7 @@ class CollectionsClassVisitor(api: Int, writer: ClassWriter) : ClassVisitor(api,
         var mv = super.visitMethod(access, name, desc, signature, exceptions)
 
 
-        // TODO use BuiltinMethod?
-        if (!(name == "toString" && desc == "()Ljava/lang/String;"))
+        if (BuiltinMethod.parse(name, desc) != BuiltinMethod.TO_STRING)
             mv = CollectionsPatcher(api, mv, className, access, name, desc)
 
         return mv
