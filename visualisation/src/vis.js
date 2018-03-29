@@ -15,7 +15,7 @@ const STATIC_NODE_RADIUS = 6;
 const HEAP_NODE_RADIUS = 4;
 const STACK_NODE_RADIUS = 2;
 const LOCAL_VAR_SLOT_HEIGHT = 18;
-const FRAME_BASE_SIZE = 15;
+const FRAME_BASE_SIZE = 30;
 const LOCAL_VAR_SLOT_PRE_PAD = 10;
 const FRAME_PADDING = 15;
 const LOCAL_VAR_LINK_X = 0;
@@ -76,7 +76,7 @@ fetchThreads().then(threads => {
 
 function tickSim() {
 
-    let callstackCurrentHeight = 0;
+    let callstackCurrentHeight = 50;
     stackFrame
         .attr("transform", (d, i) => {
             const localsHeight = d.localVars.length * LOCAL_VAR_SLOT_HEIGHT;
@@ -321,8 +321,9 @@ function restart(changedGraph) {
     stackFrameEnter.append("text")
         .attr("text-anchor", "middle")
         .attr("x", "50%")
-        .attr("y", 10)
+        .attr("y", 14)
         .attr("fill", "white")
+        .attr("class", "stackFrameClass")
         .text(d => d.clazzShort + ":" + d.name)
         .append("title")
         .text(d => d.clazzLong + ":" + d.name + d.signature);
@@ -338,6 +339,7 @@ function restart(changedGraph) {
             self.append("text")
                 .attr("text-anchor", "middle")
                 .attr("x", "50%")
+                .attr("class", "stackFrameLocalVar")
                 .attr("y", () => FRAME_BASE_SIZE + LOCAL_VAR_SLOT_PRE_PAD + (LOCAL_VAR_SLOT_HEIGHT * j))
                 .text(() => (`${shortType} ${local.name}`))
                 .append("title")

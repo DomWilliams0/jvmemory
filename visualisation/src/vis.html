@@ -39,6 +39,8 @@
 
         #controls, #timeline { height: 50px; }
 
+        #timeline { display: none; }
+
         #controls {
             display: flex;
             flex-direction: column;
@@ -79,6 +81,10 @@
 
         #heap { background-color: #353535; }
 
+        .toString {
+            text-align: center;
+        }
+
         .node { stroke: black; }
 
         .stackNode {
@@ -88,6 +94,17 @@
 
         .stackFrame {
             fill: #3b6074;
+        }
+
+        .stackFrameClass {
+            font-size: 9pt;
+            text-decoration: underline;
+            fill: yellow;
+        }
+
+        .stackFrameLocalVar {
+            font-size: 8pt;
+            fill: white;
         }
 
         .staticNode {
@@ -106,6 +123,8 @@
             border: 0;
             border-radius: 8px;
             pointer-events: none;
+            text-align: center;
+            font-size: 8pt;
         }
 
         .nodeArray {
