@@ -309,6 +309,7 @@ function restart(changedGraph) {
         .attr("startOffset", "20%")
         .text(d => d.name);
     linkLabel = linkLabel.merge(labelText);
+    linkLabel.classed("unreferenced", d => !d.connected);
 
     // stack
     stackFrame = stackFrame.data(callStack.callstack);
