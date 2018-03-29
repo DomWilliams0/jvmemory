@@ -15,9 +15,9 @@ const STATIC_NODE_RADIUS = 6;
 const HEAP_NODE_RADIUS = 4;
 const STACK_NODE_RADIUS = 2;
 const LOCAL_VAR_SLOT_HEIGHT = 18;
-const FRAME_BASE_SIZE = 30;
+const FRAME_BASE_SIZE = 20;
 const LOCAL_VAR_SLOT_PRE_PAD = 10;
-const FRAME_PADDING = 15;
+const FRAME_PADDING = 10;
 const LOCAL_VAR_LINK_X = 0;
 
 const [heapSvg, stackSvg] = buildSvgs();
@@ -246,7 +246,7 @@ function restart(changedGraph) {
             tooltips
                 .html(`<b>${d.clazz}</b><br/>${toString}`)
                 .style("left", d3.event.pageX + "px")
-                .style("top", d3.event.pageY + "px")
+                .style("top", d3.event.pageY + "px");
         })
         .on("mouseout", d => {
             tooltips.transition()

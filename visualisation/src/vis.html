@@ -73,13 +73,17 @@
             justify-content: stretch;
         }
 
-        #left { background-color: #283d3b;}
+        #left, .stackFrame { background-color: #242427;}
 
         #right { background-color: #353535;}
 
-        #stack { background-color: #878787; }
+        #stack { background-color: #cecece; }
 
-        #heap { background-color: #353535; }
+        #heap { background-color: #ecf0f1; }
+
+        .toString {
+            text-align: center;
+        }
 
         .toString {
             text-align: center;
@@ -90,10 +94,6 @@
         .stackNode {
             stroke: black;
             fill: white;
-        }
-
-        .stackFrame {
-            fill: #3b6074;
         }
 
         .stackFrameClass {
@@ -125,6 +125,7 @@
             pointer-events: none;
             text-align: center;
             font-size: 8pt;
+            border: black solid 1px;
         }
 
         .nodeArray {
@@ -146,7 +147,7 @@
 
         .linkLabel {
             font-size: 6pt;
-            fill: #fff
+            fill: black;
         }
 
         .calledObj {
@@ -193,7 +194,7 @@
         }
 
         #choose-thread {
-            background: #5bd5d0;
+            background: #252527;
             position: absolute;
             top: 50%;
             left: 50%;
