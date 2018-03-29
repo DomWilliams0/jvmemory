@@ -241,8 +241,10 @@ function restart(changedGraph) {
             tooltips.transition()
                 .duration(200)
                 .style("opacity", 1.0);
+
+            const toString = !d.str ? "" : escapeToString(d.str);
             tooltips
-                .html(`<b>${d.clazz}</b><br/>UUID: ${d.id}<br/>${escapeToString(d.str)}`)
+                .html(`<b>${d.clazz}</b><br/>${toString}`)
                 .style("left", d3.event.pageX + "px")
                 .style("top", d3.event.pageY + "px")
         })
