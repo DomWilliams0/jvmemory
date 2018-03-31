@@ -30,6 +30,9 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_enterIgnoreReg
 		jclass klass,
 		jboolean entering)
 {
+	if (get_phase() == JVMTI_PHASE_DEAD)
+		return;
+
 	struct thread_local_state *state = thread_local_state_get();
 	state->ignore_depth += entering == JNI_TRUE ? 1 : -1;
 }
@@ -155,7 +158,8 @@ JNIEXPORT void JNICALL Java_ms_domwillia_jvmemory_monitor_Monitor_exitSystemMeth
 		jclass klass,
 		jobject obj)
 {
-	thread_local_state_get()->tracked_system_obj = get_tag(obj);
+	if (get_phase() != JVMTI_PHASE_DEAD)
+		thread_local_state_get()->tracked_system_obj = get_tag(obj);
 }
 
 /*
