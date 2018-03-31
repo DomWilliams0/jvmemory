@@ -11,6 +11,11 @@ crate-type = ["staticlib"]
 libc = "0.2.36"
 protobuf = "1.4.3"
 diff = "0.1.11"
+crossbeam-deque = "0.3.0"
+
+[dependencies.spin]
+version = "0.4.7"
+default-features = false
 
 [build-dependencies]
 protoc-rust = "1.4"

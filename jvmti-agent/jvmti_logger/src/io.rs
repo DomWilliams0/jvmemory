@@ -1,70 +1,63 @@
-use std::{fs, io, mem, ptr, thread};
+use std::{fs, io, ptr, thread};
 use proto::message::Variant;
 use protobuf::Message;
 use libc::*;
 use std::ffi::CStr;
-use std::sync::{mpsc, Mutex};
+use std::sync::Arc;
+use spin;
+use crossbeam_deque::*;
 
-const BUFFER_SIZE: usize = 1024;
+const BUFFER_SIZE: usize = 1024 * 1024;
 
 #[repr(C)]
 pub struct Logger {
-    buffer_thread: thread::JoinHandle<()>,
+    running: Arc<spin::Mutex<bool>>,
+    dump_thread: thread::JoinHandle<()>,
 
     // TODO instead of every thread sharing a single logger instance, give them thread local
     //      buffers that only block to flush their buffers? profile first!
-    drainpipe: Mutex<mpsc::Sender<Variant>>,
+    drainpipe: Deque<Variant>,
 }
 
-fn spawn_buffer_thread(
+fn spawn_dump_thread (
     path: &str,
-    recv: mpsc::Receiver<Variant>,
+    stealer: Stealer<Variant>,
+    running: Arc<spin::Mutex<bool>>,
 ) -> io::Result<thread::JoinHandle<()>> {
-    fn flush_buffer<W: io::Write>(buffer: &mut Vec<Variant>, out: &mut W) {
-        for msg in buffer.iter() {
-            if let Err(e) = msg.write_length_delimited_to_writer(out) {
-                eprintln!("failed to write to log file: {:?}", e);
+
+    // TODO it seems that using a BufWriter here causes a panic during allocation event logging
+    let out_file = io::BufWriter::new(fs::File::create(path)?);
+    Ok(thread::spawn(move || {
+        let mut out = out_file;
+        loop {
+            if let Steal::Data(msg) = stealer.steal() {
+                if let Err(e) = msg.write_length_delimited_to_writer(&mut out) {
+                    eprintln!("failed to write to log file: {:?}", e);
+                }
+            }
+            else if !*running.lock() {
+                println!("exiting dump thread");
+                break;
             }
         }
-        buffer.clear();
-    }
-
-    // it seems that using a BufWriter here causes a panic during allocation event logging
-    let out_file = fs::File::create(path)?;
-    Ok(thread::spawn(|| {
-        let pipe = recv;
-        let mut file = out_file;
-        let mut buffer = Vec::<Variant>::with_capacity(BUFFER_SIZE);
-        while let Ok(msg) = pipe.recv() {
-
-            buffer.push(msg);
-
-            if buffer.len() == BUFFER_SIZE {
-                flush_buffer(&mut buffer, &mut file);
-            }
-        }
-        flush_buffer(&mut buffer, &mut file);
     }))
 }
 
 impl Logger {
     fn new(path: &str) -> io::Result<Self> {
-        let (send, recv) = mpsc::channel();
+        let deque = Deque::with_min_capacity(BUFFER_SIZE);
+        let stealer = deque.stealer();
+        let running = Arc::new(spin::Mutex::new(true));
+
         Ok(Self {
-            drainpipe: Mutex::new(send),
-            buffer_thread: spawn_buffer_thread(path, recv)?,
+            drainpipe: deque,
+            dump_thread: spawn_dump_thread(path, stealer, running.clone())?,
+            running,
         })
     }
 
-    fn safe_log(&mut self, message: Variant) -> Result<(), mpsc::SendError<Variant>> {
-        self.drainpipe.lock().unwrap().send(message)?;
-        Ok(())
-    }
-
     fn log(&mut self, message: Variant) {
-        if let Err(e) = self.safe_log(message) {
-            eprintln!("failed to write to log: {:?}", e);
-        }
+        self.drainpipe.push(message);
     }
 }
 
@@ -85,13 +78,9 @@ pub extern "C" fn logger_free(logger_ptr: *mut Logger) {
     if !logger_ptr.is_null() {
         let logger = unsafe { Box::from_raw(logger_ptr) };
 
-        let (dummy, _) = mpsc::channel();
-        let sender = mem::replace(&mut *logger.drainpipe.lock().unwrap(), dummy);
-        drop(sender);
-        logger
-            .buffer_thread
-            .join()
-            .expect("waiting on buffer thread");
+        *logger.running.lock() = false;
+        println!("waiting for dump thread to finish");
+        logger.dump_thread.join().expect("waiting on dump thread");
     }
 }
 

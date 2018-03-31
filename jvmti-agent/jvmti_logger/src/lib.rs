@@ -1,6 +1,8 @@
 extern crate libc;
 extern crate protobuf;
 extern crate diff;
+extern crate crossbeam_deque;
+extern crate spin;
 
 #[macro_use]
 mod cstr;
