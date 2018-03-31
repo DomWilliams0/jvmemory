@@ -9,6 +9,7 @@ LDFLAGS = -lpthread -ldl
 CC = gcc
 TARGET = libagent.so
 
+CARGO_FLAG = --release
 RUST_COMPILE_DIR = release
 LOGGER_BASE_DIR = jvmti_logger
 RUST_SRCS = $(shell find $(LOGGER_BASE_DIR)/src -type f -name "*.rs")
@@ -19,6 +20,7 @@ RELEASE ?= 0
 ifeq ($(RELEASE), 0)
 	RUST_COMPILE_DIR = debug
 	CFLAGS += -DDEBUG -O0 -g
+	CARGO_FLAG =
 endif
 
 SRCS := $(wildcard *.c)
@@ -40,4 +42,4 @@ $(OBJS): %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(LOGGER_LIB): $(RUST_SRCS)
-	@(cd $(LOGGER_BASE_DIR) && cargo build)
+	(cd $(LOGGER_BASE_DIR) && cargo build $(CARGO_FLAG))

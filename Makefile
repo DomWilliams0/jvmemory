@@ -65,8 +65,8 @@ $(PREPROC_TRGT): $(PREPROC_SRCS)
 	@cp -f $(PREPROC_ROOT)/build/libs/visualisation-server-$(VERSION).jar $@
 
 $(NATIVE_TRGT):
-	$(MAKE) -C $(NATIVE_ROOT) >$@.stdout 2>$@.stderr
-	@cp -f $(NATIVE_ROOT)/libagent.so $@
+	$(MAKE) RELEASE=1 -C $(NATIVE_ROOT) >$@.stdout 2>$@.stderr
+	cp -f $(NATIVE_ROOT)/libagent.so $@
 
 # TODO replace slow sbt
 # TODO release config
