@@ -252,3 +252,8 @@ long get_thread_id(JNIEnv *jnienv)
 	EXCEPTION_CHECK(jnienv);
 	return id;
 }
+
+int get_phase() {
+	jvmtiPhase p = JVMTI_PHASE_DEAD;
+	return (*env)->GetPhase(env, &p) == JVMTI_ERROR_NONE ? p : 0;
+}

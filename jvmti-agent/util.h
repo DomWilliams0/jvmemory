@@ -12,7 +12,8 @@
 
 #define DO_SAFE_COND(condition, what) do {\
     if (!(condition)) {\
-        fprintf(stderr, "Fatal error: %s",\
+        fprintf(stderr, "Fatal error in phase %d: %s",\
+                get_phase(),\
                 what\
                 );\
         fflush(stderr);\
@@ -34,7 +35,8 @@
     if (err != JVMTI_ERROR_NONE) {\
         char *str = NULL;\
         (*env)->GetErrorName(env, err, &str);\
-        fprintf(stderr, "Fatal error: %s: %s\n",\
+        fprintf(stderr, "Fatal error in phase %d: %s: %s\n",\
+                get_phase(),\
                 what,\
                 str ? str : "unknown error"\
                 );\
@@ -52,6 +54,8 @@
 void deallocate(void *p);
 
 long get_thread_id(JNIEnv *jnienv);
+
+int get_phase();
 
 
 #endif
