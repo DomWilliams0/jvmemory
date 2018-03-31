@@ -25,7 +25,6 @@ fn spawn_dump_thread (
     running: Arc<spin::Mutex<bool>>,
 ) -> io::Result<thread::JoinHandle<()>> {
 
-    // TODO it seems that using a BufWriter here causes a panic during allocation event logging
     let out_file = io::BufWriter::new(fs::File::create(path)?);
     Ok(thread::spawn(move || {
         let mut out = out_file;
@@ -79,7 +78,7 @@ pub extern "C" fn logger_free(logger_ptr: *mut Logger) {
         let logger = unsafe { Box::from_raw(logger_ptr) };
 
         *logger.running.lock() = false;
-        println!("waiting for dump thread to finish");
+        println!("waiting for dump thread to finish ({} messages to flush)", logger.drainpipe.len());
         logger.dump_thread.join().expect("waiting on dump thread");
     }
 }
