@@ -6,6 +6,8 @@ import org.objectweb.asm.*
 import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
+import java.net.URL
+import java.net.URLClassLoader
 import java.security.ProtectionDomain
 import java.util.jar.JarFile
 import kotlin.coroutines.experimental.buildSequence
@@ -119,20 +121,39 @@ class BytecodeTransformer : ClassFileTransformer {
             if (msg.isNotEmpty())
                 System.err.println("ERROR: $msg")
 
-            System.err.println("Usage: <bootstrap.jar>,<user packages...>")
+            System.err.println("Usage: <bootstrap.jar>;<user packages,...>;<classpath:...>")
             exitProcess(1)
         }
 
         @JvmStatic
+        private fun appendToClassPath(path: String) {
+            val f = File(path).toURI().toURL()
+            val cl = ClassLoader.getSystemClassLoader()
+            val m = URLClassLoader::class.java.getDeclaredMethod("addURL", java.net.URL::class.java)
+            m.isAccessible = true
+            m.invoke(cl, f)
+            println("Added $path to classpath")
+}
+
+
+        @JvmStatic
         fun premain(agentArgs: String?, inst: Instrumentation) {
             val args = agentArgs ?: bail("No args provided")
-            val split = args.splitToSequence(',')
+            val split = args.split(';')
 
             val bootstrapPath = split.take(1).elementAtOrNull(0) ?: bail()
-            userPackages = split.drop(1)
-                    .filter(String::isNotEmpty)
-                    .map { it.replace('.', '/') } // cannot use String#tidyClassName here because JVMTI_ERROR_WRONG_PHASE
-                    .toList()
+            userPackages = split.drop(1).firstOrNull()?.let {
+                        it.splitToSequence(',')
+                                .filter(String::isNotEmpty)
+                                .map { it.replace('.', '/') } // cannot use String#tidyClassName here because JVMTI_ERROR_WRONG_PHASE
+                                .toList()
+                    } ?: bail()
+
+            val classPath = split.drop(2)
+                    .firstOrNull()
+                    ?.split(':') ?: emptyList()
+            classPath.forEach(this::appendToClassPath)
+
 
             if (!File(bootstrapPath).isFile)
                 bail("Bad bootstrap.jar argument '$bootstrapPath'")

@@ -25,8 +25,7 @@ echo Saving output in directory $PROJ
 
 set -e
 java \
-	-cp $CP \
-	-javaagent:$DIR/agent.jar=$DIR/bootstrap.jar,$PACKAGES \
+	-javaagent:$DIR/agent.jar=$DIR/bootstrap.jar;$PACKAGES;$CP \
 	-agentpath:$DIR/libagent.so=$PROJ/jvmemory.log \
 	$MAIN
 
