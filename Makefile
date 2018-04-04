@@ -40,7 +40,7 @@ EVENTS_SRCS=$(shell find $(EVENTS_ROOT)/src -type f)
 VIS_SRCS=$(shell find $(VIS_ROOT)/src -type f)
 
 # scripts
-SH_SRCS=run.sh open.sh
+SH_SRCS=run.sh open.sh debug_print.sh
 SH_TRGT=$(addprefix $(TARGET_DIR)/,$(SH_SRCS))
 
 .PHONY: build
