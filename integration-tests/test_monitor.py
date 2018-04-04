@@ -57,7 +57,7 @@ def run_specimen(specimen_name: str, out_file: Path):
     main = f"specimens.{specimen_name}"
     _run_cmd(
         "java",
-        f"-javaagent:{agent}={bootstrap},specimens",
+        f"-javaagent:{agent}={bootstrap};specimens",
         f"-agentpath:{native}={out_file}",
         "-cp", str(WORKING_DIR),
         "-Xms25m",
