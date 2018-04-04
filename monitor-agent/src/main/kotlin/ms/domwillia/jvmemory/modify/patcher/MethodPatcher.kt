@@ -12,6 +12,8 @@ class MethodPatcher(
         private val definition: MethodDefinition
 ) : InstructionAdapter(api, delegate) {
 
+    private var loadedUninitialisedThis = false
+
     override fun store(index: Int, type: Type) {
         // stack: value
         val func = if (type.sort == Type.OBJECT) {
@@ -41,6 +43,9 @@ class MethodPatcher(
         callMonitor(Monitor::onLoadLocalVar)
 
         super.load(index, type)
+
+        if (index == 0 && definition.name == "<init>")
+            loadedUninitialisedThis = true
     }
 
     override fun getfield(owner: String, name: String, desc: String) {
@@ -60,57 +65,54 @@ class MethodPatcher(
     }
 
     override fun putfield(owner: String, name: String, desc: String) {
-        // TODO there are extra onLoadLocalVars before every putfield - remove these!
+        if (loadedUninitialisedThis) {
+            loadedUninitialisedThis = false
+            return super.putfield(owner, name, desc)
+        }
+
         val type = Type.getType(desc)
         val size = type.size
 
-        // avoid uninitialisedThis
-        if (name != "this$0") {
-            var func: MonitorMethod = Monitor::onPutFieldPrimitive
+        var func: MonitorMethod = Monitor::onPutFieldPrimitive
 
-            // obj: dup2
-            // size1: dup top to 3
-            // size2:
+        if (size == 1) {
+            // stack: obj value
 
-            if (size == 1) {
-                // stack: obj value
+            super.dup2()
 
-                super.dup2()
+            // stack: obj value obj value
 
-                // stack: obj value obj value
+            if (type.sort != Type.OBJECT && type.sort != Type.ARRAY) {
+                super.pop()
 
-                if (type.sort != Type.OBJECT && type.sort != Type.ARRAY) {
-                    super.pop()
-
-                    // stack: obj value obj <no value>
-
-                } else {
-                    func = Monitor::onPutFieldObject
-                }
-
-                super.visitLdcInsn(name)
-
-                // stack: obj value obj <value> field
+                // stack: obj value obj <no value>
 
             } else {
-                // stack: obj value
-                super.dup2X1()
-
-                // stack: value obj value
-                super.pop2()
-
-                // stack: value obj
-                super.dupX2()
-
-                // stack: obj value obj
-                super.visitLdcInsn(name)
-
-                // stack: obj value obj name
+                func = Monitor::onPutFieldObject
             }
 
-            // log
-            callMonitor(func)
+            super.visitLdcInsn(name)
+
+            // stack: obj value obj <value> field
+
+        } else {
+            // stack: obj value
+            super.dup2X1()
+
+            // stack: value obj value
+            super.pop2()
+
+            // stack: value obj
+            super.dupX2()
+
+            // stack: obj value obj
+            super.visitLdcInsn(name)
+
+            // stack: obj value obj name
         }
+
+        // log
+        callMonitor(func)
 
         when (size) {
             1 -> {
