@@ -39,12 +39,12 @@ EVENTS_SRCS=$(shell find $(EVENTS_ROOT)/src -type f)
 # visualisation
 VIS_SRCS=$(shell find $(VIS_ROOT)/src -type f)
 
-# run script
-RUNSH_SRCS=$(ROOT)/scripts/run.sh
-RUNSH_TRGT=$(TARGET_DIR)/run.sh
+# scripts
+SH_SRCS=run.sh open.sh
+SH_TRGT=$(addprefix $(TARGET_DIR)/,$(SH_SRCS))
 
 .PHONY: build
-build: $(TARGET_DIR) $(MONITOR_TRGT) $(NATIVE_TRGT) $(BOOTSTRAP_TRGT) $(PREPROC_TRGT) $(EVENTS_TRGT) vis_srcs $(RUNSH_TRGT)
+build: $(TARGET_DIR) $(MONITOR_TRGT) $(NATIVE_TRGT) $(BOOTSTRAP_TRGT) $(PREPROC_TRGT) $(EVENTS_TRGT) vis_srcs $(SH_TRGT)
 	@echo $(TARGET_DIR)
 
 $(TARGET_DIR):
@@ -78,7 +78,7 @@ $(EVENTS_TRGT): $(EVENTS_SRCS)
 vis_srcs:
 	@cp -f $(VIS_SRCS) $(VIS_OUT)
 
-$(RUNSH_TRGT): $(RUNSH_SRCS)
+$(TARGET_DIR)/%.sh: $(ROOT)/scripts/%.sh
 	@sed 's:$$INSTALL_DIR:$(abspath $(TARGET_DIR)):' $< > $@
 	@chmod +x $@
 
