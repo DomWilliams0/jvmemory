@@ -12,7 +12,16 @@ class MethodPatcher(
         private val definition: MethodDefinition
 ) : InstructionAdapter(api, delegate) {
 
-    private var loadedUninitialisedThis = false
+    enum class InitialisedState {
+        INITIALISED,
+        UNINITIALISED,
+        AVOID_NEXT_PUTFIELD
+    }
+
+    private var initialisedState = when (definition.name) {
+        "<init>" -> InitialisedState.UNINITIALISED
+        else -> InitialisedState.INITIALISED
+    }
 
     override fun store(index: Int, type: Type) {
         // stack: value
@@ -44,8 +53,8 @@ class MethodPatcher(
 
         super.load(index, type)
 
-        if (index == 0 && definition.name == "<init>")
-            loadedUninitialisedThis = true
+        if (index == 0 && initialisedState == InitialisedState.UNINITIALISED)
+            initialisedState = InitialisedState.AVOID_NEXT_PUTFIELD
     }
 
     override fun getfield(owner: String, name: String, desc: String) {
@@ -65,8 +74,8 @@ class MethodPatcher(
     }
 
     override fun putfield(owner: String, name: String, desc: String) {
-        if (loadedUninitialisedThis) {
-            loadedUninitialisedThis = false
+        if (initialisedState == InitialisedState.AVOID_NEXT_PUTFIELD) {
+            initialisedState = InitialisedState.UNINITIALISED
             return super.putfield(owner, name, desc)
         }
 
@@ -333,6 +342,15 @@ class MethodPatcher(
     }
 
     override fun visitMethodInsn(opcode: Int, owner: String, name: String?, desc: String?, itf: Boolean) {
+        // object constructor
+        if (initialisedState != InitialisedState.INITIALISED &&
+                opcode == Opcodes.INVOKESPECIAL &&
+                owner == "java/lang/Object" &&
+                name == "<init>") {
+            initialisedState = InitialisedState.INITIALISED
+        }
+
+
         val special = BytecodeTransformer.isSpecialSystemClass(owner)
         val ignore = opcode != Opcodes.INVOKESPECIAL &&
                 !BytecodeTransformer.isMonitorClass(owner) &&
