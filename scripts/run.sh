@@ -7,16 +7,12 @@ DIR=$INSTALL_DIR
 
 MAIN=$1
 PACKAGES=$2
+CP=$3
 # TODO project source?
 
 if [[ $# != 2 && $# != 3 && $# != 4 ]]; then
-	echo "Usage: $0 <main class> <comma separated list of packages to instrument> [open]"
+	echo "Usage: $0 <main class> <comma-separated list of packages to instrument> [additional classpath, colon-separated]"
 	exit 1
-fi
-
-OPEN=0
-if [[ $3 = "open" ]]; then
-	OPEN=1
 fi
 
 i=1
@@ -29,17 +25,10 @@ echo Saving output in directory $PROJ
 
 set -e
 java \
+	-cp $CP \
 	-javaagent:$DIR/agent.jar=$DIR/bootstrap.jar,$PACKAGES \
 	-agentpath:$DIR/libagent.so=$PROJ/jvmemory.log \
 	$MAIN
-
-if [[ $OPEN = 1 ]]; then
-	(
-	echo Opening visualisation in browser in 1 second
-	sleep 1
-	xdg-open $DIR/visualisation/vis.html
-	) &
-fi
 
 echo Starting visualisation server
 java -jar $DIR/preprocessor.jar $PROJ/jvmemory.log $PROJ/vis-events $DIR/visualisation
