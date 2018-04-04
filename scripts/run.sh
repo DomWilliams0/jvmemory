@@ -23,9 +23,14 @@ while true; do
 done
 echo Saving output in directory $PROJ
 
+AGENT_ARG="-javaagent:$DIR/agent.jar=$DIR/bootstrap.jar;$PACKAGES"
+if [[ -n "$CP" ]]; then
+	AGENT_ARG="$AGENT_ARG;$CP"
+fi
+
 set -e
 java \
-	-javaagent:$DIR/agent.jar=$DIR/bootstrap.jar;$PACKAGES;$CP \
+	$AGENT_ARG \
 	-agentpath:$DIR/libagent.so=$PROJ/jvmemory.log \
 	$MAIN
 
