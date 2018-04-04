@@ -149,7 +149,7 @@ static void JNICALL free_thread_runnable(jvmtiEnv *env,
                                          JNIEnv *jnienv,
                                          void *arg)
 {
-	while (1)
+	while (concurrent_is_program_running(concurrent))
 	{
 		DO_SAFE((*env)->RawMonitorEnter(env, free_lock), "entering free monitor");
 
