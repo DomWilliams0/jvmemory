@@ -1,5 +1,5 @@
 #!/bin/sh -e
-export JVMEMORY_TEST_DIR=../integration-tests
+export JVMEMORY_TEST_DIR=../regression-tests
 export JVMEMORY_DIR=../build/jvmemory-0.1
 export JVMEMORY_WORKING_DIR=/tmp/jvmemory-tests-$USER
 
